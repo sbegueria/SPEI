@@ -1,0 +1,18 @@
+Package: SPEI
+Type: Package
+Version: 1.6
+Date: 2013-09-02
+Title: Calculation of the Standardised Precipitation-Evapotranspiration Index
+Authors@R: c(person('Santiago', 'Beguería', role=c('cre','aut'),
+	email = 'santiago.begueria@csic.es',
+	comment = 'algorithms, R coding'),
+	person(c('Sergio','M.'), 'Vicente-Serrano', role='aut',
+	comment = 'algorithms'))
+Author: Santiago Beguería <santiago.begueria@csic.es> and Sergio M. Vicente-Serrano <svicen@ipe.csic.es>.
+Maintainer: Santiago Beguería <santiago.begueria@csic.es> 
+Description: A set of functions for computing potential evapotranspiration and several widely used drought indices including the Standardized Precipitation-Evapotranspiration Index (SPEI).
+Depends: lmomco, parallel
+License: GPL-2
+URL: http://sac.csic.es/spei
+LazyLoad: yes
+Encoding: UTF-8
