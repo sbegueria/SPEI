@@ -101,17 +101,17 @@ spei <- function(data, scale, kernel=list(type='rectangular',shift=0),
 					std[f] <- NA
 					next()
 				}
-				if (fit=='pp-pwm') {
-					pwm <- pwm.pp(month,-0.35,0)
-				} else {
-					pwm <- pwm.ub(month)
-				}
-				lmom <- pwm2lmom(pwm)
-	 			if (!are.lmom.valid(lmom) | is.na(sum(lmom[[1]])) | is.nan(sum(lmom[[1]]))) {
-					next()
-				}
 				if (distribution=='log-Logistic') {
 					# Fit a generalized log-Logistic distribution
+					if (fit=='pp-pwm') {
+						pwm <- pwm.pp(month,-0.35,0)
+					} else {
+						pwm <- pwm.ub(month)
+					}
+					lmom <- pwm2lmom(pwm)
+		 			if (!are.lmom.valid(lmom) | is.na(sum(lmom[[1]])) | is.nan(sum(lmom[[1]]))) {
+						next()
+					}
 					llpar <- parglo(lmom)
 					if (fit=='max-lik') {
 						llpar <- parglo.maxlik(month,llpar$para)
@@ -119,10 +119,19 @@ spei <- function(data, scale, kernel=list(type='rectangular',shift=0),
 					# Compute standardized values
 					std[ff,s] <- qnorm(pglo(acu.pred[ff],llpar))
 					coef[,s,c] <- llpar$para
-				} else {
+				} else if (distribution=='Gamma' | distribution=='PearsonIII') {
 					# Probability of monthly precipitation = 0 (pze)
 					zeros <- sum(month==0)
 					pze <- sum(month==0)/length(month)
+					if (fit=='pp-pwm') {
+						pwm <- pwm.pp(month[month>0],-0.35,0)
+					} else {
+						pwm <- pwm.ub(month[month>0])
+					}
+					lmom <- pwm2lmom(pwm)
+		 			if (!are.lmom.valid(lmom) | is.na(sum(lmom[[1]])) | is.nan(sum(lmom[[1]]))) {
+						next()
+					}					
 					if (distribution =='Gamma') {
 						# Fit a Gamma distribution
 						gampar <- pargam(lmom)

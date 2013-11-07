@@ -4,12 +4,13 @@
 
 __Version history:
 
-_Version 1.6, September 2013_
-1. A bug in the function \code{\link{thornthwaite}}, which resulted in wrong potential evapotranspiration estimates when a multivariate time series was used as input, has been corrected.
-2. Minor fixes to the \code{\link{spi}} and \code{\link{plot.spei}} functions to correctly handle \code{spei} objects when they result from a call to \code{\link{spi}}.
-3. A modification to the \code{\link{kern}} function, which now yields kernel coefficients averaging one.
-4. Bug correction in the function \code{\link{plot.spei}} which resulted in ub-pwm method being used irrespective of the value of the \code{fit} parameter used, when using the 'Gamma' or 'PearsonIII' distributions.
-5. Minor changes to the documentation.
+_Version 1.6, September 2013.
+1. Corrected an error in the function \code{\link{thornthwaite}} which resulted in wrong potential evapotranspiration estimates when a multivariate time series was used as input.
+2. Corrected an error in the function \code{\link{spi}} which resulted in wrong handling of zero precipitation months when using the Gamma or PearsonIII distribution.
+3. Minor fixes to the \code{\link{spi}} and \code{\link{plot.spei}} functions to correctly handle \code{spei} objects when they result from a call to \code{\link{spi}}.
+4. Modification to the \code{\link{kern}} function, which now yields kernel coefficients averaging one.
+5. Corrected an error in the functions \code{\link{spi}} and \code{\link{spei}} which resulted in ub-pwm method being used irrespective of the value of the \code{fit} parameter used, when using the 'Gamma' or 'PearsonIII' distributions.
+6. Minor changes to the documentation.
 
 _Version 1.5, May 2013.
 1. Optimization of function \code{\link{spei}}, now using embed() for accumulating the data at the desired time scale.
@@ -41,4 +42,5 @@ __To do (work in progress):
 
 1. Complete documentation for pwmLC.Rd.
 2. Review method plot.spei() that produces wrong results in some cases.
-3. Parallel processing.
+3. Implement parallel processing.
+4. Analysis functions.
