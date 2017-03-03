@@ -157,6 +157,9 @@ spei <- function(data, scale, kernel=list(type='rectangular',shift=0),
 					std[ff,s] <- qnorm(pglo(acu.pred[ff],
 						list(type="glo", para=params[,s,c], source="user")))
 				} else {
+				#	# Probability of monthly precipitation = 0 (pze) ADDED BY ECOR ON 2017 03 03
+					zeros <- sum(month==0)
+					pze <- sum(month==0)/length(month)
 					if (distribution =='Gamma') {
 						std[ff,s] <- qnorm(cdfgam(acu.pred[ff],
 							list(type="gam", para=params[,s,c], source="user")))
