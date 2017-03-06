@@ -19,6 +19,10 @@ http://sac.csic.es/spei/
 Version history
 ---------------
 
+_Version 1.6.2, (actually forked)  March 2016:  Corrected an error in \code{\link{spei}} function. It was not working when distribution was Gamma or PeasonIII  and params was not NULL. This was fixed. (Emanuele Cordano, emanuele.cordano@gmail.com) 
+
+ 
+
 _Version 1.6, September 2013 (current)
 
 _Version 1.6, September 2013.
