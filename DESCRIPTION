@@ -4,7 +4,7 @@ Version: 1.6
 Date: 2013-11-07
 Title: Calculation of the Standardised Precipitation-Evapotranspiration Index
 Authors@R: c(
-	person('Santiago', 'Begueia', role=c('aut','cre'),
+	person('Santiago', 'Begueria', role=c('aut','cre'),
 	email='santiago.begueria@csic.es'),
 	person(c('Sergio','M.'), 'Vicente-Serrano', role='aut',
 	email='svicen@ipe.csic.es'))
