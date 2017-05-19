@@ -20,4 +20,5 @@ All credit for the original code should go to the original authors.
 - Add parallel processing support
 - Increase test coverage to 75%
 - Increase test coverage to 90%
+- Figure out how to get the accented letters back without upsetting travis-ci
 
