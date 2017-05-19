@@ -14,5 +14,6 @@ License: GPL-2
 URL: http://sac.csic.es/spei
 LazyLoad: yes
 Encoding: UTF-8
-Suggests: covr
+Suggests: covr,
+    testthat
 RoxygenNote: 6.0.1
