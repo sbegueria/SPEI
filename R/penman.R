@@ -1,11 +1,5 @@
 # FAO-56 Penman-Monteith reference evapotranspiration (ET_0)
 #
-#TO DO:
-# 1: poner una serie de warnings para informar al usuario en pantalla de las opciones que se
-#    están utilizando en el cálculo.
-# 2: poner un parámetro 'verbose=TRUE' que controle si se desea que la función	
-#    devuelva estos warnings o no.
-# 3: versión para datos diarios (existe una versión ya, colgada en mi blog).
 penman <-
 function(Tmin, Tmax, U2, Ra=NA, lat=NA, Rs=NA, tsun=NA, CC=NA, ed=NA, Tdew=NA, RH=NA, P=NA, P0=NA, z=NA, crop='short', na.rm=FALSE) {
 
