@@ -7,6 +7,6 @@
 #' @export
 #' 
 SPEINews <- function() {
-    file <- file.path(system.file(package="SPEI"), "NEWS")
+    file <- file.path(system.file(package="SPEI"), "NEWS.md")
     file.show(file)
 }
