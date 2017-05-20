@@ -54,7 +54,10 @@
 #' 
 #' 
 #' @references 
-#' S.M. Vicente-Serrano, S. Beguería, J.I. López-Moreno. 2010. A Multi-scalar drought index sensitive to global warming: The Standardized Precipitation Evapotranspiration Index – SPEI. \emph{Journal of Climate} \bold{23}: 1696, DOI: 10.1175/2009JCLI2909.1.
+#' S.M. Vicente-Serrano, S. Begueria, J.I. Lopez-Moreno. 2010. 
+#' A Multi-scalar drought index sensitive to global warming: The 
+#' Standardized Precipitation Evapotranspiration Index – SPEI. 
+#' \emph{Journal of Climate} \bold{23}: 1696, DOI: 10.1175/2009JCLI2909.1.
 #' 
 #' 
 #' @author Santiago Begueria
