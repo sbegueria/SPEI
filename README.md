@@ -17,7 +17,7 @@ All credit for the original code should go to the original authors.
 - ~~Transition dependencies to imports~~
 - ~~Transition data to data-raw and use rda data~~
 - ~~Speed up the L-moments calculations (where possible)~~
-- Make general performance improvements
+- ~~Make general performance improvements~~
 - Remove pglo.R and update documentation
 - Add parallel processing support
 - Increase test coverage to 75%
