@@ -88,7 +88,7 @@ summary(balance)
 
 }
 \references{
-S.M. Vicente-Serrano, S. Beguería, J.I. López-Moreno. 2010. A Multi-scalar 
+S.M. Vicente-Serrano, S. Begueria, J.I. Lopez-Moreno. 2010. A Multi-scalar 
 drought index sensitive to global warming: The Standardized Precipitation 
 Evapotranspiration Index – SPEI. \emph{Journal of Climate} \bold{23}: 1696, 
 DOI: 10.1175/2009JCLI2909.1.
@@ -98,6 +98,6 @@ R.G. Allen, L.S. Pereira, D. Raes, M. Smith. 1998. \emph{JCrop evapotranspiratio
 paper 56}. FAO, Rome. ISBN 92-5-104219-5.
 }
 \author{
-Data ported to R by S. Beguería.
+Data ported to R by S. Begueria.
 }
 \keyword{datasets}
