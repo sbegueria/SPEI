@@ -21,8 +21,8 @@ Index (SPEI).
 }
   
 Functions \code{\link{spei}} and \code{\link{spi}} are the workhorse of the 
-SPEI library. Other functions such as \code{\link{kern}}, \code{\link{cdfglo}} 
-or \code{\link{pglo}} are auxiliary low-level functions and they will not be used 
+SPEI library. Other functions such as \code{\link{kern}}, \code{\link{parglo.maxlik}} 
+is an auxiliary low-level function and will not be used 
 directly by the typical user. Functions for computing potential evapotranspiration 
 are provided, too, for helping computing the SPEI. They are: \code{\link{thornthwaite}}, 
 \code{\link{hargreaves}} and \code{\link{penman}}.

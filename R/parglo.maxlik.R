@@ -1,37 +1,29 @@
 #' @name Generalized-Logistic
 #' 
 #' 
-#' @aliases pglo
+#' @title Generalized Logistic maximum likelihood function
 #' 
 #' 
-#' @title Generalized Logistic distribution function.
+#' @description Maximum likelihood fitting function for 
+#' generalized logistic distribution.
 #' 
 #' 
-#' @description Cumulative distribution function of the 
-#' Generalized Logistic probability distribution function, 
-#' and maximum likelihood fitting function.
-#' 
-#' 
-#' @details This functions are used internally by \code{spei} 
-#' and \code{spi} and are supposed to never be needed by the 
+#' @details This function is used internally by \code{spei} 
+#' and \code{spi} and is supposed to never be needed by the 
 #' regular user. Initial values for maximum likelihood estimation
 #' can be provided by \code{parglo}.
 #' 
 #' 
 #' @usage 
-#' pglo(x, para)
-#' 
 #' parglo.maxlik(x, ini)
 #'
 #'
 #' @param x vector of quantiles for which to evaluate the PDF.
-#' @param para a list of parameters of a generalized Logistic 
-#' distribution function, as yield by function \code{parglo}.
 #' @param ini a vector of initial values of the parameters to be fit.
 #'
 #'
-#' @return A vector of cumulative probabilities corresponding to the 
-#' quantiles in \code{x}.
+#' @return a list of parameters of a generalized Logistic 
+#' distribution function
 #' 
 #' 
 #' @references 
