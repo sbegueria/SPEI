@@ -10,7 +10,7 @@ Authors@R: c(
 	email='svicen@ipe.csic.es'))
 Description: A set of functions for computing potential evapotranspiration and several widely used drought indices including the Standardized Precipitation-Evapotranspiration Index (SPEI).
 Depends: R (>= 2.10)
-Imports: lmomco
+Imports: lmomco, lmom, TLMoments
 License: GPL-2
 URL: http://sac.csic.es/spei
 LazyLoad: yes
