@@ -158,10 +158,10 @@ function(Tmin, Tmax, Ra=NA, lat=NA, Pre=NA, na.rm=FALSE) {
 		stop('Error: Data must not contain NAs')
 	}
 	if (length(Tmin)!=length(Tmax)) {
-		stop('Error: Tmin and Tmax must be of the same lenght')
+		stop('Error: Tmin and Tmax must be of the same length')
 	}
 	if (length(Ra)>1 && length(Ra)!=length(Tmin)) {
-		stop('Error: Ra must be of the same lenght than Tmin and Tmax')
+		stop('Error: Ra must be of the same length than Tmin and Tmax')
 	}
 	if (is.ts(Tmin) && frequency(Tmin)!=12) {
 		stop('Error: Data should be a monthly time series (frequency = 12)')
