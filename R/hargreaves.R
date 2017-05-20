@@ -154,7 +154,7 @@ function(Tmin, Tmax, Ra=NA, lat=NA, Pre=NA, na.rm=FALSE) {
 	if (sum(is.na(Tmin),is.na(Tmax))!=0 && na.rm==FALSE) {
 		stop('Error: Data must not contain NAs')
 	}
-	if (length(Ra)>1 && !anyNA(Ra) && na.rm==FALSE) {
+	if (length(Ra)>1 && anyNA(Ra) && na.rm==FALSE) {
 		stop('Error: Data must not contain NAs')
 	}
 	if (length(Tmin)!=length(Tmax)) {
