@@ -148,22 +148,22 @@
 hargreaves <-
 function(Tmin, Tmax, Ra=NA, lat=NA, Pre=NA, na.rm=FALSE) {
 
-	if (length(Ra)==1 & length(lat)!=ncol(as.matrix(Tmin))){
+	if (length(Ra)==1 && length(lat)!=ncol(as.matrix(Tmin))){
 		stop('Error: lat should be specified for estimating external radiation if Ra is not provided, and should have the same number of elements than Tmin.')
 	}
-	if (sum(is.na(Tmin),is.na(Tmax))!=0 & na.rm==FALSE) {
+	if (sum(is.na(Tmin),is.na(Tmax))!=0 && na.rm==FALSE) {
 		stop('Error: Data must not contain NAs')
 	}
-	if (length(Ra)>1 & sum(is.na(Ra))!=0 & na.rm==FALSE) {
+	if (length(Ra)>1 && !anyNA(Ra) && na.rm==FALSE) {
 		stop('Error: Data must not contain NAs')
 	}
 	if (length(Tmin)!=length(Tmax)) {
 		stop('Error: Tmin and Tmax must be of the same lenght')
 	}
-	if (length(Ra)>1 & length(Ra)!=length(Tmin)) {
+	if (length(Ra)>1 && length(Ra)!=length(Tmin)) {
 		stop('Error: Ra must be of the same lenght than Tmin and Tmax')
 	}
-	if (is.ts(Tmin) & frequency(Tmin)!=12) {
+	if (is.ts(Tmin) && frequency(Tmin)!=12) {
 		stop('Error: Data should be a monthly time series (frequency = 12)')
 	}
 	
@@ -182,7 +182,7 @@ function(Tmin, Tmax, Ra=NA, lat=NA, Pre=NA, na.rm=FALSE) {
 	
 	# temperature range, ºC
 	Tr <- Tmax-Tmin
-	Tr <- ifelse(Tr<0,0,Tr)
+	Tr <- pmax(0, Tr)
 	
 	# external radiation, MJ m-2 d-1
 	if (length(Ra)==1) {
@@ -197,9 +197,9 @@ function(Tmin, Tmax, Ra=NA, lat=NA, Pre=NA, na.rm=FALSE) {
 		latr <- lat/57.2957795
 		sset <- -tan(latr)*tan(delta)
 		omegas <- sset*0
-		omegas[sset>={-1} & sset<=1] <- acos(sset[sset>={-1} & sset<=1])
+		omegas[abs(sset)<=1] <- acos(sset[abs(sset)<=1])
 		# correction for high latitudes
-		omegas[sset<{-1}] <- max(omegas)
+		omegas[sset<(-1)] <- max(omegas)
 		# Ra, MJ m-2 d-1
 		Ra <- 37.6*dr*(omegas*sin(latr)*sin(delta)+cos(latr)*cos(delta)*sin(omegas))
 		Ra <- ifelse(Ra<0,0,Ra)
@@ -216,7 +216,7 @@ function(Tmin, Tmax, Ra=NA, lat=NA, Pre=NA, na.rm=FALSE) {
 		ET0[is.nan(ab^0.76)] <- 0
 	}
 	ET0 <- ifelse(ET0<0,0,ET0)
-	
+
 	# Transform ET0 to mm month-1
 	mlen <- c(31,28.25,31,30,31,30,31,31,30,31,30,31)
 	ET0 <- mlen[c]*ET0
