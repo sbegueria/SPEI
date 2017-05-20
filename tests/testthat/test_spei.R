@@ -20,4 +20,13 @@ test_that("example w/ 12 months", {
                tol = 1e-7
   )
 })
+
+
+test_that("example w/ 1 month (User Params)", {
+  spei1MoOut = readRDS("data/spei_1mo_Out.rds")
+  expect_equal(spei1MoOut[-1], 
+               spei(wichita$PRCP-wichita$PET,1, params=spei1MoOut$coefficients)[-1],
+               tol = 1e-7 
+  )
+})
     
