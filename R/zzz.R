@@ -1,4 +1,4 @@
-".onAttach" <- function(lib, pkg) {
+.onAttach <- function(lib, pkg) {
 	packageStartupMessage(sprintf("# Package %s (%s) loaded [try SPEINews()].", 
-		pkg, packageDescription(pkg) $Version))
+		pkg, utils::packageDescription(pkg) $Version))
 }

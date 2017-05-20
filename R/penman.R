@@ -1,5 +1,25 @@
-# FAO-56 Penman-Monteith reference evapotranspiration (ET_0)
-#
+#' @title Computation of potential evapotranspiration.
+#' 
+#' 
+#' @description See hargreaves
+#' 
+#' 
+#' @details See hargreaves
+#' 
+#' 
+#' @return  A time series with the values of monthly potential or reference evapotranspiration, in mm. 
+#' If the input is a matrix or a multivariate time series each column will be treated as independent 
+#' data (e.g., diferent observatories), and the output will be a multivariate time series.
+#' 
+#' 
+#' @rdname Potential-evapotranspiration
+#'
+#'
+#' @importFrom stats ts cycle frequency start
+#'
+#'
+#' @export
+#'
 penman <-
 function(Tmin, Tmax, U2, Ra=NA, lat=NA, Rs=NA, tsun=NA, CC=NA, ed=NA, Tdew=NA, RH=NA, P=NA, P0=NA, z=NA, crop='short', na.rm=FALSE) {
 

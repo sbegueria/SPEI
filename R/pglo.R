@@ -1,7 +1,21 @@
-# Cumulative distribution function of the Generalized Logistic probability distribution function.
-#
-pglo <-
-function (x, para) {
+#' @title Probability of generalized logistic distribution
+#' 
+#' 
+#' @description See parglo.maxlik
+#' 
+#' 
+#' @details See parglo.maxlik
+#' 
+#' 
+#' @rdname Generalized-Logistic
+#' 
+#'
+#' @importFrom lmomco are.parglo.valid
+#'
+#'
+#' @export
+#'
+pglo <- function (x, para) {
 	if (!are.parglo.valid(para)) 
 		return()
 	SMALL <- 1e-15

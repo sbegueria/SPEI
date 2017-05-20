@@ -1,5 +1,25 @@
-# Thornthwaite potential evapotranspiration (PE)
-#
+#' @title Computation of potential evapotranspiration.
+#' 
+#' 
+#' @description See hargreaves
+#' 
+#' 
+#' @details See hargreaves
+#' 
+#' 
+#' @return A time series with the values of monthly potential or reference evapotranspiration, in mm. 
+#' If the input is a matrix or a multivariate time series each column will be treated as independent 
+#' data (e.g., diferent observatories), and the output will be a multivariate time series.
+#' 
+#' 
+#' @rdname Potential-evapotranspiration
+#' 
+#' 
+#' @importFrom stats ts cycle frequency start
+#' 
+#' 
+#' @export
+#' 
 thornthwaite <-
 function(Tave, lat, na.rm=FALSE) {
 	

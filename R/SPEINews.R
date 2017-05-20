@@ -1,4 +1,12 @@
-"SPEINews" <- function() {
+#' @title SPEINews
+#' 
+#' @description Show the NEWS file of the \pkg{SPEI} package.
+#'
+#' @details (See description)
+#' 
+#' @export
+#' 
+SPEINews <- function() {
     file <- file.path(system.file(package="SPEI"), "NEWS")
     file.show(file)
 }
