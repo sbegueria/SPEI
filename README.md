@@ -15,6 +15,7 @@ All credit for the original code should go to the original authors.
 - ~~Add formal unit testing with testthat~~
 - ~~Move documentation over to roxygen~~
 - ~~Transition dependencies to imports~~
+- ~~Transition data to data-raw and use rda data~~
 - ~~Speed up the L-moments calculations (where possible)~~
 - Make general performance improvements
 - Remove pglo.R and update documentation
