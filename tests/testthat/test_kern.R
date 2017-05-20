@@ -11,3 +11,9 @@ test_that("example w/ defaults", {
   k12GaussOut = readRDS("data/k12_gauss_Out.rds")
   expect_equal(k12GaussOut, kern(12, 'gaussian'))
 })
+
+
+test_that("plot works without errors/warnings", {
+  pdf(NULL) # Stops Rplots.pdf from being created
+  expect_error(kern.plot(12), NA)
+})

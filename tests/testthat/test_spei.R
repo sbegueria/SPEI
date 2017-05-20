@@ -13,6 +13,7 @@ test_that("example w/ 1 month", {
   )
 })
 
+
 test_that("example w/ 12 months", {
   spei12MoOut = readRDS("data/spei_12mo_Out.rds")
   expect_equal(spei12MoOut, 
@@ -29,4 +30,11 @@ test_that("example w/ 1 month (User Params)", {
                tol = 1e-7 
   )
 })
-    
+  
+
+test_that("plot works without errors/warnings", {
+  pdf(NULL) # Stops Rplots.pdf from being created
+  spei1 = spei(wichita$PRCP-wichita$PET,1)
+  expect_error(plot(spei1), NA)
+})
+  
