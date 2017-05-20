@@ -14,9 +14,9 @@ All credit for the original code should go to the original authors.
 ## Goals
 - ~~Add formal unit testing with testthat~~
 - ~~Move documentation over to roxygen~~
-- ~~Transition dependencies to imports (where possible)~~
-- Speed up the L-moments calculations (where possible)
-- Make general performance improvements (where possible)
+- ~~Transition dependencies to imports~~
+- ~~Speed up the L-moments calculations (where possible)~~
+- Make general performance improvements
 - Add parallel processing support
 - Increase test coverage to 75%
 - Increase test coverage to 90%
