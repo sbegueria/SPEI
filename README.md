@@ -20,9 +20,9 @@ All credit for the original code should go to the original authors.
 - ~~Make general performance improvements~~
 - ~~Remove pglo.R and update documentation~~
 - Add parallel processing support
-- Change default plot title to include "SPI"/"SPEI"" when appropriate
-- Change default y-axis title to say "z-values"
-- Allow user to change the title when plotting spi/spei
+- ~~Change default plot title to include "SPI"/"SPEI"" when appropriate~~
+- ~~Change default y-axis title to say "z-values"~~
+- ~~Allow user to change the title when plotting spi/spei~~
 - ~~Increase test coverage to 75%~~
 - Increase test coverage to 90%
 - Figure out how to get the accented letters back without upsetting travis-ci
