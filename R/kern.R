@@ -78,7 +78,7 @@
 #' @export
 #'
 kern <- function(scale, type='rectangular', shift=0) {
-	if(type!='rectangular' & type!='triangular' & type!='circular' & type!='gaussian') {
+	if(!(type %in% c('rectangular', 'triangular', 'circular', 'gaussian'))){
 		stop('type must be one of: rectangular, triangular, circular, gaussian')
 	}
 	#
