@@ -373,7 +373,7 @@ spei <- function(data, scale, kernel=list(type='rectangular',shift=0),
         
         # Adjust if user chose log-Logistic and max-lik
         if(distribution == 'log-Logistic' && fit=='max-lik'){
-          f_params = parglo.maxlik(month, f_params)
+          f_params = parglo.maxlik(month, f_params)$para
         }
       } else {
         
@@ -387,7 +387,7 @@ spei <- function(data, scale, kernel=list(type='rectangular',shift=0),
                        "Gamma" = lmom::cdfgam(acu.pred[ff], f_params),
                        "PearsonIII" = lmom::cdfpe3(acu.pred[ff], f_params)				  				
       )
-      
+
       std[ff,s] = qnorm(cdf_res)
       coef[,s,c] <- f_params
       

@@ -37,4 +37,20 @@ test_that("plot works without errors/warnings", {
   spei1 = spei(wichita$PRCP-wichita$PET,1)
   expect_error(plot(spei1), NA)
 })
+
+
+test_that("summary of spei object", {
+  speiSumOut = readRDS("data/spei_1mo_summary_Out.rds")
+  spei1 <- spei(wichita$PRCP-wichita$PET,1)
+  expect_equal(speiSumOut,
+               capture.output(summary(spei1)) # capture.output prevents printing!
+  )
+})
+
+
+test_that("max likelihood fit", {
+  speiMLOut = readRDS("data/spei_maxlik_Out.rds")
+  spei1 <- spei(wichita$PRCP-wichita$PET,1,fit="max-lik")
+  expect_equal(speiMLOut[-1], spei1[-1], tol=1e-7)
+})
   

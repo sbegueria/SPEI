@@ -58,7 +58,7 @@ parglo.maxlik <- function(x,ini) {
 		return(-logl) # optim() does minimization by default
 	}
 	# optimize
-	o <- optim(par=ini, fn=glo.loglik, x=x)
+	o <- suppressWarnings(optim(par=ini, fn=glo.loglik, x=x))
 	#o <- optim(par=ini, fn=glo.loglik, x=x,
 	#	lower=c(-Inf,0.00001,-0.5), upper=c(Inf,Inf,0.5))
 	return(list(type='glo',
