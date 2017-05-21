@@ -246,9 +246,9 @@ spei <- function(x, y,...) UseMethod('spei')
 #' 
 #' 
 #' @importFrom stats cycle ts frequency start is.ts pnorm qnorm window embed sd
-#' @importFrom lmomco pwm.pp pwm.ub pwm2lmom are.lmom.valid parglo pargam parpe3 cdfgam cdfpe3
+#' @importFrom lmomco pwm.pp pwm2lmom are.lmom.valid parglo pargam parpe3 cdfgam cdfpe3
 #' @importFrom lmom pelglo pelgam pelpe3
-#' @importFrom TLMoments PWMs
+#' @importFrom TLMoments PWM
 #' 
 #' @export
 #' 
@@ -335,9 +335,10 @@ spei <- function(data, scale, kernel=list(type='rectangular',shift=0),
       }
       
       if (is.null(params)) {
-        if (is.na(sd(month,na.rm=TRUE)) || (sd(month, na.rm=TRUE) == 0)) {
+        month_sd = sd(month,na.rm=TRUE)
+        if (is.na(month_sd) || (month_sd == 0)) {
           std[f] <- NA
-          next()
+          next
         }
         
         if(distribution != "log-Logistic"){
@@ -355,7 +356,7 @@ spei <- function(data, scale, kernel=list(type='rectangular',shift=0),
         # Calculate probability weighted moments based on fit with lmomco or TLMoments
         pwm = switch(fit,
                      "pp-pwm" = pwm.pp(month,-0.35,0),
-                     TLMoments::PWMs(month)
+                     TLMoments::PWM(month, order=0:4)
         )
         
         # Check L-moments validity
@@ -423,10 +424,11 @@ spei <- function(data, scale, kernel=list(type='rectangular',shift=0),
 #' @usage
 #' \method{print}{spei}(x, ...)
 #' \method{summary}{spei}(object, ...)
-#' \method{plot}{spei}(x, ...)
+#' \method{plot}{spei}(x, ttext, ...)
 #' 
 #' @param x an object of class \code{spei}.
 #' @param object an object of class \code{spei}.
+#' @param ttext text to use as part of the plot title
 #' @param ... additional parameters, not used at present.
 #' 
 #' 
@@ -502,13 +504,17 @@ summary.spei <- function (object, ...) {
 #' 
 #' @export
 #' 
-plot.spei <- function (x, ...) {
+plot.spei <- function (x, ttext=NULL, ...) {
 	label <- ifelse(as.character(x$call)[1]=='spei','SPEI','SPI')
 	ser <- ts(as.matrix(x$fitted[-c(1:x$scale),]),
 		end=end(x$fitted),frequency=frequency(x$fitted))
 	ser[is.nan(ser-ser)] <- 0
 	se <- ifelse(ser==0,ser,NA)
-	tit <- dimnames(x$coefficients)[2][[1]]
+	if(is.null(ttext)){
+	  tit <- paste(label, dimnames(x$coefficients)[2][[1]])
+	} else {
+	  tit = paste(label, ttext, seq_along(dim(x$coefficients)[2]))
+	}
 	#
 	if (start(ser)[2]==1) {
 		ns <- c(start(ser)[1]-1,12)
@@ -530,7 +536,7 @@ plot.spei <- function (x, ...) {
 		datt <- ts(c(0,ser[,i],0),frequency=frequency(ser),start=ns,end=ne)
 		datt.pos <- ifelse(datt>0,datt,0)
 		datt.neg <- ifelse(datt<=0,datt,0)
-		plot(datt,type='n',xlab='',ylab=label,main=tit[i])
+		plot(datt,type='n',xlab='',ylab=paste(label, "(z-values)"),main=tit[i])
 		if (!is.null(x$ref.period)) {
 			k <- ts(5,start=x$ref.period[1,],end=x$ref.period[2,],frequency=12)
 			k[1] <- k[length(k)] <- -5

@@ -14,11 +14,11 @@
 \usage{
 \method{print}{spei}(x, ...)
 \method{summary}{spei}(object, ...)
-\method{plot}{spei}(x, ...)
+\method{plot}{spei}(x, ttext, ...)
 
 \method{summary}{spei}(object, ...)
 
-\method{plot}{spei}(x, ...)
+\method{plot}{spei}(x, ttext = NULL, ...)
 }
 \arguments{
 \item{x}{an object of class \code{spei}.}
@@ -26,6 +26,8 @@
 \item{...}{additional parameters, not used at present.}
 
 \item{object}{an object of class \code{spei}.}
+
+\item{ttext}{text to use as part of the plot title}
 }
 \description{
 Generic methods for extracting information and plotting \code{spei} objects.
