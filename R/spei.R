@@ -355,8 +355,8 @@ spei <- function(data, scale, kernel=list(type='rectangular',shift=0),
         
         # Calculate probability weighted moments based on fit with lmomco or TLMoments
         pwm = switch(fit,
-                     "pp-pwm" = pwm.pp(month,-0.35,0),
-                     TLMoments::PWM(month, order=0:4)
+                     "pp-pwm" = pwm.pp(month,-0.35,0, order=3),
+                     TLMoments::PWM(month, order=0:2)
         )
         
         # Check L-moments validity
@@ -365,11 +365,15 @@ spei <- function(data, scale, kernel=list(type='rectangular',shift=0),
           next
         }
         
+        # lmom fortran functions need specific inputs L1, L2, T3
+        # this is handled by lmomco internally with lmorph
+        fortran_vec = c(lmom$lambdas[1:2], lmom$ratios[3])
+        
         # Calculate parameters based on distribution with lmom then lmomco
         f_params = switch(distribution,
-                          "log-Logistic" = tryCatch(lmom::pelglo(lmom$lambdas), error = function(e){ parglo(lmom)$para }),
-                          "Gamma" = tryCatch(lmom::pelgam(lmom$lambdas), error = function(e){ pargam(lmom$lambdas)$para }),
-                          "PearsonIII" = tryCatch(lmom::pelpe3(lmom$lambdas), error = function(e){ parpe3(lmom)$para })
+                          "log-Logistic" = tryCatch(lmom::pelglo(fortran_vec), error = function(e){ parglo(lmom)$para }),
+                          "Gamma" = tryCatch(lmom::pelgam(fortran_vec), error = function(e){ pargam(lmom)$para }),
+                          "PearsonIII" = tryCatch(lmom::pelpe3(fortran_vec), error = function(e){ parpe3(lmom)$para })
         )
         
         # Adjust if user chose log-Logistic and max-lik
