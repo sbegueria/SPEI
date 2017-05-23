@@ -355,7 +355,7 @@ spei <- function(data, scale, kernel=list(type='rectangular',shift=0),
         
         # Calculate probability weighted moments based on fit with lmomco or TLMoments
         pwm = switch(fit,
-                     "pp-pwm" = pwm.pp(month,-0.35,0, order=3),
+                     "pp-pwm" = pwm.pp(month,-0.35,0, nmom=3),
                      TLMoments::PWM(month, order=0:2)
         )
         
