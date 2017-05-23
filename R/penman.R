@@ -22,8 +22,8 @@
 #'
 penman <-
 function(Tmin, Tmax, U2, Ra=NA, lat=NA, Rs=NA, tsun=NA, CC=NA, ed=NA, Tdew=NA, RH=NA, P=NA, P0=NA, z=NA, crop='short', na.rm=FALSE) {
-
-	if (sum(is.na(Tmin),is.na(Tmax),is.na(U2))>0 & na.rm==FALSE) {
+	
+  if (sum(is.na(Tmin),is.na(Tmax),is.na(U2))>0 && na.rm==FALSE) {
 		stop('Error: Data must not contain NAs')
 	}
 	if (((length(Ra)>1 && anyNA(Ra)) ||
@@ -34,17 +34,17 @@ function(Tmin, Tmax, U2, Ra=NA, lat=NA, Rs=NA, tsun=NA, CC=NA, ed=NA, Tdew=NA, R
 		(length(Tdew)>1 && anyNA(Tdew)) ||
 		(length(RH)>1 && anyNA(RH)) ||
 		(length(P)>1 && anyNA(P)) ||
-		(length(P0)>1 && anyNA(P0))) &
+		(length(P0)>1 && anyNA(P0))) &&
 		na.rm==FALSE) {
-		stop('Error: Data must not contain NAs')
+		stop('Error: Non-temperature data must not contain NAs')
 	}
 	#if (length(Ra)==1 & length(lat)!=ncol(as.matrix(Ra))) {
 	if (is.na(Ra[1]) && is.na(lat[1])) {
 		stop('Error: One of Ra or lat must be provided')
 	}
-if (!is.na(Ra[1])) {
-	warning('Using user-provided (Ra)')
-}
+  if (!is.na(Ra[1])) {
+	  warning('Using user-provided (Ra)')
+  }
 
 	if (length(Rs)!=length(Tmin) && length(tsun)!=length(Tmin) && length(CC)!=length(Tmin)) {
 		stop('Error: One of Rs, tsun or CC must be provided')
@@ -55,9 +55,9 @@ if (!is.na(Ra[1])) {
 	if (length(P)!=length(Tmax) && is.na(z)) {
 		stop('Error: Elevation above sea level (z) must be specified if P is not provided.')
 	}
-if (is.na(z)) {
-	warning('Specifying the elevation above sea level (z) is highly recommended in order to compute the clear-sky solar radiation.')
-}
+  if (is.na(z)) {
+	  warning('Specifying the elevation above sea level (z) is highly recommended in order to compute the clear-sky solar radiation.')
+ }
 	
 	ET0 <- Tmin*NA
 
