@@ -8,6 +8,12 @@ test_that("example", {
 )
 })
 
+test_that("example with Pre", {
+  harModOut = readRDS("data/har_mod_Out.rds")
+  expect_equal(harModOut, hargreaves(wichita$TMIN,wichita$TMAX,lat=37.6475, Pre=seq_along(wichita$TMIN))
+  )
+})
+
 test_that("Ra length 1 and wrong lat length error", {
   expect_error(hargreaves(wichita$TMIN,wichita$TMAX,lat=c(37, 38), Ra = 1),
                'Error: lat should be specified for estimating external radiation if Ra is not provided, and should have the same number of elements than Tmin.'

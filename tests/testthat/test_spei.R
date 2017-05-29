@@ -54,3 +54,23 @@ test_that("max likelihood fit", {
   expect_equal(speiMLOut[-1], spei1[-1], tol=1e-7)
 })
   
+
+test_that("NAs and na.rm=FALSE error", {
+  expect_error(spei(c(NA,wichita$PRCP-wichita$PET),1),
+               'Error: Data must not contain NAs'
+  )
+})
+
+
+test_that("Incorrect distribution error", {
+  expect_error(spei(wichita$PRCP-wichita$PET,1,distribution='Beta'),
+               'Distrib must be one of "log-Logistic", "Gamma" or "PearsonIII"'
+  )
+})
+
+
+test_that("Incorrect fit error", {
+  expect_error(spei(wichita$PRCP-wichita$PET,1,fit='zzz'),
+               'Method must be one of "ub-pwm"*'
+  )
+})

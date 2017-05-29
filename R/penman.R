@@ -45,12 +45,12 @@ function(Tmin, Tmax, U2, Ra=NA, lat=NA, Rs=NA, tsun=NA, CC=NA, ed=NA, Tdew=NA, R
   if (!is.na(Ra[1])) {
 	  warning('Using user-provided (Ra)')
   }
-
+  
 	if (length(Rs)!=length(Tmin) && length(tsun)!=length(Tmin) && length(CC)!=length(Tmin)) {
 		stop('Error: One of Rs, tsun or CC must be provided')
 	}	
 	if (length(Tmin)!=length(Tmax) || length(Tmin)!=length(U2)) {
-		stop('Error: Data must be of the same lenght')
+		stop('Error: Data must be of the same length')
 	}
 	if (length(P)!=length(Tmax) && is.na(z)) {
 		stop('Error: Elevation above sea level (z) must be specified if P is not provided.')

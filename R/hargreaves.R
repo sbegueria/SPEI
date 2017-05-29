@@ -106,7 +106,7 @@
 #' Reston, VA, 57 pp.
 #'
 #'
-#' @author Santiago Begueria
+#' @author Santiago Beguería
 #' 
 #' 
 #' @examples

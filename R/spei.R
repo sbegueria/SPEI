@@ -170,7 +170,7 @@ spei <- function(x, y,...) UseMethod('spei')
 #' 
 #' 
 #' @references 
-#' S.M. Vicente-Serrano, S. Begueria, J.I. Lopez-Moreno. 2010. A Multi-scalar drought index sensitive 
+#' S.M. Vicente-Serrano, S. Beguería, J.I. López-Moreno. 2010. A Multi-scalar drought index sensitive 
 #' to global warming: The Standardized Precipitation Evapotranspiration Index – SPEI. 
 #' \emph{Journal of Climate} \bold{23}: 1696, DOI: 10.1175/2009JCLI2909.1.
 #' 
@@ -178,7 +178,7 @@ spei <- function(x, y,...) UseMethod('spei')
 #' \url{http://sac.csic.es/spei/}
 #' 
 #' 
-#' @author Santiago Begueria and Sergio M. Vicente-Serrano. Maintainer: Santiago Begueria.
+#' @author Santiago Beguería and Sergio M. Vicente-Serrano. Maintainer: Santiago Beguería.
 #' 
 #' 
 #' @seealso 
@@ -450,7 +450,7 @@ spei <- function(data, scale, kernel=list(type='rectangular',shift=0),
 #' \emph{Journal of Climate} \bold{23}: 1696, DOI: 10.1175/2009JCLI2909.1.
 #' 
 #' 
-#' @author Santiago Begueria
+#' @author Santiago Beguería
 #'  
 #' 
 #' @export

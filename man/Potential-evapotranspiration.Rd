@@ -176,5 +176,5 @@ Rep. Task Com. on Standardized Reference Evapotranspiration July 9, 2002, EWRI‚Ä
 Reston, VA, 57 pp.
 }
 \author{
-Santiago Begueria
+Santiago Beguer√≠a
 }

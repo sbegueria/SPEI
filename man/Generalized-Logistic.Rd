@@ -33,5 +33,5 @@ The Standardized Precipitation Evapotranspiration Index – SPEI.
 \emph{Journal of Climate} \bold{23}: 1696, DOI: 10.1175/2009JCLI2909.1.
 }
 \author{
-Santiago Begueria
+Santiago Beguería
 }

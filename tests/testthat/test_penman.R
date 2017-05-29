@@ -38,3 +38,17 @@ test_that("No lat and no Ra", {
                'Error: One of Ra or lat must be provided'
   )
 })
+
+test_that("First unequal length error", {
+  expect_error(penman(wichita$TMIN,wichita$TMAX,wichita$AWND,
+                      tsun=wichita$TSUN[1:3],lat=37.6475,z=402.6,na.rm=TRUE),
+               'Error: One of Rs, tsun or CC must be provided'
+  )
+})
+
+test_that("Second unequal length error", {
+  expect_error(penman(wichita$TMIN[1:3],wichita$TMAX,wichita$AWND,
+                      tsun=wichita$TSUN[1:3],lat=37.6475,z=402.6,na.rm=TRUE),
+               'Error: Data must be of the same length'
+  )
+})
