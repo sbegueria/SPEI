@@ -109,10 +109,16 @@ Santiago Beguería and Sergio M. Vicente-Serrano. Maintainer: Santiago Beguería
 # Load data
 data(wichita)
 
-# One and tvelwe-months SPEI
+# Compute potential evapotranspiration and climatic water balance
 wichita$PET <- thornthwaite(wichita$TMED,37.6475)
-spei1 <- spei(wichita$PRCP-wichita$PET,1)
-spei12 <- spei(wichita$PRCP-wichita$PET,12)
+wichita$BAL <- wichita$PRCP-wichita$PET
+
+# Convert to time series object, for convenience
+wichita <- ts(wichita[,-c(1,2)], end=c(2011,10), frequency=12)
+
+# One and tvelwe-months SPEI
+spei1 <- spei(wichita[,'BAL'],1)
+spei12 <- spei(wichita[,'BAL'],12)
 
 # Extract information from spei object
 summary(spei1)
@@ -123,29 +129,26 @@ spei1$coefficients
 
 # Plot spei object
 par(mfrow=c(2,1))
-plot(spei1)
-plot(spei12,'Wichita')
+plot(spei1,'Wichita, SPEI-1')
+plot(spei12,'Wichita, SPEI-12')
 
 # One and tvelwe-months SPI
-spi_1 <- spi(wichita$PRCP,1)
-spi_12 <- spi(wichita$PRCP,12)
+spi_1 <- spi(wichita[,'PRCP'],1)
+spi_12 <- spi(wichita[,'PRCP'],12)
 par(mfrow=c(2,1))
-plot(spi_1)
-plot(spi_12)
-
-# Define the properties of the time series with ts()
-plot(spei(ts(wichita$PRCP-wichita$PET,freq=12,start=c(1980,1)),12))
+plot(spi_1,'Wichita, SPI-1')
+plot(spi_12,'Wichita, SPI-12')
 
 # Time series not starting in January
-plot(spei(ts(wichita$PRCP-wichita$PET,freq=12,start=c(1980,6)),12))
+plot(spei(ts(wichita[,'BAL'],freq=12,start=c(1980,6)),12))
 
 # Using a particular reference period
-plot(spei(ts(wichita$PRCP-wichita$PET,freq=12,start=c(1980,1)),12,
+plot(spei(ts(wichita[,'BAL'],freq=12,start=c(1980,6)),12,
 	ref.start=c(1980,1), ref.end=c(2000,1)))
 
 # Using different kernels
-spei24 <- spei(wichita$PRCP-wichita$PET,24)
-spei24_gau <- spei(wichita$PRCP-wichita$PET,24,kernel=list(type='gaussian',shift=0))
+spei24 <- spei(wichita[,'BAL'],24)
+spei24_gau <- spei(wichita[,'BAL'],24,kernel=list(type='gaussian',shift=0))
 par(mfrow=c(2,1))
 plot(spei24,'Rectangular kernel')
 plot(spei24_gau,'Gaussian kernel')

@@ -4,6 +4,10 @@
 
 __Version history:
 
+_Version 1.7, November 2016.
+1. Corrected a bug in the \code{\link{kern}} function which resulted in a multiplicative kernel instead of an additive one such the one expected in the \code{\link{spei}} and \code{\link{spi}} functions.
+2. Plotting methods for \code{spei} objects completely rewritten, now using \code{ggplot2}. Additionally, a bug causing a bad representation of time series starting in months other than January has been corrected.
+
 _Version 1.6, September 2013.
 1. Corrected an error in the function \code{\link{thornthwaite}} which resulted in wrong potential evapotranspiration estimates when a multivariate time series was used as input.
 2. Corrected an error in the function \code{\link{spi}} which resulted in wrong handling of zero precipitation months when using the Gamma or PearsonIII distribution.
