@@ -5,6 +5,9 @@
 exportPattern(".")
 
 # Import all packages listed as Imports or Depends
-import(
-  lmomco
-)
+import(lmomco, ggplot2, parallel)
+
+# Register new S3 methods
+S3method(print, spei)
+S3method(summary, spei)
+S3method(plot, spei)
