@@ -205,13 +205,15 @@ summary.spei <- function (object, ...) {
 }
 
 # Plot method
-plot.spei <- function (x, ...) {
+plot.spei <- function (x, main=NULL) {
 	label <- ifelse(as.character(x$call)[1]=='spei','SPEI','SPI')
 	ser <- ts(as.matrix(x$fitted[-c(1:x$scale),]),
 		end=end(x$fitted),frequency=frequency(x$fitted))
 	ser[is.nan(ser-ser)] <- 0
 	se <- ifelse(ser==0,ser,NA)
-	tit <- dimnames(x$coefficients)[2][[1]]
+	if (is.null(main)) {
+	  main <- dimnames(x$coefficients)[2][[1]]
+	} 
 	#
 	if (start(ser)[2]==1) {
 		ns <- c(start(ser)[1]-1,12)
@@ -233,7 +235,7 @@ plot.spei <- function (x, ...) {
 		datt <- ts(c(0,ser[,i],0),frequency=frequency(ser),start=ns,end=ne)
 		datt.pos <- ifelse(datt>0,datt,0)
 		datt.neg <- ifelse(datt<=0,datt,0)
-		plot(datt,type='n',xlab='',ylab=label,main=tit[i])
+		plot(datt, type='n', xlab='', ylab=label, main=main[i])
 		if (!is.null(x$ref.period)) {
 			k <- ts(5,start=x$ref.period[1,],end=x$ref.period[2,],frequency=12)
 			k[1] <- k[length(k)] <- -5

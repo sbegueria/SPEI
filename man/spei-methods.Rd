@@ -17,12 +17,13 @@
 
 \method{summary}{spei}(object, ...)
 
-\method{plot}{spei}(x, ...)
+\method{plot}{spei}(x, main, ...)
 }
 
 \arguments{
   \item{x}{ an object of class \code{spei}.}
   \item{object}{ an object of class \code{spei}.}
+  \item{main}{ an (optional) title for the plot.}
   \item{...}{ additional parameters, not used at present.}
 }
 
