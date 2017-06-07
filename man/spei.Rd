@@ -115,7 +115,7 @@ wichita$BAL <- wichita$PRCP-wichita$PET
 
 # Convert to a ts (time series) object for convenience
 wichita <- ts(wichita[,-c(1,2)], end=c(2011,10), frequency=12)
-plot(whichita)
+plot(wichita)
 
 # One and tvelwe-months SPEI
 spei1 <- spei(wichita[,'BAL'], 1)
