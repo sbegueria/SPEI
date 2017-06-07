@@ -57,47 +57,52 @@ Other (possibly useful) references:
 
 ## Version history
 
-### Version 1.7, November 2016 (current).
+### Version 1.7.1, June 2017 (current on github).
 
-1. Corrected a bug in the \code{\link{kern}} function which resulted in a multiplicative kernel instead of an additive one such the one expected in the \code{\link{spei}} and \code{\link{spi}} functions.
+1. Corrected an error in `<spei>` function, which was not working when distribution was Gamma or PeasonIII and using user provided parameters. (Fixed by Emanuele Cordano, emanuele.cordano@gmail.com -- ecor)
+2. Added probability of monthly precipitation = 0 (pze) when using user provided parameters. (Fixed by Emanuele Cordano, emanuele.cordano@gmail.com -- ecor) 
+
+### Version 1.7, June 2017 (current on CRAN).
+
+1. Corrected a bug in the `<kern>` function which resulted in a multiplicative kernel instead of an additive one such the one expected in the `<spei>` and `<spi>` functions.
 2. Some small corrections to the plotting function and to the examples.
 
 ### Version 1.6, September 2013.
 
-1. Corrected an error in the function \code{\link{thornthwaite}} which resulted in wrong potential evapotranspiration estimates when a multivariate time series was used as input.
-2. Corrected an error in the function \code{\link{spi}} which resulted in wrong handling of zero precipitation months when using the Gamma or PearsonIII distribution.
-3. Minor fixes to the \code{\link{spi}} and \code{\link{plot.spei}} functions to correctly handle \code{spei} objects when they result from a call to \code{\link{spi}}.
-4. Modification to the \code{\link{kern}} function, which now yields kernel coefficients averaging one.
-5. Corrected an error in the functions \code{\link{spi}} and \code{\link{spei}} which resulted in ub-pwm method being used irrespective of the value of the \code{fit} parameter used, when using the 'Gamma' or 'PearsonIII' distributions.
+1. Corrected an error in the function `<thornthwaite>` which resulted in wrong potential evapotranspiration estimates when a multivariate time series was used as input.
+2. Corrected an error in the function `<spi>` which resulted in wrong handling of zero precipitation months when using the Gamma or PearsonIII distribution.
+3. Minor fixes to the `<spi>` and `<plot.spei>` functions to correctly handle \code{spei} objects when they result from a call to `<spi>`.
+4. Modification to the `<kern>` function, which now yields kernel coefficients averaging one.
+5. Corrected an error in the functions `<spi>` and `<spei>` which resulted in ub-pwm method being used irrespective of the value of the \code{fit} parameter used, when using the 'Gamma' or 'PearsonIII' distributions.
 6. Minor changes to the documentation.
 
 ### Version 1.5, May 2013.
 
-1. Optimization of function \code{\link{spei}}, now using embed() for accumulating the data at the desired time scale.
+1. Optimization of function `<spei>`, now using embed() for accumulating the data at the desired time scale.
 
 ### Version 1.4, May 2013.
 
-1. Minor fixes to functions \code{\link{penman}} and \code{\link{pwm}}.
+1. Minor fixes to functions `<penman>` and `<pwm>`.
 2. Documentation of the penman function defined by mistake ed as the saturation vapour pressure, while it should read 'actual vapour pressure'.
 3. Function zzz.R added to display basic information about the SPEI package at startup.
-4. Function \code{\link{SPEINews}} added to display the NEWS file.
+4. Function `<SPEINews>` added to display the NEWS file.
 
 ### Version 1.3, March 2013.
 
-1. Minor fixes to functions \code{\link{spei}} and \code{\link{penman}}.
-2. Added new option for user-supplied SPEI parameters in the \code{\link{spei}} function. This overrides the fitting of a probability function to the data.
-3. Added new dataset \code{\link{cabinda}} from Allen et al. (1998).
+1. Minor fixes to functions `<spei>` and `<penman>`.
+2. Added new option for user-supplied SPEI parameters in the `<spei>` function. This overrides the fitting of a probability function to the data.
+3. Added new dataset `<cabinda>` from Allen et al. (1998).
 
 ### Version 1.2, October 2012.
 
 1. Fixed a bug causing several functions to fail when a time series not belonging to matrix class was provided.
-2. Function \code{\link{plot.spei}} now distinguises between calls to spei and spi and labels the axis accordingly.
+2. Function `<plot.spei>` now distinguises between calls to spei and spi and labels the axis accordingly.
 
 ### Version 1.1, March 2012.
 
-1. Functions \code{\link{spei}} and \code{\link{spi}} now yield an object of class "spei".
+1. Functions `<spei>` and `<spi>` now yield an object of class "spei".
 2. New functions for summarizing and plotting "spei" objects are provided.
-3. An option to establish a reference period for the computation of the indices has been implemented in functions \code{\link{spei}} and \code{\link{spi}}.
+3. An option to establish a reference period for the computation of the indices has been implemented in functions `<spei>` and `<spi>`.
 
 ### Version 1.0, January 2012.
 

@@ -157,13 +157,21 @@ spei <- function(data, scale, kernel=list(type='rectangular',shift=0),
 					std[ff,s] <- qnorm(pglo(acu.pred[ff],
 						list(type="glo", para=params[,s,c], source="user")))
 				} else {
+					zeros <- sum(month==0)
+					pze <- sum(month==0)/length(month)
 					if (distribution =='Gamma') {
-						std[ff,s] <- qnorm(cdfgam(acu.pred[ff],
-							list(type="gam", para=params[,s,c], source="user")))
+						nl <- length(acu.pred[ff])
+						pyyy <- cdfgam(acu.pred[ff],
+								list(type="gam", para=params[,s,c], source="user"))
+						if (is.null(pyyy)) pyyy <- array(as.numeric(NA),nl)
+						std[ff,s] <- qnorm(pyyy)
 						std[ff,s] <- qnorm(pze + (1-pze)*pnorm(std[ff,s]))
 					} else if (distribution =='PearsonIII') {
-						std[ff,s] <- qnorm(cdfpe3(acu.pred[ff],
-							list(type="pe3", para=params[,s,c], source="user")))
+						nl <- length(acu.pred[ff])
+						pyyy <- cdfpe3(acu.pred[ff],
+								list(type="pe3", para=params[,s,c], source="user"))
+						if (is.null(pyyy)) pyyy <- array(as.numeric(NA),nl)
+						std[ff,s] <- qnorm(pyyy)
 						std[ff,s] <- qnorm(pze + (1-pze)*pnorm(std[ff,s]))
 					}					
 				}

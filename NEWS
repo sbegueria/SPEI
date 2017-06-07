@@ -2,9 +2,17 @@
  NEWS for R Package "SPEI"
 ---------------------------
 
+
+
 __Version history:
 
-_Version 1.7, November 2016.
+### Version 1.7.1, June 2017 (current on github).
+
+1. Corrected an error in `<spei>` function, which was not working when distribution was Gamma or PeasonIII and using user provided parameters. (Fixed by Emanuele Cordano, emanuele.cordano@gmail.com -- ecor)
+2. Added probability of monthly precipitation = 0 (pze) when using user provided parameters. (Fixed by Emanuele Cordano, emanuele.cordano@gmail.com -- ecor) 
+
+_Version 1.7, June 2017 (current on CRAN).
+
 1. Corrected a bug in the \code{\link{kern}} function which resulted in a multiplicative kernel instead of an additive one such the one expected in the \code{\link{spei}} and \code{\link{spi}} functions.
 2. Plotting methods for \code{spei} objects completely rewritten, now using \code{ggplot2}. Additionally, a bug causing a bad representation of time series starting in months other than January has been corrected.
 
