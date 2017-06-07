@@ -46,7 +46,7 @@ data(cabinda)
 \references{S.M. Vicente-Serrano, S. Beguería, J.I. López-Moreno. 2010. A Multi-scalar drought index sensitive to global warming: The Standardized Precipitation Evapotranspiration Index – SPEI. \emph{Journal of Climate} \bold{23}: 1696, DOI: 10.1175/2009JCLI2909.1.
 R.G. Allen, L.S. Pereira, D. Raes, M. Smith. 1998. \emph{JCrop evapotranspiration - Guidelines for computing crop water requirements - FAO Irrigation and drainage paper 56}. FAO, Rome. ISBN 92-5-104219-5.}
 
-\source{The \code{wichita} data were obtained from the Global Historical Climatology Network (GHCN, \url{http://www.ncdc.noaa.gov/oa/climate/ghcn-daily/}. Data for the \code{balance} dataset were extracted from CRU TS V3.1 and from the 20th Century Reanalysis V2 dataset.  Data for the \code{balance} dataset were taken from Allen et al. (1998), page 69, figure 18.}
+\source{The \code{wichita} data were obtained from the Global Historical Climatology Network (GHCN, \url{https://www.ncdc.noaa.gov/oa/climate/ghcn-daily}. Data for the \code{balance} dataset were extracted from CRU TS V3.1 and from the 20th Century Reanalysis V2 dataset.  Data for the \code{balance} dataset were taken from Allen et al. (1998), page 69, figure 18.}
 
 \author{Data ported to R by S. Beguería.}
 
