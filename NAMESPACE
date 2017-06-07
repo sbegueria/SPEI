@@ -2,10 +2,15 @@
 # Remove the previous line if you edit this file
 
 # Export all names
-exportPattern(".")
+exportPattern('.')
 
 # Import all packages listed as Imports or Depends
 import(lmomco, ggplot2, parallel)
+importFrom('graphics', 'abline', 'grid', 'lines', 'par', 'plot',
+             'points', 'polygon')
+importFrom('stats', 'cycle', 'embed', 'end', 'frequency', 'is.ts',
+             'optim', 'pnorm', 'qnorm', 'sd', 'start', 'ts', 'window')
+importFrom('utils', 'packageDescription')
 
 # Register new S3 methods
 S3method(print, spei)
