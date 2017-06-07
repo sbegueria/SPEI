@@ -94,6 +94,8 @@ data: if requested, the input data used.
 \references{
 S.M. Vicente-Serrano, S. Beguería, J.I. López-Moreno. 2010. A Multi-scalar drought index sensitive to global warming: The Standardized Precipitation Evapotranspiration Index – SPEI. \emph{Journal of Climate} \bold{23}: 1696, DOI: 10.1175/2009JCLI2909.1.
 
+Beguería S, Vicente-Serrano SM, Reig F, Latorre B. 2014. Standardized precipitation evapotranspiration index (SPEI) revisited: parameter fitting, evapotranspiration models, tools, datasets and drought monitoring. \emph{International Journal of Climatology} \bold{34(10)}: 3001-3023.
+
 \url{http://sac.csic.es/spei/}
 }
 
@@ -115,7 +117,7 @@ wichita$BAL <- wichita$PRCP-wichita$PET
 
 # Convert to a ts (time series) object for convenience
 wichita <- ts(wichita[,-c(1,2)], end=c(2011,10), frequency=12)
-plot(whichita)
+plot(wichita)
 
 # One and tvelwe-months SPEI
 spei1 <- spei(wichita[,'BAL'], 1)

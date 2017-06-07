@@ -205,7 +205,7 @@ summary.spei <- function (object, ...) {
 }
 
 # Plot method
-plot.spei <- function (x, main=NULL) {
+plot.spei <- function (x, main=NULL, ...) {
 	label <- ifelse(as.character(x$call)[1]=='spei','SPEI','SPI')
 	ser <- ts(as.matrix(x$fitted[-c(1:x$scale),]),
 		end=end(x$fitted),frequency=frequency(x$fitted))
