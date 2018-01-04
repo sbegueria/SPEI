@@ -1,49 +1,63 @@
-# FAO-56 Penman-Monteith reference evapotranspiration (ET_0)
-#
-#TO DO:
-# 1: poner una serie de warnings para informar al usuario en pantalla de las opciones que se
-#    están utilizando en el cálculo.
-# 2: poner un parámetro 'verbose=TRUE' que controle si se desea que la función	
-#    devuelva estos warnings o no.
-# 3: versión para datos diarios (existe una versión ya, colgada en mi blog).
+#' @title Computation of potential evapotranspiration.
+#' 
+#' 
+#' @description See hargreaves
+#' 
+#' 
+#' @details See hargreaves
+#' 
+#' 
+#' @return  A time series with the values of monthly potential or reference evapotranspiration, in mm. 
+#' If the input is a matrix or a multivariate time series each column will be treated as independent 
+#' data (e.g., diferent observatories), and the output will be a multivariate time series.
+#' 
+#' 
+#' @rdname Potential-evapotranspiration
+#'
+#'
+#' @importFrom stats ts cycle frequency start
+#'
+#'
+#' @export
+#'
 penman <-
 function(Tmin, Tmax, U2, Ra=NA, lat=NA, Rs=NA, tsun=NA, CC=NA, ed=NA, Tdew=NA, RH=NA, P=NA, P0=NA, z=NA, crop='short', na.rm=FALSE) {
-
-	if (sum(is.na(Tmin),is.na(Tmax),is.na(U2))>0 & na.rm==FALSE) {
+	
+  if (sum(is.na(Tmin),is.na(Tmax),is.na(U2))>0 && na.rm==FALSE) {
 		stop('Error: Data must not contain NAs')
 	}
-	if (((length(Ra)>1 & sum(is.na(Ra))>0) |
-		(length(Rs)>1 & sum(is.na(Rs))>0) |
-		(length(tsun)>1 & sum(is.na(tsun))>0) |
-		(length(CC)>1 & sum(is.na(CC))>0) |
-		(length(ed)>1 & sum(is.na(ed))>0) |
-		(length(Tdew)>1 & sum(is.na(Tdew))>0) |
-		(length(RH)>1 & sum(is.na(RH))>0) |
-		(length(P)>1 & sum(is.na(P))>0) |
-		(length(P0)>1 & sum(is.na(P0))>0)) &
+	if (((length(Ra)>1 && anyNA(Ra)) ||
+		(length(Rs)>1 && anyNA(Rs)) ||
+		(length(tsun)>1 && anyNA(tsun)) ||
+		(length(CC)>1 && anyNA(CC)) ||
+		(length(ed)>1 && anyNA(ed)) ||
+		(length(Tdew)>1 && anyNA(Tdew)) ||
+		(length(RH)>1 && anyNA(RH)) ||
+		(length(P)>1 && anyNA(P)) ||
+		(length(P0)>1 && anyNA(P0))) &&
 		na.rm==FALSE) {
-		stop('Error: Data must not contain NAs')
+		stop('Error: Non-temperature data must not contain NAs')
 	}
 	#if (length(Ra)==1 & length(lat)!=ncol(as.matrix(Ra))) {
-	if (is.na(Ra[1]) & is.na(lat[1])) {
+	if (is.na(Ra[1]) && is.na(lat[1])) {
 		stop('Error: One of Ra or lat must be provided')
 	}
-if (!is.na(Ra[1])) {
-	warning('Using user-provided (Ra)')
-}
-
-	if (length(Rs)!=length(Tmin) & length(tsun)!=length(Tmin) & length(CC)!=length(Tmin)) {
+  if (!is.na(Ra[1])) {
+	  warning('Using user-provided (Ra)')
+  }
+  
+	if (length(Rs)!=length(Tmin) && length(tsun)!=length(Tmin) && length(CC)!=length(Tmin)) {
 		stop('Error: One of Rs, tsun or CC must be provided')
 	}	
-	if (length(Tmin)!=length(Tmax) | length(Tmin)!=length(U2)) {
-		stop('Error: Data must be of the same lenght')
+	if (length(Tmin)!=length(Tmax) || length(Tmin)!=length(U2)) {
+		stop('Error: Data must be of the same length')
 	}
-	if (length(P)!=length(Tmax) & is.na(z)) {
+	if (length(P)!=length(Tmax) && is.na(z)) {
 		stop('Error: Elevation above sea level (z) must be specified if P is not provided.')
 	}
-if (is.na(z)) {
-	warning('Specifying the elevation above sea level (z) is highly recommended in order to compute the clear-sky solar radiation.')
-}
+  if (is.na(z)) {
+	  warning('Specifying the elevation above sea level (z) is highly recommended in order to compute the clear-sky solar radiation.')
+ }
 	
 	ET0 <- Tmin*NA
 
@@ -104,7 +118,7 @@ if (is.na(z)) {
 	}
 
 	# Sunset hour angle (needed if no radiation data is available)
-	if (nrow(as.matrix(Ra))!=n | {nrow(as.matrix(Rs))!=n & nrow(as.matrix(tsun))==n}) {
+	if (nrow(as.matrix(Ra))!=n || {nrow(as.matrix(Rs))!=n && nrow(as.matrix(tsun))==n}) {
 		# Note: For the winter months and latitudes higher than 55º the following
 		# equations have limited validity (Allen et al., 1994).
 		# J: number of day in the year (eq. 1.27)
@@ -121,9 +135,9 @@ if (is.na(z)) {
 		latr <- lat/57.2957795
 		sset <- t(-as.matrix(tan(latr))%*%tan(delta))
 		omegas <- sset*0
-		omegas[sset>={-1} & sset<=1] <- acos(sset[sset>={-1} & sset<=1])
+		omegas[abs(sset)<=1] <- acos(sset[abs(sset)<=1])
 		# correction for high latitudes
-		omegas[sset<{-1}] <- max(omegas)
+		omegas[sset<(-1)] <- max(omegas)
 	}
 	
 	# 9. Extraterrestrial radiation, Ra (MJ m-2 d-1)

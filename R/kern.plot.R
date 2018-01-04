@@ -1,4 +1,20 @@
-# Produces plots of all the kernel functions available.
+#' @title Plot the kern object
+#' 
+#' 
+#' @description See kern
+#' 
+#' 
+#' @details See kern
+#'
+#'
+#' @rdname Kernel-functions
+#'  
+#'  
+#' @importFrom graphics plot par
+#'   
+#'   
+#' @export
+#' 
 kern.plot  <- function(scale=12, shift=0) {
 	par(mfrow=c(2,2))
 	plot(c(kern(scale,'rectangular',shift),0),type='s',
