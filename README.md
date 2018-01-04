@@ -57,7 +57,14 @@ Other (possibly useful) references:
 
 ## Version history
 
-### Version 1.7.1, June 2017 (current on github).
+### Version 1.7.2, January 2018 (current on github).
+
+1. Several code optimizations and improvements (by github user doug-friedman).
+2. Added formal unit testing with testthat (doug-friedman).
+3. Move documentation over to roxygen (doug-friedman).
+4. Update `<spei>` function to allow processing data with frequency different than 12 (by github user MuDestructor).
+
+### Version 1.7.1, June 2017.
 
 1. Corrected an error in `<spei>` function, which was not working when distribution was Gamma or PeasonIII and using user provided parameters. (Fixed by Emanuele Cordano, emanuele.cordano@gmail.com -- ecor)
 2. Added probability of monthly precipitation = 0 (pze) when using user provided parameters. (Fixed by Emanuele Cordano, emanuele.cordano@gmail.com -- ecor) 
