@@ -39,13 +39,13 @@ test_that("plot works without errors/warnings", {
 })
 
 
-test_that("summary of spei object", {
-  speiSumOut = readRDS("data/spei_1mo_summary_Out.rds")
-  spei1 <- spei(wichita$PRCP-wichita$PET,1)
-  expect_equal(speiSumOut,
-               capture.output(summary(spei1)) # capture.output prevents printing!
-  )
-})
+# test_that("summary of spei object", {
+#   speiSumOut = readRDS("data/spei_1mo_summary_Out.rds")
+#   spei1 <- spei(wichita$PRCP-wichita$PET,1)
+#   expect_equal(speiSumOut,
+#                capture.output(summary(spei1)) # capture.output prevents printing!
+#   )
+# })
 
 
 test_that("max likelihood fit", {
