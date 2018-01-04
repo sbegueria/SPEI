@@ -39,24 +39,24 @@ spei <- function(data, scale, kernel=list(type='rectangular',shift=0),
 	if (distribution=='Gamma') {
 		coef <- array(NA,c(2,m,fr),list(par=c('alpha','beta'),colnames(data),NULL))
 		if (!is.null(params)) {
-			if (dim(params)[1]!=2 | dim(params)[2]!=m | dim(params)[3]!=12) {
-				stop(paste('parameters array should have dimensions (2,',m,'12)',sep=' '))
+			if (dim(params)[1]!=2 | dim(params)[2]!=m | dim(params)[3]!=fr) {
+				stop(paste('parameters array should have dimensions (2,',m,',', fr, ')',sep=' '))
 			}
 		}
 	}
 	if (distribution=='log-Logistic') {
 		coef <- array(NA,c(3,m,fr),list(par=c('xi','alpha','kappa'),colnames(data),NULL))
 		if (!is.null(params)) {
-			if (dim(params)[1]!=3 | dim(params)[2]!=m | dim(params)[3]!=12) {
-				stop(paste('parameters array should have dimensions (3,',m,'12)',sep=' '))
+			if (dim(params)[1]!=3 | dim(params)[2]!=m | dim(params)[3]!=fr) {
+				stop(paste('parameters array should have dimensions (3,',m,',', fr, ')',sep=' '))
 			}
 		}
 	}
 	if (distribution=='PearsonIII') {
 		coef <- array(NA,c(3,m,fr),list(par=c('mu','sigma','gamma'),colnames(data),NULL))
 		if (!is.null(params)) {
-			if (dim(params)[1]!=3 | dim(params)[2]!=m | dim(params)[3]!=12) {
-				stop(paste('parameters array should have dimensions (3,',m,'12)',sep=' '))
+			if (dim(params)[1]!=3 | dim(params)[2]!=m | dim(params)[3]!=fr) {
+				stop(paste('parameters array should have dimensions (3,',m,',', fr, ')',sep=' '))
 			}
 		}
 	}
@@ -149,8 +149,8 @@ spei <- function(data, scale, kernel=list(type='rectangular',shift=0),
 					} # end if
 				} # end if
 			} else {
-				if (dim(params)[1]!=3 & dim(params)[2]!=m & dim(params)[3]!=12) {
-					stop(paste('params should be an array with dimensions (3,',m,',12)',sep=' '))
+				if (dim(params)[1]!=3 & dim(params)[2]!=m & dim(params)[3]!=fr) {
+					stop(paste('params should be an array with dimensions (3,',m,',', fr, ')',sep=' '))
 				}
 				coef[,s,c] <- params[,s,c]
 				if (distribution=='log-Logistic') {
