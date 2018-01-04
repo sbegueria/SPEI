@@ -6,7 +6,7 @@
 
 __Version history:
 
-### Version 1.7.1, June 2017 (current on github).
+_Version 1.7.1, June 2017 (current on github).
 
 1. Corrected an error in `<spei>` function, which was not working when distribution was Gamma or PeasonIII and using user provided parameters. (Fixed by Emanuele Cordano, emanuele.cordano@gmail.com -- ecor)
 2. Added probability of monthly precipitation = 0 (pze) when using user provided parameters. (Fixed by Emanuele Cordano, emanuele.cordano@gmail.com -- ecor) 
