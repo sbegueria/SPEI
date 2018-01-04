@@ -14,8 +14,8 @@
 #' \tabular{ll}{
 #'   Package: \tab SPEI\cr
 #'   Type: \tab Package\cr
-#'   Version: \tab 1.4\cr
-#'   Date: \tab 2011-26-09\cr
+#'   Version: \tab 1.7.2\cr
+#'   Date: \tab 2018-01-04\cr
 #'   License: \tab GPL version 2 or newer\cr
 #'   LazyLoad: \tab yes\cr
 #' }
