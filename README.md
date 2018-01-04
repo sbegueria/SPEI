@@ -123,6 +123,13 @@ First release of the SPEI package.
 - [ ] Review method plot.spei() that produces wrong results in some cases.
 - [ ] Implement parallel processing - see branch parallel.
 - [ ] Analysis function - see branch corel_anal.
+- [ ] Add a warning message to penman function to inform the user about the
+      options being used. A verbose option will control wether or not to display
+      this warning.
+- [ ] A version of penman function for daily data (there is one version on my
+      blog, http://santiago.begueria.es).
+- [ ] Different versions of the Penman-Monteith ET0 calculation (FAO-56, ASDE,
+      etc), as Miquel did.
 
 
 ## Any problems?
