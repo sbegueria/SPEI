@@ -304,8 +304,8 @@ spei <- function(data, scale, kernel=list(type='rectangular',shift=0),
   dim_one = ifelse(distribution == "Gamma", 2, 3)
   
   if (!is.null(params)) {
-    if (dim(params)[1]!=dim_one | dim(params)[2]!=m | dim(params)[3]!=12) {
-      stop(paste('parameters array should have dimensions (', dim_one, ', ', m, ', 12)',sep=' '))
+    if (dim(params)[1]!=dim_one | dim(params)[2]!=m | dim(params)[3]!=fr) {
+      stop(paste('parameters array should have dimensions (', dim_one, ', ', m, ', fr)',sep=' '))
     }
   }
   
