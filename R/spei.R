@@ -344,16 +344,16 @@ spei <- function(data, scale, kernel=list(type='rectangular',shift=0),
         next()
       }
       
+     if(distribution != "log-Logistic"){
+       pze <- sum(month==0)/length(month)
+       month = month[month > 0]
+     }
+	    
       if (is.null(params)) {
         month_sd = sd(month,na.rm=TRUE)
         if (is.na(month_sd) || (month_sd == 0)) {
           std[f] <- NA
           next
-        }
-        
-        if(distribution != "log-Logistic"){
-          pze <- sum(month==0)/length(month)
-          month = month[month > 0]
         }
         
         # Stop early and assign NAs if month's data is length < 4
