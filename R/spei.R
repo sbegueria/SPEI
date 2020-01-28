@@ -567,3 +567,17 @@ plot.spei <- function (x, ttext=NULL, ...) {
 		points(se,pch=21,col='white',bg='black')
 	}
 }
+
+
+#Creating SPEI class categories
+#Create a data frame that binds the fitted values from spei$fitted to the categories index
+Spei_class<- function(data)cbind.data.frame(Fitted = data.frame(data$fitted), 
+                                            Category = data.frame(ifelse(data$fitted >= 2, "Extremely wet", 
+                                            ifelse(data$fitted >= 1.5 & data$fitted <= 1.99, "Moderately Wet",
+                                            ifelse(data$fitted >= 1.0 & data$fitted <= 1.49, "Slightly Wet", 
+                                            ifelse(data$fitted <= 0.99 & data$fitted >= -0.99, "Near Normal",
+                                            ifelse(data$fitted >= -1.00 & data$fitted <= -0.49, "Mild Drought",
+                                            ifelse(data$fitted <= -1.5 & data$fitted >= -1.99, "Moderate Drought",
+                                            ifelse(data$fitted <= -2, "Extreme", "Extreme")))))))))
+
+
