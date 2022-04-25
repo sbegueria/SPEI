@@ -304,8 +304,8 @@ spei <- function(data, scale, kernel=list(type='rectangular',shift=0),
   dim_one = ifelse(distribution == "Gamma", 2, 3)
   
   if (!is.null(params)) {
-    if (dim(params)[1]!=dim_one | dim(params)[2]!=m | dim(params)[3]!=12) {
-      stop(paste('parameters array should have dimensions (', dim_one, ', ', m, ', 12)',sep=' '))
+    if (dim(params)[1]!=dim_one | dim(params)[2]!=m | dim(params)[3]!=fr) {
+      stop(paste('parameters array should have dimensions (', dim_one, ', ', m, ', fr)',sep=' '))
     }
   }
   
@@ -344,16 +344,16 @@ spei <- function(data, scale, kernel=list(type='rectangular',shift=0),
         next()
       }
       
+     if(distribution != "log-Logistic"){
+       pze <- sum(month==0)/length(month)
+       month = month[month > 0]
+     }
+	    
       if (is.null(params)) {
         month_sd = sd(month,na.rm=TRUE)
         if (is.na(month_sd) || (month_sd == 0)) {
           std[f] <- NA
           next
-        }
-        
-        if(distribution != "log-Logistic"){
-          pze <- sum(month==0)/length(month)
-          month = month[month > 0]
         }
         
         # Stop early and assign NAs if month's data is length < 4
