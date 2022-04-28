@@ -22,7 +22,8 @@
 #'
 penman <- function(Tmin, Tmax, U2, Ra=NULL, lat=NULL, Rs=NULL, tsun=NULL,
                    CC=NULL, ed=NULL, Tdew=NULL, RH=NULL, P=NULL, P0=NULL,
-                   z=NULL, crop='short', na.rm=FALSE, verbose=TRUE) {
+                   z=NULL, crop='short', na.rm=FALSE, method='ICID', 
+                   verbose=TRUE) {
   
   ### Argument check - - - - - - - - - - - - - - - - - - - - - - - - - - -
   
@@ -108,8 +109,8 @@ penman <- function(Tmin, Tmax, U2, Ra=NULL, lat=NULL, Rs=NULL, tsun=NULL,
   
   if (!is.null(P)) {
     using$P <- TRUE
-    addWarning(paste('Using user-provided atmospheric surface pressure', 
-                     '(`P`) data.'), argcheck=warn)
+    addWarning('Using user-provided atmospheric surface pressure (`P`)',
+               'data.', argcheck=warn)
   } else if (!is.null(P0) && !is.null(z)) {
     using$P0 <- TRUE
     addWarning(paste('Using atmospheric pressure at sea level (`P0`) and',
@@ -303,13 +304,13 @@ penman <- function(Tmin, Tmax, U2, Ra=NULL, lat=NULL, Rs=NULL, tsun=NULL,
   if (using$P0) {
     P0 <- array(data.matrix(P0), int_dims)
   }
-  if (using$CO2) {
-    CO2 <- array(data.matrix(CO2), int_dims)
-  }
   if (using$z) {
     # copy and permute into correct dimensions
     z <- aperm(array(data.matrix(z), int_dims[c(2, 3, 1)]), c(3, 1, 2))
   }
+  
+  # Method used
+  addWarning(paste0('Calculation method is ', method, '.'), argcheck=warn)
   
   # Return errors and halt execution (if any)
   finishArgCheck(check)
@@ -348,31 +349,55 @@ penman <- function(Tmin, Tmax, U2, Ra=NULL, lat=NULL, Rs=NULL, tsun=NULL,
   
   # 3. Psychrometric constant, gamma (eq. 1.4)
   gamma <- 1.63e-3 * P / lambda
+  if (method=='FAO' | method=='ASCE') {
+    # (FAO-56, eq. 8)
+    gamma <- 0.665e-3 * P
+  } else if (method=='ICID') {
+    # (ICID, eq. 1.4)
+    gamma <- 1.63e-3 * P / lambda
+  }	
   
   # 6. Saturation vapour pressure, ea
-  # saturation vapour pressure at tmx (eq. 1.10, p. 66)
+  # saturation vapour pressure at tmx (ICID, eq. 1.10, p. 66)
   etmx <- 0.611 * exp((17.27 * Tmax) / (Tmax + 237.3))
-  # saturation vapour pressure at tmn (eq. 1.10, p. 66)
+  # saturation vapour pressure at tmn (ICID, eq. 1.10, p. 66)
   etmn <- 0.611 * exp((17.27 * Tmin) / (Tmin + 237.3))
-  # mean saturation vapour pressure (eq. 1.11, p. 67)
+  # mean saturation vapour pressure (ICID, eq. 1.11, p. 67)
   ea <- (etmx + etmn) / 2
+  # FAO-56 recommends Delta calculation using et instead of ea (p. 37)
+  if (method=='FAO' | method=='ASCE'){
+    et <- 0.611 * exp((17.27 * Tmean) / (Tmean + 237.3))
+  }
   
-  # 2. Slope of the saturation vapour pressure function, Delta (eq. 1.3)
-  Delta <- 4099 * ea / (Tmean + 237.3) ^ 2
-  #Delta <- 2504*exp((12.27*Tmean)/(Tmean+237.3))/(Tmean+237.3)^2
+  # 2. Slope of the saturation vapour pressure function, Delta
+  if (method=='FAO' | method=='ASCE'){
+    Delta <- 4099 * et / (Tmean + 237.3) ^ 2
+  } else if (method=='ICID'){
+    # (ICID, eq. 1.3)
+    Delta <- 4099 * ea / (Tmean + 237.3) ^ 2
+  }
   
   # 7. Actual vapour pressure, ed
   if(using$ed) {
     # good!
   } else if (using$Tdew) {
-    # (eq. 1.12, p. 67)
+    # (ICID, eq. 1.12, p. 67)
     ed <- 0.611 * exp((17.27 * Tdew) / (Tdew + 237.3))
   } else if (using$RH) {
-    # (eq. 1.16, p. 68)
-    ed <- RH / ((50 / etmn) + (50 / etmx))
+    if (method=='FAO'){
+      # (FAO-56, eq 19, p.39)
+      ed <- ea * (RH / 100)
+    } else if (method=='ICID'){
+      # (ICID, eq. 1.16, p. 68)
+      ed <- RH / ((50 / etmn) + (50 / etmx))
+    } else if (method=='ASCE'){
+      ed <- et * (RH / 100)
+    }
   } else if (using$Tmin) {
-    # (eq. 1.19, p. 69)
+    # (ICID, eq. 1.19, p. 69)
     ed <- etmn
+    # for arid climates, FAO-56 recommends ed = etmn_2
+    # etmn_2 <- 0.611*exp((17.27*(Tmin-2))/(Tmin - 2 + 237.3))
   } else {
     stop(paste('An error occurred while computing the actual vapour',
                'pressure. Please report this error.'))
@@ -409,8 +434,8 @@ penman <- function(Tmin, Tmax, U2, Ra=NULL, lat=NULL, Rs=NULL, tsun=NULL,
   }
   
   # 11. Net radiation, Rn (MJ m-2 d-1)
-  # Net radiation is the sum of net short wave radiation Rns and net long wave
-  # (incoming) radiation (Rnl).
+  # Net radiation is the sum of net short wave radiation Rns and net long
+  # wave (incoming) radiation (Rnl).
   # Rs: daily incoming solar radiation (MJ m-2 d-1)
   if (!using$Rs) {
     # nN: relative sunshine fraction []
@@ -469,7 +494,6 @@ penman <- function(Tmin, Tmax, U2, Ra=NULL, lat=NULL, Rs=NULL, tsun=NULL,
   
   # Transform ET0 to mm month-1
   ET0 <- ifelse(ET0 < 0, 0, ET0) * mlen[cyc]
-  #colnames(ET0) <- rep('ET0_pen', m)
   
   
   ### Format output and return - - - - - - - - - - - - - - - - - - - - - - -
