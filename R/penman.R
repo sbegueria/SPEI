@@ -20,10 +20,10 @@
 #'
 #' @export
 #'
-penman_new <- function(Tmin, Tmax, U2, Ra=NULL, lat=NULL, Rs=NULL, tsun=NULL,
-                       CC=NULL, ed=NULL, Tdew=NULL, RH=NULL, P=NULL, P0=NULL,
-                       CO2=NULL, z=NULL, crop='short', na.rm=FALSE, 
-                       method='ICID', verbose=TRUE) {
+penman <- function(Tmin, Tmax, U2=NULL, Ra=NULL, lat=NULL, Rs=NULL,
+                   tsun=NULL, CC=NULL, ed=NULL, Tdew=NULL, RH=NULL,
+                   P=NULL, P0=NULL, CO2=NULL, z=NULL, crop='short',
+                   na.rm=FALSE, method='ICID', verbose=TRUE) {
   
   ### Argument check - - - - - - - - - - - - - - - - - - - - - - - - - - -
   
@@ -35,9 +35,9 @@ penman_new <- function(Tmin, Tmax, U2, Ra=NULL, lat=NULL, Rs=NULL, tsun=NULL,
   warn <- newArgCheck()
   
   # A list of computation options
-  using <- list(Ra=FALSE, lat=FALSE, Rs=FALSE, tsun=FALSE, CC=FALSE,
-                ed=FALSE, Tdew=FALSE, Tmin=FALSE, RH=FALSE, P=FALSE,
-                P0=FALSE, CO2=FALSE, z=FALSE, na.rm=FALSE)
+  using <- list(U2=FALSE, Ra=FALSE, lat=FALSE, Rs=FALSE, tsun=FALSE,
+                CC=FALSE, ed=FALSE, Tdew=FALSE, Tmin=FALSE, RH=FALSE,
+                P=FALSE, P0=FALSE, CO2=FALSE, z=FALSE, na.rm=FALSE)
   
   # Check required inputs
   if(missing(Tmin)){
@@ -48,13 +48,16 @@ penman_new <- function(Tmin, Tmax, U2, Ra=NULL, lat=NULL, Rs=NULL, tsun=NULL,
     addError('Argument `Tmax` is a required input.', argcheck=check)
   }
   
-  if(missing(U2)){
-    addError('Argument `U2` is a required input.', argcheck=check)
-  } else {
-    addWarning('Using user-provided `U2` data.', argcheck=warn)
-  }
-  
   # Check other inputs
+  
+  if(!is.null(U2)){
+    using$U2 <- TRUE
+    addWarning(paste('Using user-provided wind speed at 2 m height',
+                     '(`U2`) data.'), argcheck=warn)
+  } else {
+    addWarning(paste('No wind data (`U2`) provided, so using a constant',
+                     'value of 2 m s-1.'), argcheck=warn)
+  }
   
   if (!is.null(Ra)) {
     using$Ra <- TRUE
@@ -157,7 +160,7 @@ penman_new <- function(Tmin, Tmax, U2, Ra=NULL, lat=NULL, Rs=NULL, tsun=NULL,
   }
   
   # Check for missing values in inputs
-  if (!na.rm && (anyNA(Tmin) || anyNA(Tmax) || anyNA(U2))) {
+  if (!na.rm && (anyNA(Tmin) || anyNA(Tmax) || (using$U2 && anyNA(U2)))) {
     addError(paste('`Tmin`, `Tmax` and `U2` must not contain NA values if',
                    'argument `na.rm` is set to FALSE.'), argcheck=check)
   }
@@ -236,10 +239,12 @@ penman_new <- function(Tmin, Tmax, U2, Ra=NULL, lat=NULL, Rs=NULL, tsun=NULL,
   
   # Verify the length of each input variable
   input_len <- prod(int_dims)
-  if (sum(lengths(Tmin))!=input_len || sum(lengths(Tmax))!=input_len ||
-      sum(lengths(U2))!=input_len) {
-    addError('`Tmin`, `Tmax`, and `U2` cannot have different lengths.',
+  if (sum(lengths(Tmin))!=input_len || sum(lengths(Tmax))!=input_len) {
+    addError('`Tmin` and `Tmax`cannot have different lengths.',
              argcheck=check)
+  }
+  if (using$U2 && sum(lengths(U2))!=input_len) {
+    addError('`U2` has incorrect length.', argcheck=check)
   }
   if (using$Ra && sum(lengths(Ra))!=input_len) {
     addError('`Ra` has incorrect length.', argcheck=check)
@@ -281,7 +286,11 @@ penman_new <- function(Tmin, Tmax, U2, Ra=NULL, lat=NULL, Rs=NULL, tsun=NULL,
   # Create uniformly dimensioned arrays from input
   Tmin <- array(data.matrix(Tmin), int_dims)
   Tmax <- array(data.matrix(Tmax), int_dims)
-  U2 <- array(data.matrix(U2), int_dims)
+  if (using$U2) {
+    U2 <- array(data.matrix(U2), int_dims)
+  } else {
+    U2 <- array(2, int_dims)
+  }
   if (using$Ra) {
     Ra <- array(data.matrix(Ra), int_dims)
   }
