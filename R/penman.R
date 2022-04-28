@@ -31,138 +31,102 @@ penman <- function(Tmin, Tmax, U2=NULL, Ra=NULL, lat=NULL, Rs=NULL,
   # validity, and check that all the inputs have the same dimensions
   
   # Instantiate two new 'ArgCheck' objects to collect errors and warnings
-  check <- newArgCheck()
-  warn <- newArgCheck()
+  check <- makeAssertCollection()
+  warn  <- makeAssertCollection()
   
   # A list of computation options
   using <- list(U2=FALSE, Ra=FALSE, lat=FALSE, Rs=FALSE, tsun=FALSE,
                 CC=FALSE, ed=FALSE, Tdew=FALSE, Tmin=FALSE, RH=FALSE,
                 P=FALSE, P0=FALSE, CO2=FALSE, z=FALSE, na.rm=FALSE)
   
-  # Check required inputs
-  if(missing(Tmin)){
-    addError('Argument `Tmin` is a required input.', argcheck=check)
-  }
-  
-  if(missing(Tmax)){
-    addError('Argument `Tmax` is a required input.', argcheck=check)
-  }
-  
-  # Check other inputs
-  
+  # Check optional inputs
   if(!is.null(U2)){
     using$U2 <- TRUE
-    addWarning(paste('Using user-provided wind speed at 2 m height',
-                     '(`U2`) data.'), argcheck=warn)
+    warn$push('Using user-provided wind speed at 2 m height (`U2`) data.')
   } else {
-    addWarning(paste('No wind data (`U2`) provided, so using a constant',
-                     'value of 2 m s-1.'), argcheck=warn)
+    warn$push('No wind data (`U2`) provided, so using a constant value of 2 m s-1.')
   }
   
   if (!is.null(Ra)) {
     using$Ra <- TRUE
-    addWarning(paste('Using user-provided extraterrestrial radiation',
-                     '(`Ra`) data.'), argcheck=warn)
+    warn$push('Using user-provided extraterrestrial radiation (`Ra`) data.')
   } else if (!is.null(lat)) {
     using$lat <- TRUE
-    addWarning(paste('Using latitude (`lat`) to estimate extraterrestrial',
-                     'radiation.'), argcheck=warn)
+    warn$push('Using latitude (`lat`) to estimate extraterrestrial radiation.')
   } else {
-    addError('One of `Ra` or `lat` must be provided.', argcheck=check)
+    check$push('One of `Ra` or `lat` must be provided.')
   }
   
   if (!is.null(Rs)) {
     using$Rs <- TRUE
-    addWarning(paste('Using user-provided incoming solar radiation (`Rs`)',
-                     'data.'), argcheck=warn)
+    warn$push('Using user-provided incoming solar radiation (`Rs`) data.')
   } else if (!is.null(tsun) && !is.null(lat)) {
     using$tsun <- TRUE
-    addWarning(paste('Using bright sunshine duration data (`tsun`) to',
-                     'estimate incoming solar radiation.'), argcheck=warn)
+    warn$push('Using bright sunshine duration data (`tsun`) to estimate incoming solar radiation.')
   } else if (!is.null(CC)) {
     using$CC <- TRUE
-    addWarning(paste('Using fraction cloud cover (`CC`) to estimate',
-                     'incoming solar radiation.'), argcheck=warn)
+    warn$push('Using fraction cloud cover (`CC`) to estimate incoming solar radiation.')
   } else {
-    addError('One of `Rs`, the pair `tsun` and `lat`, or `CC` must be',
-             'provided.', argcheck=check)
+    check$push('One of `Rs`, the pair `tsun` and `lat`, or `CC` must be provided.')
   }
   
   if (!is.null(ed)) {
     using$ed <- TRUE
-    addWarning('Using user-provided actual vapour pressure (`ed`) data.',
-               argcheck=warn)
+    warn$push('Using user-provided actual vapour pressure (`ed`) data.')
   } else if (!is.null(Tdew)) {
     using$Tdew <- TRUE
-    addWarning(paste('Using dewpoint temperature (`Tdew`) to estimate',
-                     'actual vapour pressure.'), argcheck=warn)
+    warn$push('Using dewpoint temperature (`Tdew`) to estimate actual vapour pressure.')
   } else if (!is.null(RH)) {
     using$RH <- TRUE
-    addWarning(paste('Using relative humidity (`RH`) to estimate actual',
-                     'vapour pressure.'), argcheck=warn)
+    warn$push('Using relative humidity (`RH`) to estimate actual vapour pressure.')
   } else if (!is.null(Tmin)) {
     using$Tmin <- TRUE
-    addWarning(paste('Using minimum temperature (`Tmin`) to estimate',
-                     'dewpoint temperature and actual vapour pressure.'),
-               argcheck=warn)
+    warn$push('Using minimum temperature (`Tmin`) to estimate dewpoint temperature and actual vapour pressure.')
   } else {
-    addError('One of `ed`, `Tdew`, `RH` or `Tmin` must be provided.',
-             argcheck=check)
+    check$push('One of `ed`, `Tdew`, `RH` or `Tmin` must be provided.')
   }
   
   if (!is.null(P)) {
     using$P <- TRUE
-    addWarning(paste('Using user-provided atmospheric surface pressure',
-                     '(`P`) data.'), argcheck=warn)
+    warn$push('Using user-provided atmospheric surface pressure (`P`) data.')
   } else if (!is.null(P0) && !is.null(z)) {
     using$P0 <- TRUE
-    addWarning(paste('Using atmospheric pressure at sea level (`P0`) and',
-                     'elevation `z` to estimate atmospheric surface pressure.'), 
-               argcheck=warn)
+    warn$push('Using atmospheric pressure at sea level (`P0`) and elevation `z` to estimate atmospheric surface pressure.')
   } else if (!is.null(z)) {
     using$z <- TRUE
-    addWarning(paste('Assuming constant atmospheric surface pressure', 
-                     'corresponding to elevation `z`.'), argcheck=warn)
+    warn$push('Assuming constant atmospheric surface pressure corresponding to elevation `z`.')
   } else {
-    addError('One of `P`, the pair `P0` and `z`, or `z` must be provided.',
-             argcheck=check)
+    check$push('One of `P`, the pair `P0` and `z`, or `z` must be provided.')
   }
   
   if (!is.null(CO2)) {
     using$CO2 <- TRUE
-    addWarning(paste('Using custom CO2 concentration.'), argcheck=warn)
+    warn$push('Using custom CO2 concentration.')
   }
   
   if (is.null(z)) {
-    addWarning(paste('Specifying the elevation above sea level (z)',
-                     'is highly recommended in order to compute the clear-sky',
-                     'solar radiation.'), argcheck=warn)
+    warn$push('Specifying the elevation above sea level (z) is highly recommended in order to compute the clear-sky solar radiation.')
   }
   
   if (crop=='short') {
-    addWarning('Computing for a short crop.', argcheck=warn)
+    warn$push('Computing for a short crop.')
   } else if (crop=='tall') {
-    addWarning('Computing for a tall crop.', argcheck=warn)
+    warn$push('Computing for a tall crop.')
   } else {
-    addError('Argument `crop` must be one of `short` or `tall`.',
-             argcheck=check)
+    check$push('Argument `crop` must be one of `short` or `tall`.')
   }
   
   if (na.rm != TRUE && na.rm != FALSE) {
-    addError('Argument `na.rm` must be set to TRUE or FALSE.',
-             argcheck=check)
+    check$push('Argument `na.rm` must be set to TRUE or FALSE.')
   } else if (na.rm) {
-    addWarning(paste('Missing values (`NA`) will not be considered',
-                     'in the calculation.'), argcheck=warn)
+    warn$push('Missing values (`NA`) will not be considered in the calculation.')
   } else {
-    addWarning(paste('Checking for missing values (`NA`): all the data',
-                     'must be complete.'), argcheck=warn)
+    warn$push('Checking for missing values (`NA`): all the data must be complete.')
   }
   
   # Check for missing values in inputs
   if (!na.rm && (anyNA(Tmin) || anyNA(Tmax) || (using$U2 && anyNA(U2)))) {
-    addError(paste('`Tmin`, `Tmax` and `U2` must not contain NA values if',
-                   'argument `na.rm` is set to FALSE.'), argcheck=check)
+    check$push('`Tmin`, `Tmax` and `U2` must not contain NA values if argument `na.rm` is set to FALSE.')
   }
   
   if (!na.rm &&
@@ -178,8 +142,7 @@ penman <- function(Tmin, Tmax, U2=NULL, Ra=NULL, lat=NULL, Rs=NULL,
        (using$P0 && (anyNA(P0) || anyNA(z))) ||
        (using$CO2 && anyNA(CO2)) ||
        (using$z && anyNA(z)))) {
-    addError(paste('Data must not contain NA values if argument `na.rm`',
-                   'is set to FALSE.'), argcheck=check)
+    check$push('Data must not contain NA values if argument `na.rm` is set to FALSE.')
   }
   
   # Determine input dimensions and compute internal dimensions (int_dims)
@@ -194,8 +157,7 @@ penman <- function(Tmin, Tmax, U2=NULL, Ra=NULL, lat=NULL, Rs=NULL,
     # 3D array input (gridded data)
     int_dims <- tmin_dims
   } else {
-    addError('Input data can not have more than 3 dimensions',
-             argcheck=check)
+    check$push('Input data can not have more than 3 dimensions')
   }
   n_sites <- prod(int_dims[[2]], int_dims[[3]])
   n_times <- int_dims[[1]]
@@ -214,7 +176,7 @@ penman <- function(Tmin, Tmax, U2=NULL, Ra=NULL, lat=NULL, Rs=NULL,
   } else { # is.array; default
     out_type <- 'array'
   }
-  addWarning(paste0('Input type is ', out_type, '.'), argcheck=warn)
+  warn$push(paste0('Input type is ', out_type, '.'))
   
   # Save column names for later
   names <- dimnames(Tmin)
@@ -240,47 +202,46 @@ penman <- function(Tmin, Tmax, U2=NULL, Ra=NULL, lat=NULL, Rs=NULL,
   # Verify the length of each input variable
   input_len <- prod(int_dims)
   if (sum(lengths(Tmin))!=input_len || sum(lengths(Tmax))!=input_len) {
-    addError('`Tmin` and `Tmax`cannot have different lengths.',
-             argcheck=check)
+    check$push('`Tmin` and `Tmax`cannot have different lengths.')
   }
   if (using$U2 && sum(lengths(U2))!=input_len) {
-    addError('`U2` has incorrect length.', argcheck=check)
+    check$push('`U2` has incorrect length.')
   }
   if (using$Ra && sum(lengths(Ra))!=input_len) {
-    addError('`Ra` has incorrect length.', argcheck=check)
+    check$push('`Ra` has incorrect length.')
   }
   if (using$lat && sum(lengths(lat))!=n_sites) {
-    addError('`lat` has incorrect length.', argcheck=check)
+    check$push('`lat` has incorrect length.')
   }
   if (using$Rs && sum(lengths(Rs))!=input_len) {
-    addError('`Rs` has incorrect length.', argcheck=check)
+    check$push('`Rs` has incorrect length.')
   }
   if (using$tsun && sum(lengths(tsun))!=input_len) {
-    addError('`tsun` has incorrect length.', argcheck=check)
+    check$push('`tsun` has incorrect length.')
   }
   if (using$CC && sum(lengths(CC))!=input_len) {
-    addError('`CC` has incorrect length.', argcheck=check)
+    check$push('`CC` has incorrect length.')
   }
   if (using$ed && sum(lengths(ed))!=input_len) {
-    addError('`ed` has incorrect length.', argcheck=check)
+    check$push('`ed` has incorrect length.')
   }
   if (using$Tdew && sum(lengths(Tdew))!=input_len) {
-    addError('`Tdew` has incorrect length.', argcheck=check)
+    check$push('`Tdew` has incorrect length.')
   }
   if (using$RH && sum(lengths(RRHa))!=input_len) {
-    addError('`RH` has incorrect length.', argcheck=check)
+    check$push('`RH` has incorrect length.')
   }
   if (using$P && sum(lengths(P))!=input_len) {
-    addError('`P` has incorrect length.', argcheck=check)
+    check$push('`P` has incorrect length.')
   }
   if (using$P0 && sum(lengths(P0))!=input_len) {
-    addError('`P0` has incorrect length.', argcheck=check)
+    check$push('`P0` has incorrect length.')
   }
   if (using$CO2 && sum(lengths(CO2))!=input_len) {
-    addError('`CO2` has incorrect length.', argcheck=check)
+    check$push('`CO2` has incorrect length.')
   }
   if (using$z && sum(lengths(z))!=n_sites) {
-    addError('`z` has incorrect length.', argcheck=check)
+    check$push('`z` has incorrect length.')
   }
   
   # Create uniformly dimensioned arrays from input
@@ -331,14 +292,16 @@ penman <- function(Tmin, Tmax, U2=NULL, Ra=NULL, lat=NULL, Rs=NULL,
   }
   
   # Method used
-  addWarning(paste0('Calculation method is ', method, '.'), argcheck=warn)
+  warn$push(paste0('Calculation method is ', method, '.'))
   
   # Return errors and halt execution (if any)
-  finishArgCheck(check)
+  if (!check$isEmpty()) {
+    stop(paste(check$getMessages(), collapse=' '))
+  }
   
   # Show a warning with computation options
   if (verbose) {
-    finishArgCheck(warn)
+    print(warn$getMessages())
   }
   
   
