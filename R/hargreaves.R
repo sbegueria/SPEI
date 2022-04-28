@@ -145,82 +145,217 @@
 #' 
 #' @export
 #' 
-hargreaves <-
-function(Tmin, Tmax, Ra=NA, lat=NA, Pre=NA, na.rm=FALSE) {
-
-	if (length(Ra)==1 && length(lat)!=ncol(as.matrix(Tmin))){
-		stop('Error: lat should be specified for estimating external radiation if Ra is not provided, and should have the same number of elements than Tmin.')
-	}
-	if (sum(is.na(Tmin),is.na(Tmax))!=0 && na.rm==FALSE) {
-		stop('Error: Data must not contain NAs')
-	}
-	if (length(Ra)>1 && anyNA(Ra) && na.rm==FALSE) {
-		stop('Error: Data must not contain NAs')
-	}
-	if (length(Tmin)!=length(Tmax)) {
-		stop('Error: Tmin and Tmax must be of the same length')
-	}
-	if (length(Ra)>1 && length(Ra)!=length(Tmin)) {
-		stop('Error: Ra must be of the same length than Tmin and Tmax')
-	}
-	if (is.ts(Tmin) && frequency(Tmin)!=12) {
-		stop('Error: Data should be a monthly time series (frequency = 12)')
-	}
-	
-	if (!is.ts(Tmin)) {
-		Tmin <- ts(as.matrix(Tmin),frequency=12)
-	} else {
-		Tmin <- ts(as.matrix(Tmin),frequency=frequency(Tmin),start=start(Tmin))
-	}
-	n <- nrow(Tmin)
-	m <- ncol(Tmin)
-	c <- cycle(Tmin)
-	ET0 <- Tmin*NA
-
-	# mean temperature, ºC
-	T <- (Tmin+Tmax)/2
-	
-	# temperature range, ºC
-	Tr <- Tmax-Tmin
-	Tr <- pmax(0, Tr)
-	
-	# external radiation, MJ m-2 d-1
-	if (length(Ra)==1) {
-		# estimate Ra, following Allen et al. (1994)
-		# number of day in the year
-		J <- as.integer(30.5*c-14.6)
-		# solar declination, rad (1 rad = 57.2957795 deg)
-		delta <- 0.409*sin(0.0172*J-1.39)
-		# relative distance Earth-Sun, []
-		dr <- 1 + 0.033*cos(0.0172*J)
-		# sunset hour angle, rad
-		latr <- lat/57.2957795
-		sset <- -tan(latr)*tan(delta)
-		omegas <- sset*0
-		omegas[abs(sset)<=1] <- acos(sset[abs(sset)<=1])
-		# correction for high latitudes
-		omegas[sset<(-1)] <- max(omegas)
-		# Ra, MJ m-2 d-1
-		Ra <- 37.6*dr*(omegas*sin(latr)*sin(delta)+cos(latr)*cos(delta)*sin(omegas))
-		Ra <- ifelse(Ra<0,0,Ra)
-	}
-	
-	# Daily ET0, mm day-1
-	if (length(Pre)!=n) {
-		# Use original Hargreaves
-		ET0 <- 0.0023 * 0.408*Ra * (T+17.8) * Tr^0.5
-	} else {
-		# Use modified method
-		ab <- Tr-0.0123*Pre
-		ET0 <- 0.0013 * 0.408*Ra * (T+17.0) * ab^0.76
-		ET0[is.nan(ab^0.76)] <- 0
-	}
-	ET0 <- ifelse(ET0<0,0,ET0)
-
-	# Transform ET0 to mm month-1
-	mlen <- c(31,28.25,31,30,31,30,31,31,30,31,30,31)
-	ET0 <- mlen[c]*ET0
-	colnames(ET0) <- rep('ET0_har',m)
-
-	return(ET0)
+hargreaves <- function(Tmin, Tmax, Ra=NULL, lat=NULL, Pre=NULL, na.rm=FALSE, verbose=TRUE) {
+  
+  ### Argument check - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  
+  # Determine which combinations of inputs were passed and check their
+  # validity, and check that all the inputs have the same dimensions
+  
+  # Instantiate two new 'ArgCheck' objects to collect errors and warnings
+  check <- makeAssertCollection()
+  warn  <- makeAssertCollection()
+  
+  # A list of computation options
+  using <- list(Ra=FALSE, lat=FALSE, Pre=FALSE, na.rm=FALSE)
+  
+  # Check optional inputs
+  if (!is.null(Ra)) {
+    using$Ra <- TRUE
+    warn$push('Using user-provided extraterrestrial radiation (`Ra`) data.')
+  } else if (!is.null(lat)) {
+    using$lat <- TRUE
+    warn$push('Using latitude (`lat`) to estimate extraterrestrial radiation.')
+  } else {
+    check$push('One of `Ra` or `lat` must be provided.')
+  }
+  
+  if (!is.null(Pre)) {
+    using$Pre <- TRUE
+    warn$push('Using precipitation data, following Droogers and Allen (2002).')
+  }
+  
+  if (na.rm != TRUE && na.rm != FALSE) {
+    check$push('Argument `na.rm` must be set to either TRUE or FALSE.')
+  } else if (na.rm) {
+    warn$push('Missing values (`NA`) will not be considered in the calculation.')
+  } else {
+    warn$push('Checking for missing values (`NA`): all the data must be complete.')
+  }
+  
+  # Check for missing values in inputs
+  if (!na.rm && (anyNA(Tmin) || anyNA(Tmax))) {
+    check$push('`Tmin` and `Tmax` must not contain NA values if argument `na.rm` is set to FALSE.')
+  }
+  
+  if (!na.rm &&
+      ((using$Ra && anyNA(Ra)) ||
+       (using$lat && anyNA(lat)) ||
+       (using$Pre && anyNA(Pre)))) {
+    check$push('Data must not contain NA values if argument `na.rm` is set to FALSE.')
+  }
+  
+  # Determine input dimensions and compute internal dimensions (int_dims)
+  tmin_dims <- dim(Tmin)
+  if (is.null(tmin_dims) || length(tmin_dims)==1) {
+    # vector input (single-site)
+    int_dims <- c(length(Tmin), 1, 1)
+  } else if (length(tmin_dims)==2) {
+    # matrix input (multi-site)
+    int_dims <- c(tmin_dims, 1)
+  } else if (length(tmin_dims)==3) {
+    # 3D array input (gridded data)
+    int_dims <- tmin_dims
+  } else {
+    check$push('Input data can not have more than 3 dimensions')
+  }
+  n_sites <- prod(int_dims[[2]], int_dims[[3]])
+  n_times <- int_dims[[1]]
+  
+  # Determine output data shape
+  if (is.ts(Tmin)) {
+    if (is.matrix(Tmin)) {
+      out_type <- 'tsmatrix'
+    } else {
+      out_type <- 'tsvector'
+    }
+  } else if (is.vector(Tmin)) {
+    out_type <- 'vector'
+  } else if (is.matrix(Tmin)) {
+    out_type <- 'matrix'
+  } else { # is.array; default
+    out_type <- 'array'
+  }
+  warn$push(paste0('Input type is ', out_type, '.'))
+  
+  # Save column names for later
+  names <- dimnames(Tmin)
+  
+  # Determine dates in data
+  if (is.ts(Tmin)) {
+    ts_freq <- frequency(Tmin)
+    ts_start <- start(Tmin)
+    cyc <- cycle(Tmin)
+  } else {
+    ts_freq <- 12
+    ts_start <- 1
+    cyc  <- cycle(ts(1:n_times, frequency = 12))
+  }
+  
+  # Get length of each month and day of the middle of each month
+  mlen <- c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
+  msum <- cumsum(mlen) - mlen + 15
+  # convert month data to array
+  mlen_array <- array(mlen[cyc], dim=int_dims)
+  msum_array <- array(msum[cyc], dim=int_dims)
+  
+  # Verify the length of each input variable
+  input_len <- prod(int_dims)
+  if (sum(lengths(Tmin))!=input_len || sum(lengths(Tmax))!=input_len) {
+    check$push('`Tmin` and `Tmax`cannot have different lengths.')
+  }
+  if (using$Ra && sum(lengths(Ra))!=input_len) {
+    check$push('`Ra` has incorrect length.')
+  }
+  if (using$lat && sum(lengths(lat))!=n_sites) {
+    check$push('`lat` has incorrect length.')
+  }
+  if (using$Pre && sum(lengths(Pre))!=input_len) {
+    check$push('`Pre` has incorrect length.')
+  }
+  
+  # Create uniformly-dimensioned arrays from input
+  Tmin <- array(data.matrix(Tmin), int_dims)
+  Tmax <- array(data.matrix(Tmax), int_dims)
+  if (using$Ra) {
+    Ra <- array(data.matrix(Ra), int_dims)
+  }
+  if (using$lat) {
+    lat <- aperm(array(data.matrix(lat), int_dims[c(2, 3, 1)]), c(3, 1, 2))
+  }
+  if (using$Pre) {
+    Rs <- array(data.matrix(Pre), int_dims)
+  }
+  
+  # Return errors and halt execution (if any)
+  if (!check$isEmpty()) {
+    stop(paste(check$getMessages(), collapse=' '))
+  }
+  
+  # Show a warning with computation options
+  if (verbose) {
+    paste(warn$getMessages(), collapse=' ')
+  }
+  
+  
+  ### Computation of ETo - - - - - - - - - - - - - - - - - - - - - - - - -
+  
+  # Mean temperature
+  Tmean <- (Tmin + Tmax) / 2
+  
+  # Temperature range, ºC
+  Tr <- Tmax - Tmin
+  Tr <- pmax(0, Tr)
+  
+  # Initialize ET0
+  ET0 <- Tmin * NA
+  
+  # 1. External radiation, MJ m-2 d-1
+  if (!using$Ra) {
+    # estimate Ra, following Allen et al. (1994)
+    # number of day in the year
+    J <- msum_array #msum[c]
+    # solar declination, rad (1 rad = 57.2957795 deg)
+    delta <- 0.409*sin(0.0172*J-1.39)
+    # relative distance Earth-Sun, []
+    dr <- 1 + 0.033*cos(0.0172*J)
+    # sunset hour angle, rad
+    latr <- lat/57.2957795
+    sset <- -tan(latr)*tan(delta)
+    omegas <- sset*0
+    omegas[abs(sset)<=1] <- acos(sset[abs(sset)<=1])
+    # correction for high latitudes
+    omegas[sset<(-1)] <- max(omegas)
+    # Ra, MJ m-2 d-1
+    Ra <- 37.6*dr*(omegas*sin(latr)*sin(delta)+cos(latr)*cos(delta)*sin(omegas))
+    Ra <- ifelse(Ra<0,0,Ra)
+  }
+  
+  # 2. Daily ET0, mm day-1
+  if (!using$Pre) {
+    # Use original Hargreaves (1948)
+    ET0 <- 0.0023 * 0.408*Ra * (Tmean+17.8) * Tr^0.5
+  } else {
+    # Use modified method (Droogers and Allen, 2002)
+    ab <- Tr-0.0123 * Pre
+    ET0 <- 0.0013 * 0.408 * Ra * (Tmean+17.0) * ab^0.76
+    ET0[is.nan(ab^0.76)] <- 0
+  }
+  ET0 <- ifelse(ET0<0, 0, ET0)
+  
+  # Transform ET0 to mm month-1
+  ET0 <- ET0 * mlen_array
+  
+  
+  ### Format output and return - - - - - - - - - - - - - - - - - - - - - - -
+  
+  if (out_type=='tsmatrix') {
+    ET0 <- matrix(ET0, nrow=n_times)
+    ET0 <- ts(ET0, frequency=ts_freq, start=ts_start)
+    colnames(ET0) <- rep('ET0_har', ncol(ET0))
+  } else if (out_type=='tsvector') {
+    ET0 <- as.vector(ET0)
+    ET0 <- ts(ET0, frequency=ts_freq, start=ts_start)
+  } else if (out_type=='vector') {
+    ET0 <- as.vector(ET0)
+  } else if (out_type=='matrix') {
+    ET0 <- matrix(ET0, nrow=n_times)
+    colnames(ET0) <- rep('ET0_har', ncol(ET0))
+  } else { # array, default
+    colnames(ET0) <- rep('ET0_har', ncol(ET0))
+  }
+  
+  dimnames(ET0) <- names
+  
+  return(ET0)
 }
