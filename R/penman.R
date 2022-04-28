@@ -122,13 +122,13 @@ function(Tmin, Tmax, U2, Ra=NA, lat=NA, Rs=NA, tsun=NA, CC=NA, ed=NA, Tdew=NA, R
 	}
 
 	# Sunset hour angle (needed if no radiation data is available)
+	mlen <- c(31,28,31,30,31,30,31,31,30,31,30,31)
 	if (nrow(as.matrix(Ra))!=n || {nrow(as.matrix(Rs))!=n && nrow(as.matrix(tsun))==n}) {
 		# Note: For the winter months and latitudes higher than 55º the following
 		# equations have limited validity (Allen et al., 1994).
 		# J: number of day in the year (eq. 1.27)
 		#J <- as.integer(30.5*c-14.6)
 		# more accurate option:
-		mlen <- c(31,28,31,30,31,30,31,31,30,31,30,31)
 		msum <- cumsum(mlen) - mlen + 15
 		J <- msum[c]
 		# delta: solar declination, rad (1 rad = 57.2957795 deg) (eq. 1.25)
