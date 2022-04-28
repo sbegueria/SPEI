@@ -52,10 +52,10 @@ function(Tmin, Tmax, U2, Ra=NA, lat=NA, Rs=NA, tsun=NA, CC=NA, ed=NA, Tdew=NA, R
 	if (length(Tmin)!=length(Tmax) || length(Tmin)!=length(U2)) {
 		stop('Error: Data must be of the same length')
 	}
-	if (length(P)!=length(Tmax) && is.na(z)) {
+  if (length(P)!=length(Tmax) && is.na(z[[1]])) {
 		stop('Error: Elevation above sea level (z) must be specified if P is not provided.')
 	}
-  if (is.na(z)) {
+  if (is.na(z[[1]])) {
 	  warning('Specifying the elevation above sea level (z) is highly recommended in order to compute the clear-sky solar radiation.')
  }
 	
