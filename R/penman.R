@@ -9,7 +9,7 @@
 #' 
 #' @return  A time series with the values of monthly potential or reference evapotranspiration, in mm. 
 #' If the input is a matrix or a multivariate time series each column will be treated as independent 
-#' data (e.g., diferent observatories), and the output will be a multivariate time series.
+#' data (e.g., different observatories), and the output will be a multivariate time series.
 #' 
 #' 
 #' @rdname Potential-evapotranspiration
@@ -21,61 +21,193 @@
 #' @export
 #'
 penman <-
-function(Tmin, Tmax, U2, Ra=NA, lat=NA, Rs=NA, tsun=NA, CC=NA, ed=NA, Tdew=NA, RH=NA, P=NA, P0=NA, z=NA, crop='short', na.rm=FALSE) {
+function(Tmin, Tmax, U2, Ra=NA, lat=NA, Rs=NA, tsun=NA, CC=NA, ed=NA, Tdew=NA, RH=NA, P=NA, P0=NA, z=NA, crop='short', na.rm=FALSE, verbose=TRUE) {
 	
-  if (sum(is.na(Tmin),is.na(Tmax),is.na(U2))>0 && na.rm==FALSE) {
-		stop('Error: Data must not contain NAs')
-	}
-	if (((length(Ra)>1 && anyNA(Ra)) ||
-		(length(Rs)>1 && anyNA(Rs)) ||
-		(length(tsun)>1 && anyNA(tsun)) ||
-		(length(CC)>1 && anyNA(CC)) ||
-		(length(ed)>1 && anyNA(ed)) ||
-		(length(Tdew)>1 && anyNA(Tdew)) ||
-		(length(RH)>1 && anyNA(RH)) ||
-		(length(P)>1 && anyNA(P)) ||
-		(length(P0)>1 && anyNA(P0))) &&
-		na.rm==FALSE) {
-		stop('Error: Non-temperature data must not contain NAs')
-	}
-	#if (length(Ra)==1 & length(lat)!=ncol(as.matrix(Ra))) {
-	if (is.na(Ra[1]) && is.na(lat[1])) {
-		stop('Error: One of Ra or lat must be provided')
-	}
-  if (!is.na(Ra[1])) {
-	  warning('Using user-provided (Ra)')
+  ### Argument check - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  
+  # Determine which combinations of inputs were passed,
+  # and check their validity
+  
+  # Instantiate two new 'ArgCheck' objects to collect errors and warnings
+  check <- newArgCheck()
+  warn <- newArgCheck()
+  
+  # A list of computation options
+  using <- list(Ra=FALSE, lat=FALSE, Rs=FALSE, tsun=FALSE, CC=FALSE,
+                ed=FALSE, Tdew=FALSE, Tmin=FALSE, RH=FALSE, P=FALSE, 
+                P0=FALSE, z=FALSE, crop='short', na.rm=FALSE)
+  
+  # Required inputs
+  if(missing(Tmin)){
+    addError('Argument `Tmin` is a required input.', argcheck=check)
   }
   
-	if (length(Rs)!=length(Tmin) && length(tsun)!=length(Tmin) && length(CC)!=length(Tmin)) {
-		stop('Error: One of Rs, tsun or CC must be provided')
-	}	
-	if (length(Tmin)!=length(Tmax) || length(Tmin)!=length(U2)) {
-		stop('Error: Data must be of the same length')
-	}
-  if (length(P)!=length(Tmax) && is.na(z[[1]])) {
-		stop('Error: Elevation above sea level (z) must be specified if P is not provided.')
-	}
-  if (is.na(z[[1]])) {
-	  warning('Specifying the elevation above sea level (z) is highly recommended in order to compute the clear-sky solar radiation.')
- }
-	
-	ET0 <- Tmin*NA
-
-	if (!is.ts(Tmin)) {
-		Tmin <- ts(as.matrix(Tmin),frequency=12)
-	} else {
-		Tmin <- ts(as.matrix(Tmin),frequency=frequency(Tmin),start=start(Tmin))
-	}
-	n <- nrow(Tmin)
-	m <- ncol(Tmin)
-	c <- cycle(Tmin)
-	
-	# Convert lat and z vectors to matrices
-	lat <- matrix(lat, n, m, byrow=TRUE)
-	z <- matrix(z, n, m, byrow=TRUE)
-
-	# Mean temperature
-	T <- (Tmin+Tmax)/2
+  if(missing(Tmax)){
+    addError('Argument `Tmax` is a required input.', argcheck=check)
+  }
+  
+  if(missing(U2)){
+    addError('Argument `U2` is a required input.', argcheck=check)
+  } else {
+    addWarning('Using user-provided `U2` data.', argcheck=warn)
+  }
+  
+  # Other inputs
+  
+  if (!is.null(Ra)) {
+    using$Ra <- TRUE
+    addWarning(paste('Using user-provided extraterrestrial radiation',
+                     '(`Ra`) data.'), argcheck=warn)
+  } else if (!is.null(lat)) {
+    using$lat <- TRUE
+    addWarning(paste('Using latitude (`lat`) to estimate extraterrestrial',
+                     'radiation.'), argcheck=warn)
+  } else {
+    addError('One of `Ra` or `lat` must be provided.', argcheck=check)
+  }
+  
+  if (!is.null(Rs)) {
+    using$Rs <- TRUE
+    addWarning(paste('Using user-provided incoming solar radiation (`Rs`)',
+                     'data.'), argcheck=warn)
+  } else if (!is.null(tsun) && !is.null(lat)) {
+    using$tsun <- TRUE
+    addWarning(paste('Using bright sunshine duration data (`tsun`) to estimate',
+                     'incoming solar radiation.'), argcheck=warn)
+  } else if (!is.null(CC)) {
+    using$CC <- TRUE
+    addWarning(paste('Using fraction cloud cover (`CC`) to estimate incoming',
+                     'solar radiation.'), argcheck=warn)
+  } else {
+    addError('One of `Rs`, the pair `tsun` and `lat`, or `CC` must be provided.',
+             argcheck=check)
+  }
+  
+  if (!is.null(ed)) {
+    using$ed <- TRUE
+    addWarning('Using user-provided actual vapour pressure (`ed`) data.',
+               argcheck=warn)
+  } else if (!is.null(Tdew)) {
+    using$Tdew <- TRUE
+    addWarning(paste('Using dewpoint temperature (`Tdew`) to estimate saturation',
+                     'vapour pressure.'), argcheck=warn)
+  } else if (!is.null(RH)) {
+    using$RH <- TRUE
+    addWarning(paste('Using relative humidity (`RH`) to estimate saturation water',
+                     'pressure.'), argcheck=warn)
+  } else if (!is.null(Tmin)) {
+    using$Tmin <- TRUE
+    addWarning(paste('Using minimum temperature (`Tmin`) to estimate dewpoint',
+                     'temperature and saturation water pressure.'), argcheck=warn)
+  } else {
+    addError('One of `ed`, `Tdew`, `RH` or `Tmin` must be provided.',
+             argcheck=check)
+  }
+  
+  if (!is.null(P)) {
+    using$P <- TRUE
+    addWarning('Using user-provided atmospheric surface pressure (`P`) data.',
+               argcheck=warn)
+  } else if (!is.null(P0) && !is.null(z)) {
+    using$P0 <- TRUE
+    addWarning(paste('Using atmospheric pressure at sea level (`P0`) and elevation',
+                     '`z` to estimate atmospheric surface pressure.'), argcheck=warn)
+  } else if (!is.null(z)) {
+    using$z <- TRUE
+    addWarning(paste('Assuming constant atmospheric surface pressure corresponding',
+                     'to elevation `z`.'), argcheck=warn)
+  } else {
+    addError('One of `P`, the pair `P0` and `z`, or `z` must be provided.',
+             argcheck=check)
+  }
+  
+  if (is.null(z)) {
+    addWarning(paste('Specifying the elevation above sea level (z)',
+                     'is highly recommended in order to compute the clear-sky',
+                     'solar radiation.'), argcheck=warn)
+  }
+  
+  if (crop=='short') {
+    addWarning('Computing for a short crop.', argcheck=warn)
+  } else if (crop=='tall') {
+    addWarning('Computing for a tall crop.', argcheck=warn)
+  } else {
+    addError('Argument `crop` must be one of `short` or `tall`.',
+             argcheck=check)
+  }
+  
+  if (na.rm != TRUE && na.rm != FALSE) {
+    addError('Argument `na.rm` must be set to TRUE or FALSE.',
+             argcheck=check)
+  } else if (na.rm) {
+    addWarning('Missing values (`NA`) will not be considered in the calculation.',
+               argcheck=warn)
+  } else {
+    addWarning(paste('Checking for missing values (`NA`): all the data must',
+                     'be complete.'), argcheck=warn)
+  }
+  
+  # Check for missing values  
+  if (!na.rm && (anyNA(Tmin) || anyNA(Tmax) || anyNA(U2))) {
+    addError(paste('`Tmin`, `Tmax` and `U2` must not contain NA values if',
+                   'argument `na.rm` is set to FALSE.'), argcheck=check)
+  }
+  
+  if (!na.rm &&
+      ((using$Ra && anyNA(Ra)) ||
+       (using$lat && anyNA(lat)) ||
+       (using$Rs && anyNA(Rs)) ||
+       (using$tsun && anyNA(tsun)) ||
+       (using$CC && anyNA(CC)) ||
+       (using$ed && anyNA(ed)) ||
+       (using$Tdew && anyNA(Tdew)) ||
+       (using$RH && anyNA(RH)) ||
+       (using$P && anyNA(P)) ||
+       (using$P0 && (anyNA(P0) || anyNA(z))) ||
+       (using$z && anyNA(z)))) {
+    addError(paste('Data must not contain NA values if argument `na.rm`',
+                   'is set to FALSE.'), argcheck=check)
+  }
+  
+  # Return errors and halt execution (if any)
+  finishArgCheck(check)
+  
+  # Show a warning with computation options
+  if (verbose) {
+    finishArgCheck(warn)
+  }
+  
+  
+  ### Dimensions - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  
+  
+  ### Computation of ETo - - - - - - - - - - - - - - - - - - - - - - - - -
+  
+  if (!is.ts(Tmin)) {
+    Tmin <- ts(as.matrix(Tmin),frequency=12)
+  } else {
+    Tmin <- ts(as.matrix(Tmin),frequency=frequency(Tmin),start=start(Tmin))
+  }
+  n <- nrow(Tmin)
+  m <- ncol(Tmin)
+  c <- cycle(Tmin)
+  
+  if (using$lat) {
+    lat <- matrix(lat, n, m, byrow=TRUE)
+  }
+  
+  if (using$z) {
+    z <- matrix(z, n, m, byrow=TRUE)
+  }
+  
+  # Mean temperature
+  T <- (Tmin + Tmax) / 2
+  
+  # A vector of month lenghts (days)
+  mlen <- c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
+  
+  # Initialize ET0
+  ET0 <- Tmin * NA
 
 	# 1. Latent heat of vaporization, lambda (eq. 1.1)
 	lambda <- 2.501 - 2.361e-3*T
