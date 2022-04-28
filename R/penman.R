@@ -129,7 +129,7 @@ function(Tmin, Tmax, U2, Ra=NA, lat=NA, Rs=NA, tsun=NA, CC=NA, ed=NA, Tdew=NA, R
 		#J <- as.integer(30.5*c-14.6)
 		# more accurate option:
 		mlen <- c(31,28,31,30,31,30,31,31,30,31,30,31)
-		msum <- c(0,31,59,90,120,151,181,212,243,273,302,334)+15
+		msum <- cumsum(mlen) - mlen + 15
 		J <- msum[c]
 		# delta: solar declination, rad (1 rad = 57.2957795 deg) (eq. 1.25)
 		delta <- 0.409*sin(0.0172*J-1.39)
@@ -172,7 +172,7 @@ function(Tmin, Tmax, U2, Ra=NA, lat=NA, Rs=NA, tsun=NA, CC=NA, ed=NA, Tdew=NA, R
 	# Rso: clear-sky solar radiation (eq. 1.40)
 	# Note: mostly valid for z<6000 m and low air turbidity
 	#if (ncol(as.matrix(z))==ncol(as.matrix(Tmin))) {
-	if (!is.na(z)) {
+	if (!is.na(z[[1]])) {
 		Rso <- matrix(0.75+2e-5*z,n,m,byrow=TRUE) * Ra
 	} else {
 		Rso <- (0.75+2e-5*840) * Ra
