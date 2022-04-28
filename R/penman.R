@@ -69,22 +69,26 @@ function(Tmin, Tmax, U2, Ra=NA, lat=NA, Rs=NA, tsun=NA, CC=NA, ed=NA, Tdew=NA, R
 	n <- nrow(Tmin)
 	m <- ncol(Tmin)
 	c <- cycle(Tmin)
+	
+	# Convert lat and z vectors to matrices
+	lat <- matrix(lat, n, m, byrow=TRUE)
+	z <- matrix(z, n, m, byrow=TRUE)
 
 	# Mean temperature
 	T <- (Tmin+Tmax)/2
 
-	# 1. Latent heat of vaporization, lambda (eq. 1.1)
+	# 1. Latent heat of vaporization, lambda (eq. 1.1)
 	lambda <- 2.501 - 2.361e-3*T
 	
 	# 4. P: atmospheric pressure, kPa
 	if (nrow(as.matrix(P))!=n) {
 		if (length(P0)==n) {
 			# estimate from sea level pressure (eq. 1.6)
-			P <- P0 %*% as.matrix(((293-0.0065*z)/293)^5.26)
+			P <- P0 * (((293 - 0.0065 * z) / 293) ^ 5.26)
 		} else {
 			# assume a constant pressure
 			P0  <- matrix(101.3,n,m)
-			P <- P0 %*% as.matrix(((293-0.0065*z)/293)^5.26)
+			P <- P0 * (((293 - 0.0065 * z) / 293) ^ 5.26)
 		}
 	}
 
@@ -106,7 +110,7 @@ function(Tmin, Tmax, U2, Ra=NA, lat=NA, Rs=NA, tsun=NA, CC=NA, ed=NA, Tdew=NA, R
 	# 7. Actual vapour pressure, ed
 	if(length(ed)!=n) {
 		if (length(Tdew)==n) {
-			# (eq. 1.12, p. 67)
+			# (eq. 1.12, p. 67)
 			ed <- 0.611*exp((17.27*Tdew)/(Tdew+237.3))
 		} else if(length(RH)==n) {
 			# (eq. 1.16, p. 68)
@@ -119,7 +123,7 @@ function(Tmin, Tmax, U2, Ra=NA, lat=NA, Rs=NA, tsun=NA, CC=NA, ed=NA, Tdew=NA, R
 
 	# Sunset hour angle (needed if no radiation data is available)
 	if (nrow(as.matrix(Ra))!=n || {nrow(as.matrix(Rs))!=n && nrow(as.matrix(tsun))==n}) {
-		# Note: For the winter months and latitudes higher than 55º the following
+		# Note: For the winter months and latitudes higher than 55º the following
 		# equations have limited validity (Allen et al., 1994).
 		# J: number of day in the year (eq. 1.27)
 		#J <- as.integer(30.5*c-14.6)
@@ -133,8 +137,7 @@ function(Tmin, Tmax, U2, Ra=NA, lat=NA, Rs=NA, tsun=NA, CC=NA, ed=NA, Tdew=NA, R
 		dr <- 1 + 0.033*cos(0.0172*J)
 		# omegas: sunset hour angle, rad (eq. 1.23)
 		latr <- lat/57.2957795
-		sset <- t(-as.matrix(tan(latr))%*%tan(delta))
-		omegas <- sset*0
+		sset <- -tan(latr) * tan(delta)		omegas <- sset*0
 		omegas[abs(sset)<=1] <- acos(sset[abs(sset)<=1])
 		# correction for high latitudes
 		omegas[sset<(-1)] <- max(omegas)
