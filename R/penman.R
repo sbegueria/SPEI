@@ -20,10 +20,10 @@
 #'
 #' @export
 #'
-penman <- function(Tmin, Tmax, U2, Ra=NULL, lat=NULL, Rs=NULL, tsun=NULL,
-                   CC=NULL, ed=NULL, Tdew=NULL, RH=NULL, P=NULL, P0=NULL,
-                   z=NULL, crop='short', na.rm=FALSE, method='ICID', 
-                   verbose=TRUE) {
+penman_new <- function(Tmin, Tmax, U2, Ra=NULL, lat=NULL, Rs=NULL, tsun=NULL,
+                       CC=NULL, ed=NULL, Tdew=NULL, RH=NULL, P=NULL, P0=NULL,
+                       CO2=NULL, z=NULL, crop='short', na.rm=FALSE, 
+                       method='ICID', verbose=TRUE) {
   
   ### Argument check - - - - - - - - - - - - - - - - - - - - - - - - - - -
   
@@ -37,7 +37,7 @@ penman <- function(Tmin, Tmax, U2, Ra=NULL, lat=NULL, Rs=NULL, tsun=NULL,
   # A list of computation options
   using <- list(Ra=FALSE, lat=FALSE, Rs=FALSE, tsun=FALSE, CC=FALSE,
                 ed=FALSE, Tdew=FALSE, Tmin=FALSE, RH=FALSE, P=FALSE,
-                P0=FALSE, z=FALSE, crop='short', na.rm=FALSE)
+                P0=FALSE, CO2=FALSE, z=FALSE, na.rm=FALSE)
   
   # Check required inputs
   if(missing(Tmin)){
@@ -109,8 +109,8 @@ penman <- function(Tmin, Tmax, U2, Ra=NULL, lat=NULL, Rs=NULL, tsun=NULL,
   
   if (!is.null(P)) {
     using$P <- TRUE
-    addWarning('Using user-provided atmospheric surface pressure (`P`)',
-               'data.', argcheck=warn)
+    addWarning(paste('Using user-provided atmospheric surface pressure',
+                     '(`P`) data.'), argcheck=warn)
   } else if (!is.null(P0) && !is.null(z)) {
     using$P0 <- TRUE
     addWarning(paste('Using atmospheric pressure at sea level (`P0`) and',
@@ -123,6 +123,11 @@ penman <- function(Tmin, Tmax, U2, Ra=NULL, lat=NULL, Rs=NULL, tsun=NULL,
   } else {
     addError('One of `P`, the pair `P0` and `z`, or `z` must be provided.',
              argcheck=check)
+  }
+  
+  if (!is.null(CO2)) {
+    using$CO2 <- TRUE
+    addWarning(paste('Using custom CO2 concentration.'), argcheck=warn)
   }
   
   if (is.null(z)) {
@@ -168,6 +173,7 @@ penman <- function(Tmin, Tmax, U2, Ra=NULL, lat=NULL, Rs=NULL, tsun=NULL,
        (using$RH && anyNA(RH)) ||
        (using$P && anyNA(P)) ||
        (using$P0 && (anyNA(P0) || anyNA(z))) ||
+       (using$CO2 && anyNA(CO2)) ||
        (using$z && anyNA(z)))) {
     addError(paste('Data must not contain NA values if argument `na.rm`',
                    'is set to FALSE.'), argcheck=check)
@@ -265,6 +271,9 @@ penman <- function(Tmin, Tmax, U2, Ra=NULL, lat=NULL, Rs=NULL, tsun=NULL,
   if (using$P0 && sum(lengths(P0))!=input_len) {
     addError('`P0` has incorrect length.', argcheck=check)
   }
+  if (using$CO2 && sum(lengths(CO2))!=input_len) {
+    addError('`CO2` has incorrect length.', argcheck=check)
+  }
   if (using$z && sum(lengths(z))!=n_sites) {
     addError('`z` has incorrect length.', argcheck=check)
   }
@@ -303,6 +312,9 @@ penman <- function(Tmin, Tmax, U2, Ra=NULL, lat=NULL, Rs=NULL, tsun=NULL,
   }
   if (using$P0) {
     P0 <- array(data.matrix(P0), int_dims)
+  }
+  if (using$CO2) {
+    CO2 <- array(data.matrix(CO2), int_dims)
   }
   if (using$z) {
     # copy and permute into correct dimensions
@@ -489,8 +501,13 @@ penman <- function(Tmin, Tmax, U2, Ra=NULL, lat=NULL, Rs=NULL, tsun=NULL,
     stop(paste('An error occurred while estimating the daily ET0',
                'sunshine fraction Please report this error.'))
   }
-  ET0 <- (0.408 * Delta * (Rn - G) + gamma * (c1 / (Tmean + 273)) *
-            U2 * (ea - ed)) / (Delta + gamma*(1 + c2 * U2))
+  if (!using$CO2) {
+    ET0 <- (0.408 * Delta * (Rn - G) + gamma * (c1 / (Tmean + 273)) * U2 *
+              (ea - ed)) / (Delta + gamma * (1 + c2 * U2))
+  } else {
+    ET0 <- (0.408 * Delta * (Rn - G) + gamma * (c1 / (Tmean + 273)) * U2 *
+              (ea - ed)) / (Delta + gamma * (1 + U2 * (c2 + 0.00024 * (CO2 - 300))))
+  }
   
   # Transform ET0 to mm month-1
   ET0 <- ifelse(ET0 < 0, 0, ET0) * mlen[cyc]
