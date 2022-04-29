@@ -65,7 +65,7 @@ penman <- function(Tmin, Tmax, U2=NULL, Ra=NULL, lat=NULL, Rs=NULL,
     warn$push('Using user-provided incoming solar radiation (`Rs`) data.')
   } else if (!is.null(tsun) && !is.null(lat)) {
     using$tsun <- TRUE
-    warn$push('Using bright sunshine duration data (`tsun`) to estimate incoming solar radiation.')
+    warn$push('Using bright sunshine duration data (`tsun`) and latitude (`lat`) to estimate incoming solar radiation.')
   } else if (!is.null(CC)) {
     using$CC <- TRUE
     warn$push('Using fraction cloud cover (`CC`) to estimate incoming solar radiation.')
@@ -128,12 +128,11 @@ penman <- function(Tmin, Tmax, U2=NULL, Ra=NULL, lat=NULL, Rs=NULL,
   }
   
   # Check for missing values in inputs
-  if (!na.rm && (anyNA(Tmin) || anyNA(Tmax) || (using$U2 && anyNA(U2)))) {
-    check$push('`Tmin`, `Tmax` and `U2` must not contain NA values if argument `na.rm` is set to FALSE.')
-  }
-  
   if (!na.rm &&
-      ((using$Ra && anyNA(Ra)) ||
+      ((anyNA(Tmin) ||
+        anyNA(Tmax) ||
+       (using$U2 && anyNA(U2)) ||
+       (using$Ra && anyNA(Ra)) ||
        (using$lat && anyNA(lat)) ||
        (using$Rs && anyNA(Rs)) ||
        (using$tsun && anyNA(tsun)) ||
@@ -144,7 +143,7 @@ penman <- function(Tmin, Tmax, U2=NULL, Ra=NULL, lat=NULL, Rs=NULL,
        (using$P && anyNA(P)) ||
        (using$P0 && (anyNA(P0) || anyNA(z))) ||
        (using$CO2 && anyNA(CO2)) ||
-       (using$z && anyNA(z)))) {
+       (using$z && anyNA(z)))) ) {
     check$push('Data must not contain NA values if argument `na.rm` is set to FALSE.')
   }
   
@@ -205,7 +204,7 @@ penman <- function(Tmin, Tmax, U2=NULL, Ra=NULL, lat=NULL, Rs=NULL,
   # Verify the length of each input variable
   input_len <- prod(int_dims)
   if (sum(lengths(Tmin))!=input_len || sum(lengths(Tmax))!=input_len) {
-    check$push('`Tmin` and `Tmax`cannot have different lengths.')
+    check$push('`Tmin` and `Tmax` cannot have different lengths.')
   }
   if (using$U2 && sum(lengths(U2))!=input_len) {
     check$push('`U2` has incorrect length.')

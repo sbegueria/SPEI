@@ -153,8 +153,10 @@
 #' pen <- penman(TMIN, TMAX, AWND, tsun=TSUN, lat=37.6475, z=402.6, na.rm=TRUE)
 #' # Penman, based on cloud cover
 #' pen2 <- penman(TMIN, TMAX, AWND, CC=ACSH, lat=37.6475, z=402.6, na.rm=TRUE)
+#' # Penman, with constant wind
+#' pen3 <- penman(TMIN, TMAX, tsun=TSUN, lat=37.6475, z=402.6, na.rm=TRUE)
 #' # Plot them together
-#' plot(ts(cbind(tho, har, pen, pen2), fr=12))
+#' plot(ts(cbind(tho, har, pen, pen2, pen3), fr=12))
 #' 
 #' # Input data as a time series vector; note that only the first parameter
 #' # needs to be a `ts` object.
@@ -198,7 +200,7 @@
 #' har <- hargreaves(tmin, tmax, lat=lat, na.rm=TRUE)
 #' dim(har)
 #'
-#' # Different Penman-Monteith flavours
+#' # Different Penman-Monteith flavors
 #'
 #' pen_icid <- penman(TMIN, TMAX, AWND, tsun=TSUN, lat=37.6475, z=402.6, na.rm=TRUE,
 #'                    method='ICID')
@@ -272,11 +274,16 @@ hargreaves <- function(Tmin, Tmax, Ra=NULL, lat=NULL, Pre=NULL, na.rm=FALSE, ver
     check$push('`Tmin` and `Tmax` must not contain NA values if argument `na.rm` is set to FALSE.')
   }
   
-  if (!na.rm &&
-      ((using$Ra && anyNA(Ra)) ||
-       (using$lat && anyNA(lat)) ||
-       (using$Pre && anyNA(Pre)))) {
-    check$push('Data must not contain NA values if argument `na.rm` is set to FALSE.')
+  if (!na.rm && (anyNA(Ra))) {
+    check$push('`Ra` must not contain NA values if argument `na.rm` is set to FALSE.')
+  }
+
+  if (!na.rm && (anyNA(Pre))) {
+    check$push('`Pre` must not contain NA values if argument `na.rm` is set to FALSE.')
+  }
+
+  if (using$lat && anyNA(lat)) {
+    check$push('`lat` cannot be missing.')
   }
   
   # Determine input dimensions and compute internal dimensions (int_dims)
