@@ -27,23 +27,23 @@
 #' equations.
 #'
 #'
-#' @param Tave   a numeric vector, matrix or time series of monthly mean temperatures, ºC. 
-#' @param lat   a numeric vector with the latitude of the site or sites, in degrees. 
-#' @param na.rm   optional, a logical value indicating whether NA values should be stripped from the computations. 
-#' @param Tmax   a numeric vector, matrix or time series of monthly mean daily maximum temperatures, ºC. 
-#' @param Tmin   a numeric vector, matrix or time series of monthly mean daily minimum temperatures, ºC.
-#' @param Ra   optional, a numeric vector, matrix or time series of monthly mean daily external radiation, MJ m-2 d-1. 
-#' @param Pre   optional, a numeric vector, matrix or time series  of monthly total precipitation, mm.
-#' @param U2   a numeric vector, matrix or time series of monthly mean daily wind speeds at 2 m height, m s-1.
-#' @param Rs   optional, a numeric vector, matrix or time series of monthly mean dialy incoming solar radiation, MJ m-2 d-1.  
-#' @param tsun   optional, a numeric vector, matrix or time series of monthly mean daily bright sunshine hours, h.  
+#' @param Tave   a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean temperatures, ºC.
+#' @param lat   a numeric vector or matrix with the latitude of the site or sites, in degrees.
+#' @param na.rm   optional, a logical value indicating whether NA values should be stripped from the computations.
+#' @param Tmax   a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean daily maximum temperatures, ºC.
+#' @param Tmin   a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean daily minimum temperatures, ºC.
+#' @param Ra   optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean daily external radiation, MJ m-2 d-1.
+#' @param Pre   optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d array  of monthly total precipitation, mm.
+#' @param U2   a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean daily wind speeds at 2 m height, m s-1.
+#' @param Rs   optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean dialy incoming solar radiation, MJ m-2 d-1.
+#' @param tsun   optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean daily bright sunshine hours, h.
 #' @param CC   optional, numeric a vector, matrix or time series of monthly mean cloud cover, \%.
-#' @param ed   optional, numeric a vector, matrix or time series of monthly mean actual vapour pressure at 2 m height, kPa. 
-#' @param Tdew   optional, a numeric vector, matrix or time series of monthly mean daily dewpoint temperature (used for estimating ed), ºC 
-#' @param RH   optional, a numeric vector, matrix or time series of monthly mean relative humidity (used for estimating ed), \%. 
-#' @param P   optional, a numeric vector, matrix or time series of monthly mean atmospheric pressure at surface, kPa. 
-#' @param P0   optional, a numeric vector, matrix or time series of monthly mean atmospheric pressure at sea level (used for estimating P), kPa. 
-#' @param CO2   optional, a numeric vector, vector time series, matrix, matrix time series, or 3-d array of monthly mean CO2 atmospheric concentration, ppm. 
+#' @param ed   optional, numeric a vector, matrix or time series of monthly mean actual vapour pressure at 2 m height, kPa.
+#' @param Tdew   optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean daily dewpoint temperature (used for estimating ed), ºC.
+#' @param RH   optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean relative humidity (used for estimating ed), \%.
+#' @param P   optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean atmospheric pressure at surface, kPa.
+#' @param P0   optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean atmospheric pressure at sea level (used for estimating P), kPa.
+#' @param CO2   optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean CO2 atmospheric concentration, ppm.
 #' @param z   optional, a numeric vector of the elevation of the site or sites, m above sea level.
 #' @param crop   optional, character string, type of reference crop. Either one of 'short' (default) or 'tall'.
 #' @param method   optional, character string, Penman-Monteith calculation method. Either one of 'ICID' (default), 'FAO', or 'ASCE'.
@@ -140,11 +140,13 @@
 #' @examples
 #' # Load data for Tampa, lat=37.6475N, elevation=402.6 m. a.s.l.
 #' # Data consists on monthly values since January 1980
+#' 
 #' data(wichita)
 #' attach(wichita)
 #' names(wichita)
 #' 
 #' # PET according to Thornthwaite
+#' 
 #' tho <- thornthwaite(TMED, 37.6475)
 #' # Hargreaves
 #' har <- hargreaves(TMIN, TMAX, lat=37.6475)
@@ -153,10 +155,18 @@
 #' # Penman, based on cloud cover
 #' pen2 <- penman(TMIN, TMAX, AWND, CC=ACSH, lat=37.6475, z=402.6, na.rm=TRUE)
 #' # Plot them together
-#' plot(cbind(tho, har, pen, pen2))
+#' plot(ts(cbind(tho, har, pen, pen2), fr=12))
 #' 
-#' # Now consider the data started in June 1900
-#' thornthwaite(ts(TMED, start=c(1900,6), frequency=12), 37.6475)
+#' # Input data as a time series vector; note that only the first parameter
+#' # needs to be a `ts` object.
+#' 
+#' thornthwaite(ts(TMED, start=c(1980, 1), frequency=12), 37.6475)
+#' hargreaves(ts(TMIN, start=c(1980, 1), frequency=12), TMAX, lat=37.6475)
+#' penman(ts(TMIN, start=c(1980, 1), frequency=12), TMAX, AWND, tsun=TSUN,
+#'  lat=37.6475, z=402.6, na.rm=TRUE)
+#' 
+#' # Input data as a time series. Consider the data started in June 1980
+#' thornthwaite(ts(TMED, start=c(1980, 6), frequency=12), 37.6475)
 #' 
 #' # Comparison with example from Allen et al. (1998), p. 69, fig. 18:
 #' # Data from Cabinda, Angola (-5.33S, 12.11E, 20 m a.s.l.)
@@ -166,6 +176,27 @@
 #' plot(cabinda$ET0, pen.cab)
 #' abline(0, 1, lt='dashed')
 #' summary(lm(pen.cab~cabinda$ET0))$r.squared
+#'
+#' Matrix input (data from several stations)
+#' Replicating Wichita data two time to simulate data at two locations.
+#' tmin <- cbind(TMIN, TMIN+1.5)
+#' tmax <- cbind(TMAX, TMAX+1.5)
+#' lat <- c(37.6475, 35.000)
+#'
+#' har <- hargreaves(tmin, tmax, lat=lat, na.rm=TRUE)
+#' plot(har); abline(0,1)
+#' plot(ts(har, fr=12))
+#'
+#' Array input (gridded data)
+#' Replicating Wichita data to simulate data from a grid. Note that the time
+#' dimension (`nt`) comes first. Latitude is provided as a 2-d array.
+#' nt <- length(TMIN)
+#' tmin <- array(TMIN, dim=c(nt, 2, 2))
+#' tmax <- array(TMAX, dim=c(nt, 2, 2))
+#' lat <- array(c(40, 30, 40, 30), dim=c(2,2))
+#'
+#' har <- hargreaves(tmin, tmax, lat=lat, na.rm=TRUE)
+#' dim(har)
 #'
 #'
 #' @importFrom stats cycle frequency ts start
@@ -315,7 +346,7 @@ hargreaves <- function(Tmin, Tmax, Ra=NULL, lat=NULL, Pre=NULL, na.rm=FALSE, ver
   
   # Show a warning with computation options
   if (verbose) {
-    paste(warn$getMessages(), collapse=' ')
+    print(paste(warn$getMessages(), collapse=' '))
   }
   
   

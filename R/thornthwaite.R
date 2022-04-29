@@ -32,7 +32,7 @@ thornthwaite <- function(Tave, lat, na.rm=FALSE, verbose=TRUE) {
   warn  <- makeAssertCollection()
   
   # Report on the method being used
-  warn$push('Calculating reference evapotranspiration using the Hargreaves method.')
+  warn$push('Calculating reference evapotranspiration using the Thornthwaite method.')
   
   # A list of computation options
   using <- list(na.rm=FALSE)
@@ -122,8 +122,9 @@ thornthwaite <- function(Tave, lat, na.rm=FALSE, verbose=TRUE) {
   
   # Show a warning with computation options
   if (verbose) {
-    paste(warn$getMessages(), collapse=' ')
+    print(paste(warn$getMessages(), collapse=' '))
   }
+
   
   
   ### Computation of ETo - - - - - - - - - - - - - - - - - - - - - - - - -

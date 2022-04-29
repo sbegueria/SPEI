@@ -231,7 +231,7 @@ penman <- function(Tmin, Tmax, U2=NULL, Ra=NULL, lat=NULL, Rs=NULL,
   if (using$Tdew && sum(lengths(Tdew))!=input_len) {
     check$push('`Tdew` has incorrect length.')
   }
-  if (using$RH && sum(lengths(RRHa))!=input_len) {
+  if (using$RH && sum(lengths(RH))!=input_len) {
     check$push('`RH` has incorrect length.')
   }
   if (using$P && sum(lengths(P))!=input_len) {
@@ -301,7 +301,7 @@ penman <- function(Tmin, Tmax, U2=NULL, Ra=NULL, lat=NULL, Rs=NULL,
   
   # Show a warning with computation options
   if (verbose) {
-    print(warn$getMessages())
+    print(paste(warn$getMessages(), collapse=' '))
   }
   
   
