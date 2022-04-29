@@ -461,7 +461,7 @@ penman <- function(Tmin, Tmax, U2=NULL, Ra=NULL, lat=NULL, Rs=NULL,
   G[2:(n_times-1),,] <- 0.07 * (Tmean[3:n_times,,] - Tmean[1:(n_times-2),,])
   G[n_times,,] <- 0.14 * (Tmean[n_times,,] - Tmean[(n_times-1),,])
   
-  # Wind speed at 2m, U2 (eq. 1.62)
+  # Wind speed at 2m, U2, when originally measured at different height (eq. 1.62)
   #U2 <- U2 * 4.85203/log((zz-0.08)/0.015)
   
   # Daily ET0 (eq. 2.18)
@@ -470,8 +470,8 @@ penman <- function(Tmin, Tmax, U2=NULL, Ra=NULL, lat=NULL, Rs=NULL,
   } else if (crop=='long') {
     c1 <- 1600; c2 <- 0.38 # tall reference crop (e.g. alfalfa, 0.5 m)
   } else {
-    stop(paste('An error occurred while estimating the daily ET0',
-               'sunshine fraction Please report this error.'))
+    stop(paste('An error occurred while estimating the daily ETo.',
+               'Please report this error.'))
   }
   if (!using$CO2) {
     ET0 <- (0.408 * Delta * (Rn - G) + gamma * (c1 / (Tmean + 273)) * U2 *

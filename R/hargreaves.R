@@ -43,6 +43,7 @@
 #' @param RH   optional, a numeric vector, matrix or time series of monthly mean relative humidity (used for estimating ed), \%. 
 #' @param P   optional, a numeric vector, matrix or time series of monthly mean atmospheric pressure at surface, kPa. 
 #' @param P0   optional, a numeric vector, matrix or time series of monthly mean atmospheric pressure at sea level (used for estimating P), kPa. 
+#' @param CO2   optional, a numeric vector, vector time series, matrix, matrix time series, or 3-d array of monthly mean CO2 atmospheric concentration, ppm. 
 #' @param z   optional, a numeric vector of the elevation of the site or sites, m above sea level.
 #' @param crop   optional, character string, type of reference crop. Either one of 'short' (default) or 'tall'.
 #' @param method   optional, character string, Penman-Monteith calculation method. Either one of 'ICID' (default), 'FAO', or 'ASCE'.
@@ -82,7 +83,8 @@
 #' (sorted from least to most uncertain method). Similarly, the atmospheric surface pressure \code{P} 
 #' required for computing the psychrometric constant can be calculated from the atmospheric pressure at 
 #' sea level \code{P0} and the elevation \code{z}, or else it will be assumed to be constant (101.3 kPa).
-#' If no wind speed data \code{U2} are available, a constant value of 2 m per second is used.
+#' If no wind speed data \code{U2} are available, a constant value of 2 m per second is used. Custom CO2
+#' atmospheric concentration \code{CO2} can also be provided, following Yang et al. (2019).
 #'
 #' The function will produce an error message if a valid combination of input parameters is not provided.
 #' If \code{verbose} is `TRUE` (the default value), a message will be produced informing on the computation
@@ -106,10 +108,10 @@
 #'
 #'
 #' @references 
-#' Thornthwaite, C. W. (1948). An approach toward a rational classification of climate. 
+#' Thornthwaite, C. W., 1948. An approach toward a rational classification of climate. 
 #' \emph{Geographical Review} \bold{38}: 55–94. doi:10.2307/2107309.
 #' 
-#' Hargreaves G.H. 1994. Defining and using reference evapotranspiration. 
+#' Hargreaves G.H., 1994. Defining and using reference evapotranspiration. 
 #' \emph{Journal of Irrigation and Drainage Engineering} \bold{120}: 1132–1139.
 #' 
 #' Droogers P., Allen R. G., 2002. Estimating reference evapotranspiration under inaccurate data conditions. 
@@ -121,12 +123,15 @@
 #' Allen R. G., Smith M., Pereira L. S., Perrier A., 1994. An update for the calculation of reference 
 #' evapotranspiration. \emph{ICID Bulletin of the International Commission on Irrigation and Drainage}, 35–92.
 #' 
-#' Allen R.G., Pereira L.S.,Raes D., Smith, M. 1998. \emph{J. Crop evapotranspiration - Guidelines for 
+#' Allen R.G., Pereira L.S.,Raes D., Smith, M., 1998. \emph{J. Crop evapotranspiration - Guidelines for 
 #' computing crop water requirements - FAO Irrigation and drainage paper 56}. FAO, Rome. ISBN 92-5-104219-5.
 #' 
 #' Walter I.A. and 14 co-authors, 2002. \emph{The ASCE standardized reference evapotranspiration equation.} 
 #' Rep. Task Com. on Standardized Reference Evapotranspiration July 9, 2002, EWRI–Am. Soc. Civil Engr., 
 #' Reston, VA, 57 pp.
+#' 
+#' Yang, Y., Roderick, M.L., Zhang, S. McVicar, T., Donohue, R.J., 2019. Hydrologic implications of vegetation
+#' response to elevated CO2 in climate projections. \emph{Nature Clim Change} \bold{9}: 44–48.
 #'
 #'
 #' @author Santiago Beguería
