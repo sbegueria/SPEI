@@ -27,9 +27,12 @@ thornthwaite <- function(Tave, lat, na.rm=FALSE, verbose=TRUE) {
   # Determine which combinations of inputs were passed and check their
   # validity, and check that all the inputs have the same dimensions
   
-  # Instantiate two new 'ArgCheck' objects to collect errors and warnings
+  # Instantiate two objects to collect errors and warnings
   check <- makeAssertCollection()
   warn  <- makeAssertCollection()
+  
+  # Report on the method being used
+  warn$push('Calculating reference evapotranspiration using the Hargreaves method.')
   
   # A list of computation options
   using <- list(na.rm=FALSE)
@@ -64,7 +67,7 @@ thornthwaite <- function(Tave, lat, na.rm=FALSE, verbose=TRUE) {
     # 3D array input (gridded data)
     int_dims <- tmin_dims
   } else {
-    check$push('Input data can not have more than 3 dimensions')
+    check$push('Input data can not have more than three dimensions.')
   }
   n_sites <- prod(int_dims[[2]], int_dims[[3]])
   n_times <- int_dims[[1]]

@@ -30,10 +30,13 @@ penman <- function(Tmin, Tmax, U2=NULL, Ra=NULL, lat=NULL, Rs=NULL,
   # Determine which combinations of inputs were passed and check their
   # validity, and check that all the inputs have the same dimensions
   
-  # Instantiate two new 'ArgCheck' objects to collect errors and warnings
+  # Instantiate two objects to collect errors and warnings
   check <- makeAssertCollection()
   warn  <- makeAssertCollection()
   
+  # Report on the method being used
+  warn$push(paste0('Calculating reference evapotranspiration using the Penman-Monteith method, following the ', method, ' variant.'))
+
   # A list of computation options
   using <- list(U2=FALSE, Ra=FALSE, lat=FALSE, Rs=FALSE, tsun=FALSE,
                 CC=FALSE, ed=FALSE, Tdew=FALSE, Tmin=FALSE, RH=FALSE,
@@ -157,12 +160,12 @@ penman <- function(Tmin, Tmax, U2=NULL, Ra=NULL, lat=NULL, Rs=NULL,
     # 3D array input (gridded data)
     int_dims <- tmin_dims
   } else {
-    check$push('Input data can not have more than 3 dimensions')
+    check$push('Input data can not have more than three dimensions.')
   }
   n_sites <- prod(int_dims[[2]], int_dims[[3]])
   n_times <- int_dims[[1]]
   
-  # Determine output data shape
+  # Determine type of input and output data shape
   if (is.ts(Tmin)) {
     if (is.matrix(Tmin)) {
       out_type <- 'tsmatrix'
@@ -290,9 +293,6 @@ penman <- function(Tmin, Tmax, U2=NULL, Ra=NULL, lat=NULL, Rs=NULL,
     # copy and permute into correct dimensions
     z <- aperm(array(data.matrix(z), int_dims[c(2, 3, 1)]), c(3, 1, 2))
   }
-  
-  # Method used
-  warn$push(paste0('Calculation method is ', method, '.'))
   
   # Return errors and halt execution (if any)
   if (!check$isEmpty()) {
