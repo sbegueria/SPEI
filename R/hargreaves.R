@@ -43,7 +43,7 @@
 #' @param RH   optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean relative humidity (used for estimating ed), \%.
 #' @param P   optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean atmospheric pressure at surface, kPa.
 #' @param P0   optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean atmospheric pressure at sea level (used for estimating P), kPa.
-#' @param CO2   optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean CO2 atmospheric concentration, ppm.
+#' @param CO2   optional, a single numeric value, a numeric vector, or a tsvector of monthly mean CO2 atmospheric concentration, ppm.
 #' @param z   optional, a numeric vector or matrix of the elevation of the site or sites, m above sea level.
 #' @param crop   optional, character string, type of reference crop. Either one of 'short' (default) or 'tall'.
 #' @param method   optional, character string, Penman-Monteith calculation method. Either one of 'ICID' (default), 'FAO', or 'ASCE'.
