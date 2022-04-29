@@ -44,7 +44,7 @@
 #' @param P   optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean atmospheric pressure at surface, kPa.
 #' @param P0   optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean atmospheric pressure at sea level (used for estimating P), kPa.
 #' @param CO2   optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean CO2 atmospheric concentration, ppm.
-#' @param z   optional, a numeric vector of the elevation of the site or sites, m above sea level.
+#' @param z   optional, a numeric vector or matrix of the elevation of the site or sites, m above sea level.
 #' @param crop   optional, character string, type of reference crop. Either one of 'short' (default) or 'tall'.
 #' @param method   optional, character string, Penman-Monteith calculation method. Either one of 'ICID' (default), 'FAO', or 'ASCE'.
 #' @param verbose   optional, logical, report the computation options during calculation. Either 'TRUE' (default) or 'FALSE'.
@@ -145,12 +145,11 @@
 #' attach(wichita)
 #' names(wichita)
 #' 
-#' # PET according to Thornthwaite
-#' 
+#' # PET following Thornthwaite
 #' tho <- thornthwaite(TMED, 37.6475)
-#' # Hargreaves
+#' # ETo by Hargreaves
 #' har <- hargreaves(TMIN, TMAX, lat=37.6475)
-#' # Penman, based on sun hours, ignore NAs
+#' # ETo by Penman, based on sun hours, ignore NAs
 #' pen <- penman(TMIN, TMAX, AWND, tsun=TSUN, lat=37.6475, z=402.6, na.rm=TRUE)
 #' # Penman, based on cloud cover
 #' pen2 <- penman(TMIN, TMAX, AWND, CC=ACSH, lat=37.6475, z=402.6, na.rm=TRUE)
@@ -170,6 +169,7 @@
 #' 
 #' # Comparison with example from Allen et al. (1998), p. 69, fig. 18:
 #' # Data from Cabinda, Angola (-5.33S, 12.11E, 20 m a.s.l.)
+#' 
 #' data(cabinda)
 #' pen.cab <- penman(cabinda$Tmin, cabinda$Tmax, cabinda$U2,
 #' 	Rs=cabinda$Rs, tsun=cabinda$tsun, RH=cabinda$RH, lat=-5.33, z=20)
@@ -177,26 +177,48 @@
 #' abline(0, 1, lt='dashed')
 #' summary(lm(pen.cab~cabinda$ET0))$r.squared
 #'
-#' Matrix input (data from several stations)
-#' Replicating Wichita data two time to simulate data at two locations.
+#' # Matrix input (data from several stations)
+#' # Replicating Wichita data twice to simulate data at two locations.
+#' 
 #' tmin <- cbind(TMIN, TMIN+1.5)
 #' tmax <- cbind(TMAX, TMAX+1.5)
 #' lat <- c(37.6475, 35.000)
-#'
 #' har <- hargreaves(tmin, tmax, lat=lat, na.rm=TRUE)
 #' plot(har); abline(0,1)
 #' plot(ts(har, fr=12))
 #'
-#' Array input (gridded data)
-#' Replicating Wichita data to simulate data from a grid. Note that the time
-#' dimension (`nt`) comes first. Latitude is provided as a 2-d array.
+#' # Array input (gridded data)
+#' # Replicating Wichita data to simulate data from a grid. Note that the time
+#' # dimension (`nt`) comes first. Latitude is provided as a 2-d array.
+#' 
 #' nt <- length(TMIN)
 #' tmin <- array(TMIN, dim=c(nt, 2, 2))
 #' tmax <- array(TMAX, dim=c(nt, 2, 2))
 #' lat <- array(c(40, 30, 40, 30), dim=c(2,2))
-#'
 #' har <- hargreaves(tmin, tmax, lat=lat, na.rm=TRUE)
 #' dim(har)
+#'
+#' # Different Penman-Monteith flavours
+#'
+#' pen_icid <- penman(TMIN, TMAX, AWND, tsun=TSUN, lat=37.6475, z=402.6, na.rm=TRUE,
+#'                    method='ICID')
+#' pen_asce <- penman(TMIN, TMAX, AWND, tsun=TSUN, lat=37.6475, z=402.6, na.rm=TRUE,
+#'                    method='ASCE')
+#' pen_fao <- penman(TMIN, TMAX, AWND, tsun=TSUN, lat=37.6475, z=402.6, na.rm=TRUE,
+#'                   method='FAO')
+#' plot(ts(cbind(pen_icid, pen_asce, pen_fao), fr=12))
+#'
+#' # Different CO2 concentrations
+#'
+#' # Default (300 ppm)
+#' pen_300 <- penman(TMIN, TMAX, AWND, tsun=TSUN, lat=37.6475, z=402.6, na.rm=TRUE)
+#' # Increased to 450 ppm
+#' pen_450 <- penman(TMIN, TMAX, AWND, tsun=TSUN, lat=37.6475, z=402.6, CO2=450, na.rm=TRUE)
+#' plot(pen_450, pen_300); abline(0, 1)
+#' # Increasing from 300 to 450
+#' co2 <- seq(300, 450, length.out=length(TMIN))
+#' pen_co2 <- penman(TMIN, TMAX, AWND, tsun=TSUN, lat=37.6475, z=402.6, CO2=co2, na.rm=TRUE)
+#' plot(ts(cbind(pen_300, pen_co2), fr=12))
 #'
 #'
 #' @importFrom stats cycle frequency ts start
