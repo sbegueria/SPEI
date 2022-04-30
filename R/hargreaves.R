@@ -147,16 +147,24 @@
 #' 
 #' # PET following Thornthwaite
 #' tho <- thornthwaite(TMED, 37.6475)
+#' 
 #' # ETo by Hargreaves
 #' har <- hargreaves(TMIN, TMAX, lat=37.6475)
+#' 
 #' # ETo by Penman, based on sun hours, ignore NAs
 #' pen <- penman(TMIN, TMAX, AWND, tsun=TSUN, lat=37.6475, z=402.6, na.rm=TRUE)
+#' 
 #' # Penman, based on cloud cover
 #' pen2 <- penman(TMIN, TMAX, AWND, CC=ACSH, lat=37.6475, z=402.6, na.rm=TRUE)
+#' 
 #' # Penman, with constant wind
 #' pen3 <- penman(TMIN, TMAX, tsun=TSUN, lat=37.6475, z=402.6, na.rm=TRUE)
+#' 
 #' # Plot them together
 #' plot(ts(cbind(tho, har, pen, pen2, pen3), fr=12))
+#' 
+#' # Compare between methods
+#' pairs(cbind(tho, har, pen, pen2, pen3))
 #' 
 #' # Input data as a time series vector; note that only the first parameter
 #' # needs to be a `ts` object.

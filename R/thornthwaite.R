@@ -102,8 +102,12 @@ thornthwaite <- function(Tave, lat, na.rm=FALSE, verbose=TRUE) {
     cyc  <- cycle(ts(1:n_times, frequency = 12))
   }
   
-  # Get length of each month and day of the middle of each month
+  # Length of each month and day of the middle of each month
   mlen <- c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
+  msum <- cumsum(mlen) - mlen + 15
+  # convert month data to array
+  mlen_array <- array(mlen[cyc], dim=int_dims)
+  msum_array <- array(msum[cyc], dim=int_dims)
   
   # Verify the length of each input variable
   input_len <- prod(int_dims)
@@ -124,27 +128,27 @@ thornthwaite <- function(Tave, lat, na.rm=FALSE, verbose=TRUE) {
   if (verbose) {
     print(paste(warn$getMessages(), collapse=' '))
   }
-
+  
   
   
   ### Computation of ETo - - - - - - - - - - - - - - - - - - - - - - - - -
   
   # Initialize PET
   PET <- Tave * NA
-  
   # Monthly correction factor, depending on latitude (K)
-  # tangens of the average solar declination angle for each month of the year
   tanLat <- tan(lat / 57.2957795)
-  tanDelta <- c(-0.37012566,-0.23853358,-0.04679872,0.16321764,
-                0.32930908,0.40677729,0.3747741,0.239063,
-                0.04044485,-0.16905776,-0.33306377,-0.40743608)
-  tanLatM <- tanLat * tanDelta[cyc]
-  tanLatM[tanLatM< (-1)] <- -1
-  tanLatM[tanLatM>1] <- 1
-  omega <- acos(-tanLatM)
-  # monthly average number of sun hours (N)
-  N <- 24 * omega / pi
-  K <- N / 12 * mlen[cyc] / 30
+  # mean solar declination angle for each month (Delta)
+  Delta <- 0.4093 * sin(((2*pi*msum_array)/365) - 1.405)
+  # hourly angle of sun rising (omega)
+  tanDelta <- tan(Delta)
+  tanLatDelta <- tanLat * tanDelta
+  tanLatDelta <- ifelse(tanLatDelta<(-1), -1, tanLatDelta)
+  tanLatDelta <- ifelse(tanLatDelta>1, 1, tanLatDelta)
+  omega <- acos(-tanLatDelta)
+  # mean daily daylight hours for each month (N)
+  N <- 24 / pi * omega
+  # which leads to K
+  K <- N / 12 * mlen_array / 30
   
   # Annual temperature efficiency index (J)
   Tt <- apply(Tave, c(2,3), function(x) {
