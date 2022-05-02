@@ -46,10 +46,12 @@ spei <- function(x, y,...) UseMethod('spei')
 #' @param ref.end optional, ending point of the reference period used 
 #' for computing the index. Defaults to NULL, indicating that the last 
 #' value in data will be used as ending point.
-#' @param x optional, a logical value indicating wether the data used 
+#' @param x optional, a logical value indicating whether the data used 
 #' for fitting the model should be kept. Defaults to FALSE.
 #' @param params optional, an array of parameters for computing the 
 #' spei. This option overrides computation of fitting parameters.
+#' @param verbose optional, logical, report the computation options during
+#' calculation. Either 'TRUE' (default) or 'FALSE'.
 #' @param ... other possible parameters.
 #' 
 #' 
@@ -263,73 +265,240 @@ spei <- function(x, y,...) UseMethod('spei')
 #' 
 #' @export
 #' 
-spei <- function(data, scale, kernel=list(type='rectangular',shift=0),
+spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
                  distribution='log-Logistic', fit='ub-pwm', na.rm=FALSE, 
-                 ref.start=NULL, ref.end=NULL, x=FALSE, params=NULL, ...) {
+                 ref.start=NULL, ref.end=NULL, x=FALSE, params=NULL,
+                 verbose=TRUE, ...) {
   
-  scale <- as.numeric(scale)
-  na.rm <- as.logical(na.rm)
-  x <- as.logical(x)
-  #if (!exists("data",inherits=F) | !exists("scale",inherits=F)) {
-  #	stop('Both data and scale must be provided')
-  #}
-  if (anyNA(data) && na.rm==FALSE) {
-    stop('Error: Data must not contain NAs')
-  }
-  if (!(distribution %in% c('log-Logistic', 'Gamma', 'PearsonIII'))) {
-    stop('Distrib must be one of "log-Logistic", "Gamma" or "PearsonIII"')
-  }
-  if (!(fit %in% c('max-lik', 'ub-pwm', 'pp-pwm'))) {
-    stop('Method must be one of "ub-pwm" (default), "pp-pwm" or "max-lik"')
-  }
-  if ( (!is.null(ref.start) && length(ref.start)!=2) | (!is.null(ref.end) && length(ref.end)!=2) ) {
-    stop('Start and end of the reference period must be a numeric vector of length two.')
+  ### Argument check - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  
+  # Determine which combinations of inputs were passed and check their
+  # validity, and check that all the inputs have the same dimensions
+  
+  # Instantiate two objects to collect errors and warnings
+  check <- makeAssertCollection()
+  warn  <- makeAssertCollection()
+  
+  # A list of computation options
+  using <- list(na.rm=FALSE, ref.start=FALSE, ref.end=FALSE, x=FALSE,
+                params=FALSE)
+  
+  # Check compulsory inputs
+  
+  if (!is.numeric(scale)) {
+    check$push('Argument `scale` must be numeric.')
+  } else if (length(scale) != 1) {
+    check$push('Argument `scale` must be a single value')
+  } else {
+    warn$push(paste0('Calculating the Standardized Precipitation ',
+                     'Evapotranspiration Index (SPEI) at a time scale of ', scale, '.'))
   }
   
+  # Check optional inputs
+  
+  if (!is.list(kernel) | length(kernel) != 2 | names(kernel)[1] != 'type' |
+      names(kernel)[2] != 'shift') {
+    check$push('Argument `kernel` must be a list with components `type` and `shift`.')
+  } else if (class(kernel$type) != 'character' | length(kernel$type) != 1) {
+    check$push('Element `type` of `kernel` must be a single valued numeric.')
+  } else if (class(kernel$shift) != 'numeric' | length(kernel$shift) != 1) {
+    check$push('Element `shift` of `kernel` must be a single valued numeric.')
+  } else {
+    warn$push(paste0('Using kernel type \'', kernel$type, '\'', ', with ',
+                     kernel$shift, ' shift.'))
+  }
+  
+  if (is.null(params)) {
+    # fit distribution
+    if (!is.character(distribution) | length(distribution) != 1 |
+        ! distribution %in% c('log-Logistic', 'Gamma' ,'PearsonIII')) {
+      check$push(paste0('Argument `distribution` must be one of `log-Logistic`,',
+                        ' `Gamma` or `PearsonIII`.'))
+    } else {
+      warn$push(paste0('Fitting the data to a ', distribution, ' distribution.'))
+    }
+    if (!is.character(fit) | length(fit) != 1 |
+        ! fit %in% c('ub-pwm', 'pp-pwm' ,'max-lik')) {
+      check$push(paste0('Argument `fit` must be one of `ub-pwm`, `pp-pwm` ',
+                        'or `max-lik`.'))
+    } else {
+      warn$push(paste0('Using the ', fit, ' parameter fitting method.'))
+    }
+  } else {
+    # do not fit distribution; note that additional checks must be performed to
+    # guarantee that the user-provided object conforms to what is expected
+    using$params <- TRUE
+    if (!is.character(distribution) | length(distribution) != 1 |
+        ! distribution %in% c('log-Logistic', 'Gamma' ,'PearsonIII')) {
+      check$push(paste0('Argument `distribution` must be one of `log-Logistic`,',
+                        ' `Gamma` or `PearsonIII`.'))
+    } else {
+      warn$push(paste0('Using the ', distribution, ' distribution with ',
+                       'user-specified distribution parameters.'))
+    }
+  }
+  
+  if (!is.logical(na.rm)) {
+    check$push('Argument `na.rm` must be set to either TRUE or FALSE.')
+  } else if (na.rm) {
+    warn$push('Missing values (`NA`) will not be considered in the calculation.')
+  } else {
+    using$na.rm <- TRUE
+    warn$push('Checking for missing values (`NA`): all the data must be complete.')
+  }
+  
+  # note: additional checks must be performed on both ref to see they conform to the data
+  if (!is.null(ref.start) | !is.null(ref.end)) {
+    if (!is.numeric(ref.start) | length(ref.start) != 2) {
+      check$push('Argument `ref.start` must be a numeric vector of length two.')
+    } else {
+      using$ref.start <- TRUE
+    }
+    if (!is.numeric(ref.end) | length(ref.end) != 2) {
+      check$push('Argument `ref.end` must be a numeric vector of length two.')
+    } else {
+      using$ref.end <- TRUE
+    }
+    warn$push('Using a user-specified reference period.')
+  } else {
+    warn$push('Using the whole time series as reference period.')
+  }
+  
+  if (!is.logical(x)) {
+    check$push('Argument `x` must be set to either TRUE or FALSE.')
+  } else if (x) {
+    using$x <- TRUE
+    warn$push('Storing the input data in the returned spei object.')
+  }
+  
+  if (!is.logical(verbose)) {
+    check$push('Argument `verbose` must be set to either TRUE or FALSE.')
+  }
+  
+  # Check for missing values in inputs
+  
+  if (!na.rm && anyNA(data)) {
+    check$push('`data` must not contain NA values if argument `na.rm` is set to FALSE.')
+  }
+  
+  # Determine input dimensions and compute internal dimensions (int_dims)
+  tmin_dims <- dim(data)
+  if (is.null(tmin_dims) || length(tmin_dims)==1) {
+    # vector input (single-site)
+    int_dims <- c(length(Tmin), 1, 1)
+  } else if (length(tmin_dims)==2) {
+    # matrix input (multi-site)
+    int_dims <- c(tmin_dims, 1)
+  } else if (length(tmin_dims)==3) {
+    # 3D array input (gridded data)
+    int_dims <- tmin_dims
+  } else {
+    check$push('Input data can not have more than three dimensions.')
+  }
+  n_sites <- prod(int_dims[[2]], int_dims[[3]])
+  n_times <- int_dims[[1]]
+  input_len <- prod(int_dims)
+  
+  # Determine output data shape
+  if (is.ts(data)) {
+    if (is.matrix(data)) {
+      out_type <- 'tsmatrix'
+    } else {
+      out_type <- 'tsvector'
+    }
+  } else if (is.vector(data)) {
+    out_type <- 'vector'
+  } else if (is.matrix(data)) {
+    out_type <- 'matrix'
+  } else { # is.array; default
+    out_type <- 'array'
+  }
+  warn$push(paste0('Input type is ', out_type, '.'))
+  
+  # Save column names for later
+  names <- dimnames(data)
+  
+  # Determine dates in data
+  if (is.ts(data)) {
+    ts_freq <- frequency(data)
+    ts_start <- start(data)
+    ts_end <- end(data)
+    cyc <- cycle(data)
+  } else {
+    ts_freq <- 12
+    ts_start <- 1
+    ts_end <- n_times
+    cyc  <- cycle(ts(1:n_times, frequency = 12))
+  }
+  
+  
+  # Verify the dimensions of the parameters array
+  
+  dim_params <- ifelse(distribution == 'Gamma', 2, 3)
+  if (using$params) {
+    if (dim(params)[1] != dim_params | dim(params)[2]  != n_sites |
+        dim(params)[3] != ts_freq) {
+      check$push(paste0('Parameters array should have dimensions (', dim_params,
+                        ', ', n_sites, ', ', ts_freq, ')'))
+    }
+  }
+  
+  # Create uniformly-dimensioned arrays from input
+  #  data <- array(data.matrix(data), int_dims)
   if (!is.ts(data)) {
     data <- ts(as.matrix(data), frequency = 12)
   } else {
     data <- ts(as.matrix(data), frequency=frequency(data), start=start(data))
   }
-  m <- ncol(data)
-  fr <- frequency(data)
   
+  # Return errors and halt execution (if any)
+  if (!check$isEmpty()) {
+    stop(paste(check$getMessages(), collapse=' '))
+  }
+  
+  # Show a warning with computation options
+  if (verbose) {
+    print(paste(warn$getMessages(), collapse=' '))
+  }
+  
+  
+  ### Computation of ETo - - - - - - - - - - - - - - - - - - - - - - - - -
   
   coef = switch(distribution,
-                "Gamma" = array(NA,c(2,m,fr),list(par=c('alpha','beta'),colnames(data),NULL)),
-                "log-Logistic" = array(NA,c(3,m,fr),list(par=c('xi','alpha','kappa'),colnames(data),NULL)),
-                "PearsonIII" = coef <- array(NA,c(3,m,fr),list(par=c('mu','sigma','gamma'),colnames(data),NULL))
+                "Gamma" = array(NA, c(2, n_sites, ts_freq),
+                                list(par=c('alpha','beta'), colnames(data), NULL)),
+                "log-Logistic" = array(NA, c(3, n_sites, ts_freq),
+                                       list(par=c('xi','alpha','kappa'), colnames(data), NULL)),
+                "PearsonIII" = coef <- array(NA, c(3, n_sites, ts_freq),
+                                             list(par=c('mu','sigma','gamma'), colnames(data), NULL))
   )
   
-  dim_one = ifelse(distribution == "Gamma", 2, 3)
+  # Trim data set to reference period for fitting
+  if (!using$ref.start) ref.start <- ts_start
+  if (!using$ref.end) ref.end <- ts_end
+  data.fit <- window(data, ref.start, ref.end)
   
-  if (!is.null(params)) {
-    if (dim(params)[1]!=dim_one | dim(params)[2]!=m | dim(params)[3]!=fr) {
-      stop(paste('parameters array should have dimensions (', dim_one, ', ', m, ', fr)',sep=' '))
-    }
-  }
-  
-  # Loop through series (columns in data)
-  if (!is.null(ref.start) && !is.null(ref.end)) {
-    data.fit <- window(data,ref.start,ref.end)	
-  } else {
-    data.fit <- data
-  }
+  # Instantiate and object to store the standardized results
   std <- data*NA
-  for (s in 1:m) {
-    # Cumulative series (acu)
+  
+  # Loop through series (columns in data) - This only works if data is a time series
+  for (s in 1:n_sites) {
+    
+    # Cumulative series at the desired time scale (acu)
     acu <- data.fit[,s]
     acu.pred <- data[,s]
     if (scale>1) {
-      wgt <- kern(scale,kernel$type,kernel$shift)
-      acu[scale:length(acu)] <- rowSums(embed(acu,scale)*wgt,na.rm=na.rm)
+      wgt <- kern(scale, kernel$type, kernel$shift)
+      acu[scale:length(acu)] <- rowSums(embed(acu, scale) * wgt, na.rm=na.rm)
       acu[1:(scale-1)] <- NA
-      acu.pred[scale:length(acu.pred)] <- rowSums(embed(acu.pred,scale)*wgt,na.rm=na.rm)
+      acu.pred[scale:length(acu.pred)] <- rowSums(embed(acu.pred, scale) * wgt, 
+                                                  na.rm=na.rm)
       acu.pred[1:(scale-1)] <- NA
     }
     
     # Loop through the months
-    for (c in (1:fr)) {
+    for (c in (1:ts_freq)) {
+      
       # Filter month m, excluding NAs
       f <- which(cycle(acu)==c)
       f <- f[!is.na(acu[f])]
@@ -337,54 +506,61 @@ spei <- function(data, scale, kernel=list(type='rectangular',shift=0),
       ff <- ff[!is.na(acu.pred[ff])]
       
       # Monthly series, sorted
-      month <- sort.default(acu[f], method="quick")
+      month <- sort.default(acu[f], method='quick')
       
       if (length(month)==0) {
         std[f] <- NA
         next()
       }
       
-     if(distribution != "log-Logistic"){
-       pze <- sum(month==0)/length(month)
-       month = month[month > 0]
-     }
-	    
-      if (is.null(params)) {
-        month_sd = sd(month,na.rm=TRUE)
+      # Probability of zero (pze)
+      if(distribution != 'log-Logistic'){
+        pze <- sum(month==0) / length(month)
+        month = month[month > 0]
+      }
+      
+      # Distribution parameters
+      if (!using$params) {
+        # Fit distribution parameters
+        month_sd = sd(month, na.rm=TRUE)
+        
+        # Early stopping
         if (is.na(month_sd) || (month_sd == 0)) {
           std[f] <- NA
           next
         }
-        
-        # Stop early and assign NAs if month's data is length < 4
         if(length(month) < 4){
           std[ff,s] = NA
           coef[,s,c] <- NA
           next
         }
         
-        # Calculate probability weighted moments based on fit with lmomco or TLMoments
+        # Calculate probability weighted moments based lmomco or TLMoments
         pwm = switch(fit,
-                     "pp-pwm" = pwm.pp(month,-0.35,0, nmom=3),
+                     'pp-pwm' = pwm.pp(month,-0.35,0, nmom=3),
                      #pwm.ub(month, nmom=3)
-                     TLMoments::PWM(month, order=0:2)
+                     'ub-pwm' = TLMoments::PWM(month, order=0:2)
         )
         
         # Check L-moments validity
         lmom <- pwm2lmom(pwm)
-        if ( !are.lmom.valid(lmom) || anyNA(lmom[[1]]) || any(is.nan(lmom[[1]])) ){
+        if ( !are.lmom.valid(lmom) || anyNA(lmom[[1]]) ||
+             any(is.nan(lmom[[1]])) ){
           next
         }
         
-        # lmom fortran functions need specific inputs L1, L2, T3
-        # this is handled by lmomco internally with lmorph
+        # `lmom` fortran functions need specific inputs L1, L2, T3
+        # This is handled internally by `lmomco` with `lmorph`
         fortran_vec = c(lmom$lambdas[1:2], lmom$ratios[3])
         
-        # Calculate parameters based on distribution with lmom then lmomco
+        # Calculate parameters based on distribution with `lmom`, then `lmomco`
         f_params = switch(distribution,
-                          "log-Logistic" = tryCatch(lmom::pelglo(fortran_vec), error = function(e){ parglo(lmom)$para }),
-                          "Gamma" = tryCatch(lmom::pelgam(fortran_vec), error = function(e){ pargam(lmom)$para }),
-                          "PearsonIII" = tryCatch(lmom::pelpe3(fortran_vec), error = function(e){ parpe3(lmom)$para })
+                          'log-Logistic' = tryCatch(lmom::pelglo(fortran_vec),
+                                                    error = function(e){ parglo(lmom)$para }),
+                          'Gamma' = tryCatch(lmom::pelgam(fortran_vec),
+                                             error = function(e){ pargam(lmom)$para }),
+                          'PearsonIII' = tryCatch(lmom::pelpe3(fortran_vec),
+                                                  error = function(e){ parpe3(lmom)$para })
         )
         
         # Adjust if user chose log-Logistic and max-lik
@@ -392,39 +568,42 @@ spei <- function(data, scale, kernel=list(type='rectangular',shift=0),
           f_params = parglo.maxlik(month, f_params)$para
         }
       } else {
+        # User-provided distribution parameters
         
         f_params = as.vector(params[,s,c])
         
       }
       
-      # Calculate cdf based on distribution with lmom
+      # Calculate CDF based on distribution with `lmom`
       cdf_res = switch(distribution,
-                       "log-Logistic" = lmom::cdfglo(acu.pred[ff], f_params),
-                       "Gamma" = lmom::cdfgam(acu.pred[ff], f_params),
-                       "PearsonIII" = lmom::cdfpe3(acu.pred[ff], f_params)				  				
+                       'log-Logistic' = lmom::cdfglo(acu.pred[ff], f_params),
+                       'Gamma' = lmom::cdfgam(acu.pred[ff], f_params),
+                       'PearsonIII' = lmom::cdfpe3(acu.pred[ff], f_params)				  				
       )
-
+      
       std[ff,s] = qnorm(cdf_res)
       coef[,s,c] <- f_params
       
       # Adjust if user chose Gamma or PearsonIII
       if(distribution != 'log-Logistic'){ 
-        std[ff,s] = qnorm(pze + (1-pze)*pnorm(std[ff,s]))
+        std[ff,s] = qnorm(pze + (1-pze) * pnorm(std[ff,s]))
       }
       
     } # next c (month)
   } # next s (series)
   colnames(std) <- colnames(data)
   
-  z <- list(call=match.call(expand.dots=FALSE),
-            fitted=std,coefficients=coef,scale=scale,kernel=list(type=kernel$type,
-                                                                 shift=kernel$shift,values=kern(scale,kernel$type,kernel$shift)),
-            distribution=distribution,fit=fit,na.action=na.rm)
-  if (x) z$data <- data
-  if (!is.null(ref.start)) z$ref.period <- rbind(ref.start,ref.end)
+  z <- list(call = match.call(expand.dots=FALSE),
+            fitted = std, coefficients=coef, scale=scale,
+            kernel = list(type=kernel$type,
+                          shift = kernel$shift, values=kern(scale, kernel$type, kernel$shift)),
+            distribution = distribution, fit=fit, na.action=na.rm)
+  if (using$x) z$data <- data
+  if (using$ref.start | using$ref.end) z$ref.period <- rbind(ref.start,ref.end)
   
   class(z) <- 'spei'
   return(z)
+}
 }
 
 #' @name Generic-methods-for-spei-objects

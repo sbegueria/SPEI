@@ -277,6 +277,10 @@ hargreaves <- function(Tmin, Tmax, Ra=NULL, lat=NULL, Pre=NULL, na.rm=FALSE, ver
     warn$push('Checking for missing values (`NA`): all the data must be complete.')
   }
   
+  if (!is.logical(verbose)) {
+    check$push('Argument `verbose` must be set to either TRUE or FALSE.')
+  }
+  
   # Check for missing values in inputs
   if (!na.rm && (anyNA(Tmin) || anyNA(Tmax))) {
     check$push('`Tmin` and `Tmax` must not contain NA values if argument `na.rm` is set to FALSE.')
