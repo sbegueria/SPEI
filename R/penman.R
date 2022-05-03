@@ -30,13 +30,10 @@ penman <- function(Tmin, Tmax, U2=NULL, Ra=NULL, lat=NULL, Rs=NULL,
   # Determine which combinations of inputs were passed and check their
   # validity, and check that all the inputs have the same dimensions
   
-  # Instantiate two objects to collect errors and warnings
+  # Instantiate two new 'ArgCheck' objects to collect errors and warnings
   check <- makeAssertCollection()
   warn  <- makeAssertCollection()
   
-  # Report on the method being used
-  warn$push(paste0('Calculating reference evapotranspiration using the Penman-Monteith method, following the ', method, ' variant.'))
-
   # A list of computation options
   using <- list(U2=FALSE, Ra=FALSE, lat=FALSE, Rs=FALSE, tsun=FALSE,
                 CC=FALSE, ed=FALSE, Tdew=FALSE, Tmin=FALSE, RH=FALSE,
@@ -65,7 +62,7 @@ penman <- function(Tmin, Tmax, U2=NULL, Ra=NULL, lat=NULL, Rs=NULL,
     warn$push('Using user-provided incoming solar radiation (`Rs`) data.')
   } else if (!is.null(tsun) && !is.null(lat)) {
     using$tsun <- TRUE
-    warn$push('Using bright sunshine duration data (`tsun`) and latitude (`lat`) to estimate incoming solar radiation.')
+    warn$push('Using bright sunshine duration data (`tsun`) to estimate incoming solar radiation.')
   } else if (!is.null(CC)) {
     using$CC <- TRUE
     warn$push('Using fraction cloud cover (`CC`) to estimate incoming solar radiation.')
@@ -128,11 +125,12 @@ penman <- function(Tmin, Tmax, U2=NULL, Ra=NULL, lat=NULL, Rs=NULL,
   }
   
   # Check for missing values in inputs
+  if (!na.rm && (anyNA(Tmin) || anyNA(Tmax) || (using$U2 && anyNA(U2)))) {
+    check$push('`Tmin`, `Tmax` and `U2` must not contain NA values if argument `na.rm` is set to FALSE.')
+  }
+  
   if (!na.rm &&
-      ((anyNA(Tmin) ||
-        anyNA(Tmax) ||
-       (using$U2 && anyNA(U2)) ||
-       (using$Ra && anyNA(Ra)) ||
+      ((using$Ra && anyNA(Ra)) ||
        (using$lat && anyNA(lat)) ||
        (using$Rs && anyNA(Rs)) ||
        (using$tsun && anyNA(tsun)) ||
@@ -143,7 +141,7 @@ penman <- function(Tmin, Tmax, U2=NULL, Ra=NULL, lat=NULL, Rs=NULL,
        (using$P && anyNA(P)) ||
        (using$P0 && (anyNA(P0) || anyNA(z))) ||
        (using$CO2 && anyNA(CO2)) ||
-       (using$z && anyNA(z)))) ) {
+       (using$z && anyNA(z)))) {
     check$push('Data must not contain NA values if argument `na.rm` is set to FALSE.')
   }
   
@@ -159,12 +157,12 @@ penman <- function(Tmin, Tmax, U2=NULL, Ra=NULL, lat=NULL, Rs=NULL,
     # 3D array input (gridded data)
     int_dims <- tmin_dims
   } else {
-    check$push('Input data can not have more than three dimensions.')
+    check$push('Input data can not have more than 3 dimensions')
   }
   n_sites <- prod(int_dims[[2]], int_dims[[3]])
   n_times <- int_dims[[1]]
   
-  # Determine type of input and output data shape
+  # Determine output data shape
   if (is.ts(Tmin)) {
     if (is.matrix(Tmin)) {
       out_type <- 'tsmatrix'
@@ -183,28 +181,30 @@ penman <- function(Tmin, Tmax, U2=NULL, Ra=NULL, lat=NULL, Rs=NULL,
   # Save column names for later
   names <- dimnames(Tmin)
   
-  # Determine dates in data
+  # Determine dates: month length and mid-month day-within-year
   if (is.ts(Tmin)) {
     ts_freq <- frequency(Tmin)
     ts_start <- start(Tmin)
-    cyc <- cycle(Tmin)
+    if (ts_freq != 12) {
+      check$push('Input data needs to be have a frequency of 12 if provided as a time series (i.e., a monthly time series).')
+    }
+    ym <- zoo::as.yearmon(time(Tmin))
+    warn$push(paste0('Time series spanning ', ym[1], ' to ', ym[n_times], '.'))
+    date <- as.Date(ym)
+    mlen_array <- array(as.numeric(lubridate::days_in_month(date)), dim=int_dims)
+    msum_array <- array(yday(date) + round((mlen_array/2) - 1), dim=int_dims)
   } else {
-    ts_freq <- 12
-    ts_start <- 1
-    cyc  <- cycle(ts(1:n_times, frequency = 12))
+    mlen <- c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
+    msum <- cumsum(mlen) - mlen + 15
+    mlen_array <- array(mlen, dim=int_dims)
+    msum_array <- array(msum, dim=int_dims)
+    warn$push('Assuming the data are monthly time series starting in January, all regular (non-leap) years.')
   }
-  
-  # Get length of each month and day of the middle of each month
-  mlen <- c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
-  msum <- cumsum(mlen) - mlen + 15
-  # convert month data to array
-  mlen_array <- array(mlen[cyc], dim=int_dims)
-  msum_array <- array(msum[cyc], dim=int_dims)
   
   # Verify the length of each input variable
   input_len <- prod(int_dims)
   if (sum(lengths(Tmin))!=input_len || sum(lengths(Tmax))!=input_len) {
-    check$push('`Tmin` and `Tmax` cannot have different lengths.')
+    check$push('`Tmin` and `Tmax`cannot have different lengths.')
   }
   if (using$U2 && sum(lengths(U2))!=input_len) {
     check$push('`U2` has incorrect length.')
@@ -230,7 +230,7 @@ penman <- function(Tmin, Tmax, U2=NULL, Ra=NULL, lat=NULL, Rs=NULL,
   if (using$Tdew && sum(lengths(Tdew))!=input_len) {
     check$push('`Tdew` has incorrect length.')
   }
-  if (using$RH && sum(lengths(RH))!=input_len) {
+  if (using$RH && sum(lengths(RRHa))!=input_len) {
     check$push('`RH` has incorrect length.')
   }
   if (using$P && sum(lengths(P))!=input_len) {
@@ -239,8 +239,8 @@ penman <- function(Tmin, Tmax, U2=NULL, Ra=NULL, lat=NULL, Rs=NULL,
   if (using$P0 && sum(lengths(P0))!=input_len) {
     check$push('`P0` has incorrect length.')
   }
-  if (using$CO2 && (sum(lengths(CO2))!=1 & sum(lengths(CO2))!=n_times)) {
-    check$push('`CO2` has incorrect length: it has to be either a single value or a vector equal to `n_times`.')
+  if (using$CO2 && sum(lengths(CO2))!=input_len) {
+    check$push('`CO2` has incorrect length.')
   }
   if (using$z && sum(lengths(z))!=n_sites) {
     check$push('`z` has incorrect length.')
@@ -293,6 +293,9 @@ penman <- function(Tmin, Tmax, U2=NULL, Ra=NULL, lat=NULL, Rs=NULL,
     z <- aperm(array(data.matrix(z), int_dims[c(2, 3, 1)]), c(3, 1, 2))
   }
   
+  # Method used
+  warn$push(paste0('Calculation method is ', method, '.'))
+  
   # Return errors and halt execution (if any)
   if (!check$isEmpty()) {
     stop(paste(check$getMessages(), collapse=' '))
@@ -300,7 +303,7 @@ penman <- function(Tmin, Tmax, U2=NULL, Ra=NULL, lat=NULL, Rs=NULL,
   
   # Show a warning with computation options
   if (verbose) {
-    print(paste(warn$getMessages(), collapse=' '))
+    paste(warn$getMessages(), collapse=' ')
   }
   
   
@@ -391,8 +394,7 @@ penman <- function(Tmin, Tmax, U2=NULL, Ra=NULL, lat=NULL, Rs=NULL,
     # Note: For the winter months and latitudes higher than 55º the following
     # equations have limited validity (Allen et al., 1994).
     # J: number of day in the year (eq. 1.27)
-    msum <- cumsum(mlen) - mlen + 15
-    J <- msum[cyc]
+    J <- msum_array
     # delta: solar declination, rad (1 rad = 57.2957795 deg) (eq. 1.25)
     delta <- 0.409 * sin(0.0172 * J - 1.39)
     # dr: relative distance Earth-Sun, [] (eq. 1.24)
@@ -460,7 +462,7 @@ penman <- function(Tmin, Tmax, U2=NULL, Ra=NULL, lat=NULL, Rs=NULL,
   G[2:(n_times-1),,] <- 0.07 * (Tmean[3:n_times,,] - Tmean[1:(n_times-2),,])
   G[n_times,,] <- 0.14 * (Tmean[n_times,,] - Tmean[(n_times-1),,])
   
-  # Wind speed at 2m, U2, when originally measured at different height (eq. 1.62)
+  # Wind speed at 2m, U2 (eq. 1.62)
   #U2 <- U2 * 4.85203/log((zz-0.08)/0.015)
   
   # Daily ET0 (eq. 2.18)
@@ -469,8 +471,8 @@ penman <- function(Tmin, Tmax, U2=NULL, Ra=NULL, lat=NULL, Rs=NULL,
   } else if (crop=='long') {
     c1 <- 1600; c2 <- 0.38 # tall reference crop (e.g. alfalfa, 0.5 m)
   } else {
-    stop(paste('An error occurred while estimating the daily ETo.',
-               'Please report this error.'))
+    stop(paste('An error occurred while estimating the daily ET0',
+               'sunshine fraction Please report this error.'))
   }
   if (!using$CO2) {
     ET0 <- (0.408 * Delta * (Rn - G) + gamma * (c1 / (Tmean + 273)) * U2 *
@@ -481,7 +483,7 @@ penman <- function(Tmin, Tmax, U2=NULL, Ra=NULL, lat=NULL, Rs=NULL,
   }
   
   # Transform ET0 to mm month-1
-  ET0 <- ifelse(ET0 < 0, 0, ET0) * mlen[cyc]
+  ET0 <- ifelse(ET0 < 0, 0, ET0) * mlen_array
   
   
   ### Format output and return - - - - - - - - - - - - - - - - - - - - - - -

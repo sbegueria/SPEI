@@ -236,7 +236,8 @@
 #' 
 #' @export
 #' 
-hargreaves <- function(Tmin, Tmax, Ra=NULL, lat=NULL, Pre=NULL, na.rm=FALSE, verbose=TRUE) {
+function(Tmin, Tmax, Ra=NULL, lat=NULL, Pre=NULL,
+         na.rm=FALSE, verbose=TRUE) {
   
   ### Argument check - - - - - - - - - - - - - - - - - - - - - - - - - - -
   
@@ -289,11 +290,11 @@ hargreaves <- function(Tmin, Tmax, Ra=NULL, lat=NULL, Pre=NULL, na.rm=FALSE, ver
   if (!na.rm && (anyNA(Ra))) {
     check$push('`Ra` must not contain NA values if argument `na.rm` is set to FALSE.')
   }
-
+  
   if (!na.rm && (anyNA(Pre))) {
     check$push('`Pre` must not contain NA values if argument `na.rm` is set to FALSE.')
   }
-
+  
   if (using$lat && anyNA(lat)) {
     check$push('`lat` cannot be missing.')
   }
@@ -334,28 +335,30 @@ hargreaves <- function(Tmin, Tmax, Ra=NULL, lat=NULL, Pre=NULL, na.rm=FALSE, ver
   # Save column names for later
   names <- dimnames(Tmin)
   
-  # Determine dates in data
+  # Determine dates: month length and mid-month day-within-year
   if (is.ts(Tmin)) {
     ts_freq <- frequency(Tmin)
     ts_start <- start(Tmin)
-    cyc <- cycle(Tmin)
+    if (ts_freq != 12) {
+      check$push('Input data needs to be have a frequency of 12 if provided as a time series (i.e., a monthly time series).')
+    }
+    ym <- zoo::as.yearmon(time(Tmin))
+    warn$push(paste0('Time series spanning ', ym[1], ' to ', ym[n_times], '.'))
+    date <- as.Date(ym)
+    mlen_array <- array(as.numeric(lubridate::days_in_month(date)), dim=int_dims)
+    msum_array <- array(yday(date) + round((mlen_array/2) - 1), dim=int_dims)
   } else {
-    ts_freq <- 12
-    ts_start <- 1
-    cyc  <- cycle(ts(1:n_times, frequency = 12))
+    mlen <- c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
+    msum <- cumsum(mlen) - mlen + 15
+    mlen_array <- array(mlen, dim=int_dims)
+    msum_array <- array(msum, dim=int_dims)
+    warn$push('Assuming the data are monthly time series starting in January, all regular (non-leap) years.')
   }
-  
-  # Get length of each month and day of the middle of each month
-  mlen <- c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
-  msum <- cumsum(mlen) - mlen + 15
-  # convert month data to array
-  mlen_array <- array(mlen[cyc], dim=int_dims)
-  msum_array <- array(msum[cyc], dim=int_dims)
   
   # Verify the length of each input variable
   input_len <- prod(int_dims)
   if (sum(lengths(Tmin))!=input_len || sum(lengths(Tmax))!=input_len) {
-    check$push('`Tmin` and `Tmax`cannot have different lengths.')
+    check$push('`Tmin` and `Tmax` should not have different lengths.')
   }
   if (using$Ra && sum(lengths(Ra))!=input_len) {
     check$push('`Ra` has incorrect length.')
@@ -407,34 +410,35 @@ hargreaves <- function(Tmin, Tmax, Ra=NULL, lat=NULL, Pre=NULL, na.rm=FALSE, ver
   if (!using$Ra) {
     # estimate Ra, following Allen et al. (1994)
     # number of day in the year
-    J <- msum_array #msum[c]
+    J <- msum_array
     # solar declination, rad (1 rad = 57.2957795 deg)
-    delta <- 0.409*sin(0.0172*J-1.39)
+    delta <- 0.409 * sin(0.0172 * J - 1.39)
     # relative distance Earth-Sun, []
-    dr <- 1 + 0.033*cos(0.0172*J)
+    dr <- 1 + 0.033 * cos(0.0172 * J)
     # sunset hour angle, rad
-    latr <- lat/57.2957795
+    latr <- lat / 57.2957795
     sset <- -tan(latr)*tan(delta)
-    omegas <- sset*0
-    omegas[abs(sset)<=1] <- acos(sset[abs(sset)<=1])
+    omegas <- sset * 0
+    omegas[abs(sset) <= 1] <- acos(sset[abs(sset) <= 1])
     # correction for high latitudes
     omegas[sset<(-1)] <- max(omegas)
     # Ra, MJ m-2 d-1
-    Ra <- 37.6*dr*(omegas*sin(latr)*sin(delta)+cos(latr)*cos(delta)*sin(omegas))
-    Ra <- ifelse(Ra<0,0,Ra)
+    Ra <- 37.6 * dr * 
+      (omegas * sin(latr) * sin(delta) + cos(latr) * cos(delta) * sin(omegas))
+    Ra <- ifelse(Ra<0, 0, Ra)
   }
   
   # 2. Daily ET0, mm day-1
   if (!using$Pre) {
     # Use original Hargreaves (1948)
-    ET0 <- 0.0023 * 0.408*Ra * (Tmean+17.8) * Tr^0.5
+    ET0 <- 0.0023 * 0.408 * Ra * (Tmean + 17.8) * Tr ^ 0.5
   } else {
     # Use modified method (Droogers and Allen, 2002)
-    ab <- Tr-0.0123 * Pre
-    ET0 <- 0.0013 * 0.408 * Ra * (Tmean+17.0) * ab^0.76
-    ET0[is.nan(ab^0.76)] <- 0
+    ab <- Tr - 0.0123 * Pre
+    ET0 <- 0.0013 * 0.408 * Ra * (Tmean + 17.0) * ab ^ 0.76
+    ET0[is.nan(ab ^ 0.76)] <- 0
   }
-  ET0 <- ifelse(ET0<0, 0, ET0)
+  ET0 <- ifelse(ET0 < 0, 0, ET0)
   
   # Transform ET0 to mm month-1
   ET0 <- ET0 * mlen_array

@@ -27,12 +27,9 @@ thornthwaite <- function(Tave, lat, na.rm=FALSE, verbose=TRUE) {
   # Determine which combinations of inputs were passed and check their
   # validity, and check that all the inputs have the same dimensions
   
-  # Instantiate two objects to collect errors and warnings
+  # Instantiate two new 'ArgCheck' objects to collect errors and warnings
   check <- makeAssertCollection()
   warn  <- makeAssertCollection()
-  
-  # Report on the method being used
-  warn$push('Calculating reference evapotranspiration using the Thornthwaite method.')
   
   # A list of computation options
   using <- list(na.rm=FALSE)
@@ -67,7 +64,7 @@ thornthwaite <- function(Tave, lat, na.rm=FALSE, verbose=TRUE) {
     # 3D array input (gridded data)
     int_dims <- tmin_dims
   } else {
-    check$push('Input data can not have more than three dimensions.')
+    check$push('Input data can not have more than 3 dimensions')
   }
   n_sites <- prod(int_dims[[2]], int_dims[[3]])
   n_times <- int_dims[[1]]
@@ -91,23 +88,27 @@ thornthwaite <- function(Tave, lat, na.rm=FALSE, verbose=TRUE) {
   # Save column names for later
   names <- dimnames(Tave)
   
-  # Determine dates in data
+  # Determine dates: month length and mid-month day-within-year
   if (is.ts(Tave)) {
     ts_freq <- frequency(Tave)
     ts_start <- start(Tave)
     cyc <- cycle(Tave)
+    if (ts_freq != 12) {
+      check$push('Input data needs to be have a frequency of 12 if provided as a time series (i.e., a monthly time series).')
+    }
+    ym <- zoo::as.yearmon(time(Tave))
+    warn$push(paste0('Time series spanning ', ym[1], ' to ', ym[n_times], '.'))
+    date <- as.Date(ym)
+    mlen_array <- array(as.numeric(lubridate::days_in_month(date)), dim=int_dims)
+    msum_array <- array(yday(date) + round((mlen_array/2) - 1), dim=int_dims)
   } else {
-    ts_freq <- 12
-    ts_start <- 1
-    cyc  <- cycle(ts(1:n_times, frequency = 12))
+    mlen <- c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
+    msum <- cumsum(mlen) - mlen + 15
+    cyc <- array(c(1:12), dim=int_dims)[,,]
+    mlen_array <- array(mlen, dim=int_dims)
+    msum_array <- array(msum, dim=int_dims)
+    warn$push('Assuming the data are monthly time series starting in January, all regular (non-leap) years.')
   }
-  
-  # Length of each month and day of the middle of each month
-  mlen <- c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
-  msum <- cumsum(mlen) - mlen + 15
-  # convert month data to array
-  mlen_array <- array(mlen[cyc], dim=int_dims)
-  msum_array <- array(msum[cyc], dim=int_dims)
   
   # Verify the length of each input variable
   input_len <- prod(int_dims)
@@ -126,9 +127,8 @@ thornthwaite <- function(Tave, lat, na.rm=FALSE, verbose=TRUE) {
   
   # Show a warning with computation options
   if (verbose) {
-    print(paste(warn$getMessages(), collapse=' '))
+    paste(warn$getMessages(), collapse=' ')
   }
-  
   
   
   ### Computation of ETo - - - - - - - - - - - - - - - - - - - - - - - - -
