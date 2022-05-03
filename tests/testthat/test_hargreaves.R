@@ -100,7 +100,7 @@ test_that('lat length does not correspond with number of sites', {
 test_that('example with lat', {
   expect_equal(
     readRDS('data/hargreaves_out_lat.rds'),
-    hargreaves(TMIN,TMAX,lat=37.6475)
+    hargreaves(TMIN, TMAX, lat=37.6475)
   )
 })
 
@@ -120,3 +120,11 @@ test_that('example with Pre', {
   )
 })
 
+#out <- hargreaves(ts(TMIN, c(1980,1), fr=12), TMAX, lat=37.6475)
+#saveRDS(out, file='./tests/testthat/data/hargreaves_out_ts.rds')
+test_that('example with lat', {
+  expect_equal(
+    readRDS('data/hargreaves_out_ts.rds'),
+    hargreaves(ts(TMIN, c(1980,1), fr=12), TMAX, lat=37.6475)
+  )
+})

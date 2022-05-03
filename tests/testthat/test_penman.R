@@ -160,7 +160,26 @@ test_that('P0 incorrect length', {
 #saveRDS(out, file='./tests/testthat/data/penman_out_tsun.rds')
 test_that('example with tsun', {
   expect_equal(
-    readRDS('./tests/testthat/data/penman_out_tsun.rds'),
+    readRDS('data/penman_out_tsun.rds'),
+    penman(TMIN, TMAX, AWND, tsun=TSUN, lat=37.6475, z=402.6, na.rm=TRUE)
+  )
+})
+
+#out <- penman(ts(TMIN, c(1980,1), fr=12), TMAX, AWND, tsun=TSUN, lat=37.6475, z=402.6, na.rm=TRUE)
+#saveRDS(out, file='./tests/testthat/data/penman_out_ts.rds')
+test_that('example with ts input', {
+  expect_equal(
+    readRDS('data/penman_out_ts.rds'),
+    penman(ts(TMIN, c(1980,1), fr=12), TMAX, AWND, tsun=TSUN, lat=37.6475,
+           z=402.6, na.rm=TRUE)
+  )
+})
+
+#out <- penman(TMIN, TMAX, AWND, tsun=TSUN, lat=37.6475, z=402.6, na.rm=TRUE)
+#saveRDS(out, file='./tests/testthat/data/penman_out_tsun.rds')
+test_that('example with tsun', {
+  expect_equal(
+    readRDS('data/penman_out_tsun.rds'),
     penman(TMIN, TMAX, AWND, tsun=TSUN, lat=37.6475, z=402.6, na.rm=TRUE)
   )
 })
@@ -169,7 +188,7 @@ test_that('example with tsun', {
 #saveRDS(out, file='./tests/testthat/data/penman_out_cc.rds')
 test_that('example with cc', {
   expect_equal(
-    readRDS('./tests/testthat/data/penman_out_cc.rds'),
+    readRDS('data/penman_out_cc.rds'),
     penman(TMIN, TMAX, AWND, CC=ACSH, lat=37.6475, z=402.6, na.rm=TRUE)
   )
 })
@@ -178,7 +197,7 @@ test_that('example with cc', {
 #saveRDS(out, file='./tests/testthat/data/penman_out_u2.rds')
 test_that('example with constant wind', {
   expect_equal(
-    readRDS('./tests/testthat/data/penman_out_u2.rds'),
+    readRDS('data/penman_out_u2.rds'),
     penman(TMIN, TMAX, tsun=TSUN, lat=37.6475, z=402.6, na.rm=TRUE)
   )
 })
@@ -187,7 +206,7 @@ test_that('example with constant wind', {
 #saveRDS(out, file='./tests/testthat/data/penman_out_tsun_ts.rds')
 test_that('example with tsvector', {
   expect_equal(
-    readRDS('./tests/testthat/data/penman_out_tsun_ts.rds'),
+    readRDS('data/penman_out_tsun_ts.rds'),
     penman(ts(TMIN, start=c(1980, 1), frequency=12), TMAX, AWND, tsun=TSUN,
            lat=37.6475, z=402.6, na.rm=TRUE)
   )
@@ -198,7 +217,7 @@ data(cabinda)
 #saveRDS(out, file='./tests/testthat/data/penman_out_cabinda.rds')
 test_that('example with cabinda data', {
   expect_equal(
-    readRDS('./tests/testthat/data/penman_out_cabinda.rds'),
+    readRDS('data/penman_out_cabinda.rds'),
     penman(cabinda$Tmin, cabinda$Tmax, cabinda$U2,	Rs=cabinda$Rs,
            tsun=cabinda$tsun, RH=cabinda$RH, lat=-5.33, z=20)  )
 })
@@ -207,7 +226,7 @@ test_that('example with cabinda data', {
 #saveRDS(out, file='./tests/testthat/data/penman_out_asce.rds')
 test_that('example with ASCE`s method', {
   expect_equal(
-    readRDS('./tests/testthat/data/penman_out_asce.rds'),
+    readRDS('data/penman_out_asce.rds'),
     penman(TMIN, TMAX, AWND, tsun=TSUN, lat=37.6475, z=402.6, na.rm=TRUE, method='ASCE')
   )
 })
@@ -216,7 +235,7 @@ test_that('example with ASCE`s method', {
 #saveRDS(out, file='./tests/testthat/data/penman_out_fao.rds')
 test_that('example with FAO`s method', {
   expect_equal(
-    readRDS('./tests/testthat/data/penman_out_fao.rds'),
+    readRDS('data/penman_out_fao.rds'),
     penman(TMIN, TMAX, AWND, tsun=TSUN, lat=37.6475, z=402.6, na.rm=TRUE, method='FAO')
   )
 })
@@ -225,7 +244,7 @@ test_that('example with FAO`s method', {
 #saveRDS(out, file='./tests/testthat/data/penman_out_co2.rds')
 test_that('example with different CO2', {
   expect_equal(
-    readRDS('./tests/testthat/data/penman_out_co2.rds'),
+    readRDS('data/penman_out_co2.rds'),
     penman(TMIN, TMAX, AWND, tsun=TSUN, lat=37.6475, z=402.6, CO2=450, na.rm=TRUE)
   )
 })
@@ -235,7 +254,7 @@ co2 <- seq(300, 450, length.out=length(TMIN))
 #saveRDS(out, file='./tests/testthat/data/penman_out_co2ts.rds')
 test_that('example with increasing CO2', {
   expect_equal(
-    readRDS('./tests/testthat/data/penman_out_co2ts.rds'),
+    readRDS('data/penman_out_co2ts.rds'),
     penman(TMIN, TMAX, AWND, tsun=TSUN, lat=37.6475, z=402.6, CO2=co2, na.rm=TRUE)
   )
 })

@@ -40,3 +40,10 @@ test_that('example', {
   thoOut = readRDS('data/thornthwaite_out.rds') #./tests/testthat/
   expect_equal(thoOut, thornthwaite(TMED, 37.6475))
 })
+
+#out <- thornthwaite(ts(TMED, c(1980,1), fr=12), 37.6475)
+#saveRDS(out, file='./tests/testthat/data/thornthwaite_out_ts.rds')
+test_that('example', {
+  thoOut = readRDS('data/thornthwaite_out_ts.rds') #./tests/testthat/
+  expect_equal(thoOut, thornthwaite(ts(TMED, c(1980,1), fr=12), 37.6475))
+})

@@ -236,7 +236,7 @@
 #' 
 #' @export
 #' 
-function(Tmin, Tmax, Ra=NULL, lat=NULL, Pre=NULL,
+hargreaves <- function(Tmin, Tmax, Ra=NULL, lat=NULL, Pre=NULL,
          na.rm=FALSE, verbose=TRUE) {
   
   ### Argument check - - - - - - - - - - - - - - - - - - - - - - - - - - -
