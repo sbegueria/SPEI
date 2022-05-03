@@ -361,6 +361,8 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
     }
     warn$push('Using a user-specified reference period.')
   } else {
+    #ref.start <- ts_start
+    #ref.end <- ts_end
     warn$push('Using the whole time series as reference period.')
   }
   
@@ -376,7 +378,6 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
   }
   
   # Check for missing values in inputs
-  
   if (!na.rm && anyNA(data)) {
     check$push('`data` must not contain NA values if argument `na.rm` is set to FALSE.')
   }
@@ -399,7 +400,7 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
   n_times <- int_dims[[1]]
   input_len <- prod(int_dims)
   
-  # Determine output data shape
+  # Determine input data shape
   if (is.ts(data)) {
     if (is.matrix(data)) {
       out_type <- 'tsmatrix'
@@ -424,16 +425,17 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
     ts_start <- start(data)
     ts_end <- end(data)
     cyc <- cycle(data)
+    ym <- zoo::as.yearmon(time(data))
+    warn$push(paste0('Time series spanning ', ym[1], ' to ', ym[n_times], '.'))
   } else {
     ts_freq <- 12
     ts_start <- 1
     ts_end <- n_times
     cyc  <- cycle(ts(1:n_times, frequency = 12))
+    warn$push('Assuming the data are monthly time series starting in January.')
   }
   
-  
   # Verify the dimensions of the parameters array
-  
   dim_params <- ifelse(distribution == 'Gamma', 2, 3)
   if (using$params) {
     if (dim(params)[1] != dim_params | dim(params)[2]  != n_sites |
@@ -444,7 +446,6 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
   }
   
   # Create uniformly-dimensioned arrays from input
-  #  data <- array(data.matrix(data), int_dims)
   if (!is.ts(data)) {
     data <- ts(as.matrix(data), frequency = 12)
   } else {
@@ -460,7 +461,7 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
   if (verbose) {
     print(paste(warn$getMessages(), collapse=' '))
   }
-  
+
   
   ### Computation of ETo - - - - - - - - - - - - - - - - - - - - - - - - -
   
@@ -473,40 +474,40 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
                                              list(par=c('mu','sigma','gamma'), colnames(data), NULL))
   )
   
-  # Trim data set to reference period for fitting
-  if (!using$ref.start) ref.start <- ts_start
-  if (!using$ref.end) ref.end <- ts_end
-  data.fit <- window(data, ref.start, ref.end)
-  
-  # Instantiate and object to store the standardized results
+  # Instantiate an object to store the standardized results
   std <- data*NA
   
   # Loop through series (columns in data) - This only works if data is a time series
   for (s in 1:n_sites) {
     
     # Cumulative series at the desired time scale (acu)
-    acu <- data.fit[,s]
-    acu.pred <- data[,s]
-    if (scale>1) {
-      wgt <- kern(scale, kernel$type, kernel$shift)
-      acu[scale:length(acu)] <- rowSums(embed(acu, scale) * wgt, na.rm=na.rm)
-      acu[1:(scale-1)] <- NA
-      acu.pred[scale:length(acu.pred)] <- rowSums(embed(acu.pred, scale) * wgt, 
-                                                  na.rm=na.rm)
-      acu.pred[1:(scale-1)] <- NA
+    acu <- data[,s]
+    if (scale > 1) {
+      # WEIGHT SHOULD BE MULTIPLIED BY SCALE!!!
+      wgt <- kern(scale, kernel$type, kernel$shift) # * scale
+      acu <- c(
+        rep(NA, scale-1),
+        rowSums(embed(acu, scale) * wgt, na.rm=na.rm)
+      )
+      acu <- ts(acu, start=ts_start, fr=ts_freq)
     }
+    
+    # Trim data set to reference period for fitting (acu.ref) - requires a ts
+    if (!using$ref.start) ref.start <- ts_start
+    if (!using$ref.end) ref.end <- ts_end
+    acu.ref <- window(acu, ref.start, ref.end)
     
     # Loop through the months
     for (c in (1:ts_freq)) {
       
       # Filter month m, excluding NAs
-      f <- which(cycle(acu)==c)
-      f <- f[!is.na(acu[f])]
-      ff <- which(cycle(acu.pred)==c)
-      ff <- ff[!is.na(acu.pred[ff])]
+      f <- which(cycle(acu.ref)==c)
+      f <- f[!is.na(acu.ref[f])]
+      ff <- which(cycle(acu)==c)
+      ff <- ff[!is.na(acu[ff])]
       
       # Monthly series, sorted
-      month <- sort.default(acu[f], method='quick')
+      month <- sort.default(acu.ref[f], method='quick')
       
       if (length(month)==0) {
         std[f] <- NA
@@ -576,9 +577,9 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
       
       # Calculate CDF based on distribution with `lmom`
       cdf_res = switch(distribution,
-                       'log-Logistic' = lmom::cdfglo(acu.pred[ff], f_params),
-                       'Gamma' = lmom::cdfgam(acu.pred[ff], f_params),
-                       'PearsonIII' = lmom::cdfpe3(acu.pred[ff], f_params)				  				
+                       'log-Logistic' = lmom::cdfglo(acu[ff], f_params),
+                       'Gamma' = lmom::cdfgam(acu[ff], f_params),
+                       'PearsonIII' = lmom::cdfpe3(acu[ff], f_params)				  				
       )
       
       std[ff,s] = qnorm(cdf_res)
@@ -604,6 +605,7 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
   class(z) <- 'spei'
   return(z)
 }
+
 
 #' @name Generic-methods-for-spei-objects
 #' 
