@@ -385,7 +385,7 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
   tmin_dims <- dim(data)
   if (is.null(tmin_dims) || length(tmin_dims)==1) {
     # vector input (single-site)
-    int_dims <- c(length(Tmin), 1, 1)
+    int_dims <- c(length(data), 1, 1)
   } else if (length(tmin_dims)==2) {
     # matrix input (multi-site)
     int_dims <- c(tmin_dims, 1)
@@ -603,7 +603,6 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
   
   class(z) <- 'spei'
   return(z)
-}
 }
 
 #' @name Generic-methods-for-spei-objects
