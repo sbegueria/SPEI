@@ -349,20 +349,22 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
   
   # note: additional checks must be performed on both ref to see they conform to the data
   if (!is.null(ref.start) | !is.null(ref.end)) {
-    if (!is.numeric(ref.start) | length(ref.start) != 2) {
-      check$push('Argument `ref.start` must be a numeric vector of length two.')
-    } else {
-      using$ref.start <- TRUE
+    if (!is.null(ref.start)) {
+      if (!is.numeric(ref.start) | length(ref.start) != 2) {
+        check$push('Argument `ref.start` must be a numeric vector of length two.')
+      } else {
+        using$ref.start <- TRUE
+      }
     }
-    if (!is.numeric(ref.end) | length(ref.end) != 2) {
-      check$push('Argument `ref.end` must be a numeric vector of length two.')
-    } else {
-      using$ref.end <- TRUE
+    if (!is.null(ref.end)) {
+      if (!is.null(ref.end) && (!is.numeric(ref.end) | length(ref.end) != 2)) {
+        check$push('Argument `ref.end` must be a numeric vector of length two.')
+      } else {
+        using$ref.end <- TRUE
+      }
     }
     warn$push('Using a user-specified reference period.')
   } else {
-    #ref.start <- ts_start
-    #ref.end <- ts_end
     warn$push('Using the whole time series as reference period.')
   }
   
@@ -460,13 +462,16 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
   ### Computation of SPEI - - - - - - - - - - - - - - - - - - - - - - - - -
   
   # Instantiate an object to store the distribution coefficients
+  # ADD PZE TO GAMMA AND PEARSONIII
   coef = switch(distribution,
                 "Gamma" = array(NA, c(2, n_sites, ts_freq),
                                 list(par=c('alpha','beta'), colnames(data), NULL)),
+                "PearsonIII" = coef <- array(NA, c(3, n_sites, ts_freq),
+                                             list(par=c('mu','sigma','gamma'), colnames(data), NULL)),
                 "log-Logistic" = array(NA, c(3, n_sites, ts_freq),
                                        list(par=c('xi','alpha','kappa'), colnames(data), NULL)),
-                "PearsonIII" = coef <- array(NA, c(3, n_sites, ts_freq),
-                                             list(par=c('mu','sigma','gamma'), colnames(data), NULL))
+                "GEV" = array(NA, c(3, n_sites, ts_freq),
+                              list(par=c('xi','alpha','kappa'), colnames(data), NULL))
   )
   
   # Create uniformly-dimensioned ts-matrices from input for internal use (acu)
@@ -547,7 +552,7 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
           next()
         }
         
-        # Calculate probability weighted moments based lmomco or TLMoments
+        # Calculate probability weighted moments based on `lmomco` or `TLMoments`
         pwm = switch(fit,
                      'pp-pwm' = lmomco::pwm.pp(x.mon, -0.35, 0, nmom=3, sort=TRUE),
                      'ub-pwm' = TLMoments::PWM(x.mon, order=0:2)
@@ -574,7 +579,7 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
                                                   error = function(e){ parpe3(lmom)$para })
         )
         
-        # Adjust if user chose log-Logistic and max-lik
+        # Adjust if user chose `log-Logistic` and `max-lik`
         if(distribution == 'log-Logistic' && fit=='max-lik'){
           f_params = parglo.maxlik(x.mon, f_params)$para
         }
@@ -594,7 +599,7 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
       cdf_res <- switch(distribution,
                         'log-Logistic' = lmom::cdfglo(x[ff], f_params),
                         'Gamma' = lmom::cdfgam(x[ff], f_params),
-                        'PearsonIII' = lmom::cdfpe3(x[ff], f_params)				  				
+                        'PearsonIII' = lmom::cdfpe3(x[ff], f_params)
       )
       # Adjust for `pze` if distribution is Gamma or PearsonIII
       if(distribution == 'Gamma' | distribution == 'PearsonIII'){ 
