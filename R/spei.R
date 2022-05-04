@@ -411,8 +411,10 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
       out_type <- 'vector'
     } else if (is.matrix(data)) {
       out_type <- 'matrix'
-    } else {
+    } else if (is.array(data)) {
       out_type <- 'array'
+    } else {
+      check$push('Input data must be a vector, tsvector, matrix, tsmatrix, or 3-d array.')
     }
     warn$push(paste0('Input type is ', out_type, '.'))
     
@@ -444,13 +446,14 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
       }
     }
     
-    # Create uniformly-dimensioned atrays from input
-    if (!is.ts(data)) {
-      data <- ts(as.matrix(data), frequency = 12)
-    } else {
-      data <- ts(as.matrix(data), frequency=frequency(data), start=start(data))
+    # Create uniformly-dimensioned ts-matrices from input
+    if (out_type == 'vector' | out_type == 'tsvector') {
+      data <- ts(as.matrix(data), ts_start, frequency=ts_freq)
+    } else if (out_type == 'matrix' | out_type == 'tsmatrix') {
+      data <- ts(data, ts_start, frequency=ts_freq)
+    } else if (out_type == 'array') {
+      data <- ts(matrix(data, ncol=n_sites), ts_start, frequency=ts_freq)
     }
-    #  data <- array(data.matrix(data), int_dims)
     
     # Return errors and halt execution (if any)
     if (!check$isEmpty()) {
@@ -476,9 +479,9 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
   )
   
   # Instantiate an object to store the standardized results
-  std <- data*NA
+  spei <- data*NA
   
-  # Loop through series (columns in data) - This only works if data is a time series
+  # Loop through series (columns in data)
   for (s in 1:n_sites) {
     
     ## Prepare the data - - - - - - - - - - - - - -
@@ -487,14 +490,14 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
     acu <- data[,s]
     if (scale > 1) {
       wgt <- kern(scale, kernel$type, kernel$shift) # * scale
-      acu <- zoo::rollapplyr(acu, scale, fill=NA, FUN=function(x) sum(x*wgt)) # works on matrices, too!
+      acu <- zoo::rollapplyr(acu, scale, fill=NA, FUN=function(x) sum(x*wgt)) # works on matrices, too! - THIS COULD BE PUT OUTSIDE THE S LOOP!
       acu <- ts(acu, start=ts_start, fr=ts_freq)
     }
     
     # Trim data set to reference period for fitting (acu.ref) - requires a ts
-    if (!using$ref.start) ref.start <- ts_start
-    if (!using$ref.end) ref.end <- ts_end
-    acu.ref <- window(acu, ref.start, ref.end)
+    if (!using$ref.start) ref.start <- ts_start # NULL
+    if (!using$ref.end) ref.end <- ts_end # NULL
+    acu.ref <- suppressWarnings(window(acu, ref.start, ref.end))
     
     # Loop through the months or whatever time period used
     for (c in (1:ts_freq)) {
@@ -508,7 +511,7 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
       
       # Escape if there are no data
       if (length(acu.mon)==0) {
-        std[f] <- NA
+        spei[f] <- NA
         next()
       }
       
@@ -527,11 +530,11 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
         
         # Early stopping
         if (is.na(acu.mon_sd) || (acu.mon_sd == 0)) {
-          std[f] <- NA
+          spei[f] <- NA
           next()
         }
         if(length(acu.mon) < 4){
-          std[ff,s] = NA
+          spei[ff,s] = NA
           coef[,s,c] <- NA
           next()
         }
@@ -579,7 +582,7 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
       
       ## Standardize - - - - - - - - - - - - - -
       
-      # Standardize: calculate CDF based on chosen distribution and `f_params`
+      # Calculate CDF on `acu` using `f_params`
       cdf_res <- switch(distribution,
                         'log-Logistic' = lmom::cdfglo(acu[ff], f_params),
                         'Gamma' = lmom::cdfgam(acu[ff], f_params),
@@ -587,23 +590,47 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
       )
       # Adjust for `pze` if distribution is Gamma or PearsonIII
       if(distribution == 'Gamma' | distribution == 'PearsonIII'){ 
-        std[ff,s] <- qnorm(pze + (1-pze) * pnorm(std[ff,s]))
+        spei[ff,s] <- qnorm(pze + (1-pze) * pnorm(spei[ff,s]))
       }
       
       # Store the standardized values
-      std[ff,s] <- qnorm(cdf_res)
+      spei[ff,s] <- qnorm(cdf_res)
       
     } # next c (month)
   } # next s (series)
-  colnames(std) <- colnames(data)
+  
+  colnames(spei) <- colnames(data)
+  
+  
+  ### Format output and return - - - - - - - - - - - - - - - - - - - - - - -
+  
+  if (out_type == 'tsmatrix') {
+    colnames(spei) <- names
+    #colnames(spei) <- rep(paste0('SPEI', scale), n_sites)
+  } else if (out_type == 'tsvector') {
+    spei <- as.vector(spei)
+    spei <- ts(spei, frequency=ts_freq, start=ts_start)
+  } else if (out_type == 'vector') {
+    spei <- as.vector(spei)
+  } else if (out_type == 'matrix') {
+    spei <- matrix(spei, nrow=n_times)
+    colnames(spei) <- names
+    #colnames(spei) <- rep('SPEI', n_sites)
+  } else { # array
+    spei <- array(spei, dim=int_dims)
+    dimnames(spei)[3] <- names
+    #dimnames(spei)[3] <- list(NULL, rep('SPEI', int_dims[2]), rep('SPEI', int_dims[3]))
+  }
   
   z <- list(call = match.call(expand.dots=FALSE),
-            fitted = std, coefficients=coef, scale=scale,
+            fitted = spei,
+            coefficients = coef,
+            scale = scale,
             kernel = list(type=kernel$type,
                           shift = kernel$shift, values=kern(scale, kernel$type, kernel$shift)),
             distribution = distribution, fit=fit, na.action=na.rm)
   if (using$x) z$data <- data
-  if (using$ref.start | using$ref.end) z$ref.period <- rbind(ref.start,ref.end)
+  if (using$ref.start | using$ref.end) z$ref.period <- rbind(ref.start, ref.end)
   
   class(z) <- 'spei'
   return(z)
