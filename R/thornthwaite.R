@@ -131,7 +131,7 @@ thornthwaite <- function(Tave, lat, na.rm=FALSE, verbose=TRUE) {
   }
   
   
-  ### Computation of ETo - - - - - - - - - - - - - - - - - - - - - - - - -
+  ### Computation of PET - - - - - - - - - - - - - - - - - - - - - - - - -
   
   # Initialize PET
   PET <- Tave * NA
@@ -168,8 +168,11 @@ thornthwaite <- function(Tave, lat, na.rm=FALSE, verbose=TRUE) {
   
   # Potential evapotranspiration series (PE)
   Tave[Tave<0] <- 0
-  PET <- K * 16 * (10 * Tave / J) ^ q
-  
+  if (sum(J) != 0) {
+    PET <- K * 16 * (10 * Tave / J) ^ q
+  } else {
+    PET <- K * 0
+  }
   
   ### Format output and return - - - - - - - - - - - - - - - - - - - - - - -
   
