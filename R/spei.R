@@ -211,6 +211,8 @@ spei <- function(x, y,...) UseMethod('spei')
 #' spei1 <- spei(wichita[,'BAL'], 1)
 #' spei12 <- spei(wichita[,'BAL'], 12)
 #' class(spei1)
+#' plot(spei1)
+#' plot(spei12)
 #' 
 #' # Extract information from `spei` object: summary, call function, fitted values, and coefficients
 #' summary(spei1)
@@ -233,10 +235,11 @@ spei <- function(x, y,...) UseMethod('spei')
 #' plot(spi_12, 'Wichita, SPI-12')
 #' 
 #' # Time series not starting in January
-#' par(mfrow=c(1,1))
 #' plot(spei(ts(wichita[,'BAL'], freq=12, start=c(1980,6)), 12))
 #' 
 #' # Using a particular reference period (1980-2000) for computing the parameters
+#' # This can results in unexpected values if data outside the reference period
+#' # are way higher / lower than those within the reference period.
 #' plot(spei(ts(wichita[,'BAL'], freq=12, start=c(1980,6)), 12,
 #' 	ref.start=c(1980,1), ref.end=c(2000,1)))
 #' 
@@ -244,8 +247,8 @@ spei <- function(x, y,...) UseMethod('spei')
 #' spei24 <- spei(wichita[,'BAL'], 24)
 #' spei24_gau <- spei(wichita[,'BAL'], 24, kernel=list(type='gaussian', shift=0))
 #' par(mfrow=c(2,1))
-#' plot(spei24, main='SPEI-24 with rectangular kernel')
-#' plot(spei24_gau, main='SPEI-24 with gaussian kernel')
+#' plot(spei24)
+#' plot(spei24_gau)
 #' dev.off()
 #' 
 #' # Using different methods (distributions)
@@ -274,6 +277,16 @@ spei <- function(x, y,...) UseMethod('spei')
 #' dim(cruts4)
 #' spei_12 <- spei(cruts4, 12)
 #' dim(spei_12$fitted)
+#' 
+#' # Modding the plot
+#' # Since plot.spei() returns a ggplot object, it is possible to add or tweak
+#' # parts of the plot.
+#' plot(spei(wichita[,'BAL'], 12)) +
+#'  ggtitle('SPEI1 at Wichita') +
+#'  scale_fill_manual(values=c('blue','red')) +  # classic SPEI look
+#'  scale_color_manual(values=c('blue','red')) + # classic SPEI look
+#'  theme_classic() +
+#'  theme(legend.position='bottom')
 #' 
 #' #' @importFrom stats cycle ts frequency start is.ts pnorm qnorm window embed sd
 #' @importFrom lmomco pwm.pp pwm2lmom are.lmom.valid parglo pargam parpe3 cdfgam cdfpe3
@@ -681,13 +694,13 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
 #' @param ... additional parameters, not used at present.
 #' 
 #' 
-#' @details This functions allow extracting information and plotting \code{spei} 
+#' @details These functions allow extracting information and plotting \code{spei} 
 #' objects. \code{print} yields the fitted values, i.e. a time series of SPEI or SPI values. 
 #' \code{summary} reports the function call, the parameters of the PDF used, and the time 
 #' series of SPEI or SPI values. \code{plot} produces a plot of the time series of SPEI or 
 #' SPI values, with blue and red colors for positive and negative values, respectively. If 
 #' a reference period was used in the function call it is shown by a shaded area. In the 
-#' unlikely case that NA or Inf values were produced, these are shown by circles.
+#' event that NA or Inf values were produced, these are shown by circles.
 #' 
 #' @references 
 #' S.M. Vicente-Serrano, S. Beguería, J.I. López-Moreno. 2010. A Multi-scalar drought index 
@@ -697,6 +710,8 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
 #' 
 #' @author Santiago Beguería
 #'  
+#' @examples 
+#' See examples of use in the help page of the \code{spei()} function.
 #' 
 #' @export
 #' 
@@ -836,15 +851,34 @@ plot.spei <- function (x) {
     ref1 <- ref2 <- NULL
   }
   
+  # Remove leading / ending NAs
+  data <- zoo::na.trim(data)
+  
   # Melt
   kk <- as.data.frame(data)
   kk$time <- as.character(time(data))
   kk <- reshape::melt(kk, id.vars='time')
   kk$time <- as.numeric(kk$time)
-  kk <- kk[!is.na(kk$value),]
+  
+  # Add NAs
+  kk$na <- ifelse(is.na(kk$value), 0, NA)
   
   # Add SPI / SPEI categories
   kk$cat <- ifelse(kk$value > 0, 'neg', 'pos')
+  
+  # To do: cut the plot horizontally by drought classes; can be done with
+  # stacked bars, using geom_bar(stat='identity')
+  # kk$cat <- cut(kk$value, breaks=c(-Inf, -2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2, Inf))
+  # # go class by class
+  # w <- which(kk$cat == '(-1,-0.5]')
+  # kk <- rbind(kk, kk[w,])
+  # kk$value[w] <- -0.5
+  # kk$cat[w] <- '(-0.5,0]'
+  # #
+  # w <- which(kk$cat == '(-1,-0.5]')
+  # kk <- rbind(kk, kk[w,])
+  # kk$value[w] <- -0.5
+  # kk$cat[w] <- '(-0.5,0]'
   
   # Plot it
   g <- ggplot(kk, aes(time, value, fill=cat, color=cat))
@@ -856,9 +890,14 @@ plot.spei <- function (x) {
   }
   # add the bars with the SPEI values
   g <- g +
-    geom_bar(stat='identity') +
+    geom_bar(stat='identity') + # color='white' helps separate between values
+    #    scale_fill_manual(values=c('blue','red')) +  # classic SPEI look, a bit daunting in the eyes
+    #    scale_color_manual(values=c('blue','red')) + # classic SPEI look, a bit daunting in the eyes
     scale_fill_manual(values=c('cyan3','tomato')) +  # new look
     scale_color_manual(values=c('cyan3','tomato')) # new look
+  # add NAs
+  g <- g + 
+    geom_point(aes(time, na), shape=21, fill='white', color='black')
   # add other parts and options
   g <- g +
     geom_hline(yintercept=0, color='grey') +
