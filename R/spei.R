@@ -268,7 +268,12 @@ spei <- function(x, y,...) UseMethod('spei')
 #' plot(bal_spei12)
 #' 
 #' # 3-d array input (computing data from a gridded spatio-temporal dataset)
-#' 
+#' # Dataset cruts4 contains monthly time series of the climatic water balance at
+#' # six locations, in a gridded format (3-d array)
+#' data(cruts4)
+#' dim(cruts4)
+#' spei_12 <- spei(cruts4, 12)
+#' dim(spei_12$fitted)
 #' 
 #' #' @importFrom stats cycle ts frequency start is.ts pnorm qnorm window embed sd
 #' @importFrom lmomco pwm.pp pwm2lmom are.lmom.valid parglo pargam parpe3 cdfgam cdfpe3
