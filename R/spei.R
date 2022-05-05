@@ -261,9 +261,10 @@ spei <- function(x, y,...) UseMethod('spei')
 #' 
 #' # Matrix input (computing data from several stations at one)
 #' # Dataset `balance` contains time series of the climatic water balance at 12 locations
+#' # Note that input must be provided as matrix
 #' data(balance)
 #' head(balance)
-#' bal_spei12 <- spei(balance, 12)
+#' bal_spei12 <- spei(as.matrix(balance), 12)
 #' plot(bal_spei12)
 #' 
 #' # 3-d array input (computing data from a gridded spatio-temporal dataset)
@@ -358,7 +359,7 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
     warn$push('Checking for missing values (`NA`): all the data must be complete.')
   }
   
-  # note: additional checks must be performed on both ref to see they conform to the data
+  # note: additional checks must be performed on both ref to see they are within the data limits
   if (!is.null(ref.start) | !is.null(ref.end)) {
     if (!is.null(ref.start)) {
       if (!is.numeric(ref.start) | length(ref.start) != 2) {
@@ -431,9 +432,6 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
     out_type <- NULL
   }
   warn$push(paste0('Input type is ', out_type, '.'))
-  
-  # Save column names for later
-  names <- dimnames(data)
   
   # Determine time properties
   if (is.ts(data)) {
@@ -516,7 +514,7 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
   }
   
   # Instantiate an object to store the standardized data
-  spei <- acu*NA
+  spei <- acu * NA
   
   # Loop through series (columns in data)
   for (s in 1:n_sites) {
@@ -624,38 +622,33 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
     } # next c (month)
   } # next s (series)
   
-  colnames(spei) <- colnames(data)
-  
   
   ### Format output and return - - - - - - - - - - - - - - - - - - - - - - -
   
   if (out_type == 'tsmatrix') {
-    colnames(spei) <- names
-    #colnames(spei) <- rep(paste0('SPEI', scale), n_sites)
   } else if (out_type == 'tsvector') {
     spei <- as.vector(spei)
     spei <- ts(spei, frequency=ts_freq, start=ts_start)
   } else if (out_type == 'vector') {
     spei <- as.vector(spei)
   } else if (out_type == 'matrix') {
-    spei <- matrix(spei, nrow=n_times)
-    colnames(spei) <- names
-    #colnames(spei) <- rep('SPEI', n_sites)
+    spei <- matrix(spei, nrow=n_times, dimnames=list(NULL, colnames(spei)))
   } else { # array
-    spei <- array(spei, dim=int_dims)
-    dimnames(spei)[3] <- names
-    #dimnames(spei)[3] <- list(NULL, rep('SPEI', int_dims[2]), rep('SPEI', int_dims[3]))
+    spei <- array(spei, dim=int_dims, dimnames=dimnames(data))
   }
   
   z <- list(call = match.call(expand.dots=FALSE),
+            info = paste(warn$getMessages(), collapse=' '),
             fitted = spei,
             coefficients = coef,
             scale = scale,
-            kernel = list(type=kernel$type,
-                          shift = kernel$shift, values=kern(scale, kernel$type, kernel$shift)),
-            distribution = distribution, fit=fit, na.action=na.rm)
-  if (using$keep.x) z$data <- data
+            kernel = list(type=kernel$type, shift = kernel$shift,
+                          values=kern(scale, kernel$type, kernel$shift)),
+            distribution = distribution,
+            fit=fit,
+            na.action=na.rm)
   if (using$ref.start | using$ref.end) z$ref.period <- rbind(ref.start, ref.end)
+  if (using$keep.x) z$data <- data
   
   class(z) <- 'spei'
   return(z)

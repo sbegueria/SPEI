@@ -1,7 +1,7 @@
 #' @name Datasets
 #' 
 #' 
-#' @aliases balance cabinda
+#' @aliases wichita balance cabinda
 #' 
 #' 
 #' @title Datasets for illustrating the functions in the SPEI package.
