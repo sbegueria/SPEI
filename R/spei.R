@@ -312,12 +312,13 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
   }
   
   # Check optional inputs
-  
-  if (!is.list(kernel) | length(kernel) != 2 | names(kernel)[1] != 'type' |
-      names(kernel)[2] != 'shift') {
+
+  if (!is.list(kernel)) {
+    check$push('Argument `kernel` must be a list.')
+  } else if (length(kernel) != 2 | names(kernel)[1] != 'type' | names(kernel)[2] != 'shift') {
     check$push('Argument `kernel` must be a list with components `type` and `shift`.')
   } else if (class(kernel$type) != 'character' | length(kernel$type) != 1) {
-    check$push('Element `type` of `kernel` must be a single valued numeric.')
+    check$push('Element `type` of `kernel` must be a single valued character vector')
   } else if (class(kernel$shift) != 'numeric' | length(kernel$shift) != 1) {
     check$push('Element `shift` of `kernel` must be a single valued numeric.')
   } else {
