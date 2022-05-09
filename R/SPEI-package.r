@@ -43,5 +43,5 @@
 #' 
 #' @importFrom checkmate makeAssertCollection
 #' @importFrom stats cycle end frequency start ts optim
-#' @importFrom zoo as.yearmon
+#' @importFrom zoo as.yearmon rollapplyr
 NULL
