@@ -339,7 +339,7 @@ hargreaves <- function(Tmin, Tmax, Ra=NULL, lat=NULL, Pre=NULL,
     if (ts_freq != 12) {
       check$push('Input data needs to be have a frequency of 12 if provided as a time series (i.e., a monthly time series).')
     }
-    ym <- zoo::as.yearmon(time(Tmin))
+    ym <- as.yearmon(time(Tmin))
     warn$push(paste0('Time series spanning ', ym[1], ' to ', ym[n_times], '.'))
     date <- as.Date(ym)
     mlen_array <- array(as.numeric(lubridate::days_in_month(date)), dim=int_dims)
