@@ -587,7 +587,7 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
         )
         
         # Check L-moments validity
-        lmom <- lmomcopwm2lmom(pwm)
+        lmom <- pwm2lmom(pwm)
         if ( !are.lmom.valid(lmom) || anyNA(lmom[[1]]) ||
              any(is.nan(lmom[[1]])) ){
           next()
