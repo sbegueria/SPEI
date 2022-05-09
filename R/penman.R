@@ -17,9 +17,6 @@
 #' @rdname Potential-evapotranspiration
 #'
 #'
-#' @importFrom stats ts cycle frequency start
-#'
-#'
 #' @export
 #'
 penman <- function(Tmin, Tmax, U2=NULL, Ra=NULL, lat=NULL, Rs=NULL,

@@ -15,9 +15,6 @@
 #' @rdname Potential-evapotranspiration
 #' 
 #' 
-#' @importFrom stats ts cycle frequency start
-#' 
-#' 
 #' @export
 #' 
 thornthwaite <- function(Tave, lat, na.rm=FALSE, verbose=TRUE) {

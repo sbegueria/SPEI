@@ -41,4 +41,6 @@
 #' \url{http://sac.csic.es/spei/}
 #' @keywords package
 #' 
+#' @importFrom checkmate makeAssertCollection
+#' @importFrom stats cycle end frequency start ts optim
 NULL

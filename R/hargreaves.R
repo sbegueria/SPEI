@@ -231,9 +231,6 @@
 #' plot(ts(cbind(pen_300, pen_co2), fr=12))
 #'
 #'
-#' @importFrom stats cycle frequency ts start
-#' 
-#' 
 #' @export
 #' 
 hargreaves <- function(Tmin, Tmax, Ra=NULL, lat=NULL, Pre=NULL,

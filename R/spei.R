@@ -288,10 +288,9 @@ spei <- function(x, y,...) UseMethod('spei')
 #'  theme_classic() +
 #'  theme(legend.position='bottom')
 #' 
-#' #' @importFrom stats cycle ts frequency start is.ts pnorm qnorm window embed sd
-#' @importFrom lmomco pwm.pp pwm2lmom are.lmom.valid parglo pargam parpe3 cdfgam cdfpe3
-#' @importFrom lmom pelglo pelgam pelpe3
 #' @importFrom TLMoments PWM
+#' @importFrom lmom pelgam  pelglo pelpe3
+#' @importFrom lmomco are.lmom.valid are.parglo.valid cdfgam cdfpe3 pargam parglo parpe3 pwm.pp pwm2lmom
 #' 
 #' @export
 #' 
@@ -457,7 +456,7 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
     ts_freq <- frequency(data)
     ts_start <- start(data)
     ts_end <- end(data)
-    ym <- zoo::as.yearmon(time(data))
+    ym <- as.yearmon(time(data))
     warn$push(paste0('Time series spanning ', ym[1], ' to ', ym[n_times],
                      ', with frequency = ', ts_freq, '.'))
   } else {
@@ -517,7 +516,7 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
   # Apply rolling (weighted) sum if scale > 1
   if (scale > 1) {
     wgt <- kern(scale, kernel$type, kernel$shift) * scale
-    acu <- zoo::rollapplyr(acu, scale, fill=NA, FUN=function(x) sum(x*rev(wgt)))
+    acu <- rollapplyr(acu, scale, fill=NA, FUN=function(x) sum(x*rev(wgt)))
   }
   
   # Convert to time series
@@ -583,12 +582,12 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
         
         # Calculate probability weighted moments based on `lmomco` or `TLMoments`
         pwm = switch(fit,
-                     'pp-pwm' = lmomco::pwm.pp(x.mon, -0.35, 0, nmom=3, sort=TRUE),
-                     'ub-pwm' = TLMoments::PWM(x.mon, order=0:2)
+                     'pp-pwm' = pwm.pp(x.mon, -0.35, 0, nmom=3, sort=TRUE),
+                     'ub-pwm' = PWM(x.mon, order=0:2)
         )
         
         # Check L-moments validity
-        lmom <- lmomco::pwm2lmom(pwm)
+        lmom <- lmomcopwm2lmom(pwm)
         if ( !are.lmom.valid(lmom) || anyNA(lmom[[1]]) ||
              any(is.nan(lmom[[1]])) ){
           next()
@@ -600,11 +599,11 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
         
         # Calculate parameters based on distribution with `lmom`, then `lmomco`
         f_params = switch(distribution,
-                          'log-Logistic' = tryCatch(lmom::pelglo(fortran_vec),
+                          'log-Logistic' = tryCatch(lmompelglo(fortran_vec),
                                                     error = function(e){ parglo(lmom)$para }),
-                          'Gamma' = tryCatch(lmom::pelgam(fortran_vec),
+                          'Gamma' = tryCatch(pelgam(fortran_vec),
                                              error = function(e){ pargam(lmom)$para }),
-                          'PearsonIII' = tryCatch(lmom::pelpe3(fortran_vec),
+                          'PearsonIII' = tryCatch(pelpe3(fortran_vec),
                                                   error = function(e){ parpe3(lmom)$para })
         )
         
@@ -626,9 +625,9 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
       
       # Calculate CDF on `x` using `f_params`
       cdf_res <- switch(distribution,
-                        'log-Logistic' = lmom::cdfglo(x[ff], f_params),
-                        'Gamma' = lmom::cdfgam(x[ff], f_params),
-                        'PearsonIII' = lmom::cdfpe3(x[ff], f_params)
+                        'log-Logistic' = cdfglo(x[ff], f_params),
+                        'Gamma' = cdfgam(x[ff], f_params),
+                        'PearsonIII' = cdfpe3(x[ff], f_params)
       )
       # Adjust for `pze` if distribution is Gamma or PearsonIII
       if(distribution == 'Gamma' | distribution == 'PearsonIII'){ 
@@ -762,9 +761,7 @@ summary.spei <- function (object, ...) {
 #' @rdname Generic-methods-for-spei-objects
 #' 
 #' 
-#' @importFrom stats ts frequency end 
-#' @importFrom graphics plot polygon abline grid lines points par
-#' 
+#' @importFrom graphics abline grid lines par plot points polygon
 #' 
 #' @export
 #' 
@@ -852,12 +849,12 @@ plot.spei <- function (x) {
   }
   
   # Remove leading / ending NAs
-  data <- zoo::na.trim(data)
+  data <- na.trim(data)
   
   # Melt
   kk <- as.data.frame(data)
   kk$time <- as.character(time(data))
-  kk <- reshape::melt(kk, id.vars='time')
+  kk <- melt(kk, id.vars='time')
   kk$time <- as.numeric(kk$time)
   
   # Add NAs

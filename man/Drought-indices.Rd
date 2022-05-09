@@ -289,7 +289,6 @@ plot(spei(wichita[,'BAL'], 12)) +
  theme_classic() +
  theme(legend.position='bottom')
 
-#' @importFrom stats cycle ts frequency start is.ts pnorm qnorm window embed sd
 }
 \references{
 S.M. Vicente-Serrano, S. Beguería, J.I. López-Moreno. 2010. A Multi-scalar drought index sensitive 

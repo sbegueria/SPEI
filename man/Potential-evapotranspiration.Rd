@@ -87,9 +87,11 @@ thornthwaite(Tave, lat, na.rm = FALSE, verbose = TRUE)
 A vector, matrix or 3-d array with the values of monthly potential or reference
 evapotranspiration, in mm.
 
-A time series with the values of monthly potential or reference evapotranspiration, in mm. 
-If the input is a matrix or a multivariate time series each column will be treated as independent 
-data (e.g., different observatories), and the output will be a multivariate time series.
+A time series with the values of monthly potential or reference 
+evapotranspiration, in mm. 
+If the input is a matrix or a multivariate time series each column will be 
+treated as independent data (e.g., different observatories), and the output
+will be a multivariate time series.
 
 A time series with the values of monthly potential or reference evapotranspiration, in mm. 
 If the input is a matrix or a multivariate time series each column will be treated as independent 
