@@ -14,8 +14,8 @@
 #' \tabular{ll}{
 #'   Package: \tab SPEI\cr
 #'   Type: \tab Package\cr
-#'   Version: \tab 1.7.2\cr
-#'   Date: \tab 2018-01-04\cr
+#'   Version: \tab 1.8\cr
+#'   Date: \tab 2022-09-05\cr
 #'   License: \tab GPL version 2 or newer\cr
 #'   LazyLoad: \tab yes\cr
 #' }
@@ -30,6 +30,7 @@
 #' @author     
 #' Santiago Beguería and Sergio M. Vicente-Serrano
 #' Maintainer: Santiago Beguería
+#' Contributors: Fergus Reig
 #' 
 #' 
 #' @references 

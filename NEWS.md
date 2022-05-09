@@ -6,7 +6,23 @@
 
 __Version history:
 
-_Version 1.7.1, June 2017 (current on github).
+_Version 1.8, May 2022 (current development version on github).
+
+1. Solving several minor bugs in `<thornthwaite>`, `<hargreaves>`, and `<penman>` functions (output difference less than 0.1%).
+2. Solving a bug in `<spei>` that resulted in bad cumulative data when using a non-rectangular kernel, resulting in incorrect SPEI values.
+3. Implementation of more thorough data and options checks, and providing a single error message containing all the errors upon failure.
+4. Implementation of verbosity in all functions: now they print information about the options being used. New argument `verbosity` added, defaulting to TRUE.
+5. All the functions now accept 3-d arrayed data, enabling the possibility of using them on gridded climate data.
+6. Implementation of different versions of the Penman-Monteith ETo calculation in function `<penman>`.
+7. Implementation of an option to include CO2 concentration data in function `<penman>`.
+8. Implementation of a new option for when no wind data are available in function `<penman>`.
+9. Funtion `<plot.spei>` completely rewritten based on `ggplot2`, solving some bugs and enabling more flexibility.
+
+_Version 1.7.2, June 2019 (current stable version on github).
+
+1. Allowing for data with frequency other than 12 in `<spei>` function.
+
+_Version 1.7.1, June 2017.
 
 1. Corrected an error in `<spei>` function, which was not working when distribution was Gamma or PeasonIII and using user provided parameters. (Fixed by Emanuele Cordano, emanuele.cordano@gmail.com -- ecor)
 2. Added probability of monthly precipitation = 0 (pze) when using user provided parameters. (Fixed by Emanuele Cordano, emanuele.cordano@gmail.com -- ecor) 

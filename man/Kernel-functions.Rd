@@ -4,7 +4,6 @@
 \alias{Kernel-functions}
 \alias{kern}
 \alias{kern.plot}
-\alias{kern.plot}
 \title{Time kernel for computing the SPEI at different time scales.}
 \usage{
 kern(scale, type = "rectangular", shift = 0)

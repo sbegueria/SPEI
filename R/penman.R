@@ -7,9 +7,11 @@
 #' @details See hargreaves
 #' 
 #' 
-#' @return  A time series with the values of monthly potential or reference evapotranspiration, in mm. 
-#' If the input is a matrix or a multivariate time series each column will be treated as independent 
-#' data (e.g., different observatories), and the output will be a multivariate time series.
+#' @return  A time series with the values of monthly potential or reference 
+#' evapotranspiration, in mm. 
+#' If the input is a matrix or a multivariate time series each column will be 
+#' treated as independent data (e.g., different observatories), and the output
+#' will be a multivariate time series.
 #' 
 #' 
 #' @rdname Potential-evapotranspiration
