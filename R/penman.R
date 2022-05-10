@@ -17,6 +17,7 @@
 #' @rdname Potential-evapotranspiration
 #'
 #'
+#' @importFrom lubridate days_in_month yday
 #' @export
 #'
 penman <- function(Tmin, Tmax, U2=NULL, Ra=NULL, lat=NULL, Rs=NULL,
@@ -190,7 +191,7 @@ penman <- function(Tmin, Tmax, U2=NULL, Ra=NULL, lat=NULL, Rs=NULL,
     ym <- as.yearmon(time(Tmin))
     warn$push(paste0('Time series spanning ', ym[1], ' to ', ym[n_times], '.'))
     date <- as.Date(ym)
-    mlen_array <- array(as.numeric(lubridate::days_in_month(date)), dim=int_dims)
+    mlen_array <- array(as.numeric(days_in_month(date)), dim=int_dims)
     msum_array <- array(yday(date) + round((mlen_array/2) - 1), dim=int_dims)
   } else {
     mlen <- c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
