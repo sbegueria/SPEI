@@ -863,7 +863,7 @@ plot.spei <- function (x) {
   kk$time <- as.numeric(kk$time)
   
   # Add NAs
-  kk$na <- ifelse(is.na(kk$value), 0, NA)
+  kk$na <- as.numeric(ifelse(is.na(kk$value), 0, NA))
   
   # Add SPI / SPEI categories
   kk$cat <- ifelse(kk$value > 0, 'neg', 'pos')
