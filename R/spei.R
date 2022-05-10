@@ -517,7 +517,7 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
   # Apply rolling (weighted) sum if scale > 1
   if (scale > 1) {
     wgt <- kern(scale, kernel$type, kernel$shift) * scale
-    acu <- rollapplyr(acu, scale, fill=NA, FUN=function(x) sum(x*rev(wgt)))
+    acu <- zoo::rollapplyr(acu, scale, fill=NA, FUN=function(x) sum(x*rev(wgt)))
   }
   
   # Convert to time series
