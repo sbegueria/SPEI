@@ -124,7 +124,7 @@ thornthwaite <- function(Tave, lat, na.rm=FALSE, verbose=TRUE) {
   
   # Show a warning with computation options
   if (verbose) {
-    paste(warn$getMessages(), collapse=' ')
+    print(paste(warn$getMessages(), collapse=' '))
   }
   
   

@@ -302,7 +302,7 @@ penman <- function(Tmin, Tmax, U2=NULL, Ra=NULL, lat=NULL, Rs=NULL,
   
   # Show a warning with computation options
   if (verbose) {
-    paste(warn$getMessages(), collapse=' ')
+    print(paste(warn$getMessages(), collapse=' '))
   }
   
   
