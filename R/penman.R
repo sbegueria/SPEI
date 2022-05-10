@@ -238,8 +238,10 @@ penman <- function(Tmin, Tmax, U2=NULL, Ra=NULL, lat=NULL, Rs=NULL,
   if (using$P0 && sum(lengths(P0))!=input_len) {
     check$push('`P0` has incorrect length.')
   }
-  if (using$CO2 && sum(lengths(CO2))!=input_len) {
-    check$push('`CO2` has incorrect length.')
+  if (using$CO2 && sum(lengths(CO2))!=1) {
+    if (sum(lengths(CO2))!=input_len) {
+      check$push('`CO2` has incorrect length.')
+    }
   }
   if (using$z && sum(lengths(z))!=n_sites) {
     check$push('`z` has incorrect length.')
