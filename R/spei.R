@@ -288,7 +288,7 @@ spei <- function(x, y,...) UseMethod('spei')
 #'  theme_classic() +
 #'  theme(legend.position='bottom')
 #' 
-#' @importFrom zoo rollapplyr
+#' @importFrom zoo rollapply
 #' @importFrom TLMoments PWM
 #' @importFrom lmomco are.lmom.valid are.parglo.valid cdfgam cdfpe3 pargam parglo parpe3 pwm.pp pwm2lmom
 #' @importFrom lmom pelgam pelglo pelpe3 cdfglo cdfgam cdfpe3
@@ -517,7 +517,8 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
   # Apply rolling (weighted) sum if scale > 1
   if (scale > 1) {
     wgt <- kern(scale, kernel$type, kernel$shift) * scale
-    acu <- rollapplyr(acu, scale, fill=NA, FUN=function(x) sum(x*rev(wgt)))
+    acu <- rollapply(acu, scale, fill=NA, FUN=function(x) sum(x*rev(wgt)),
+                     align='right')
   }
   
   # Convert to time series
