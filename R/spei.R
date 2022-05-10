@@ -289,7 +289,7 @@ spei <- function(x, y,...) UseMethod('spei')
 #'  theme(legend.position='bottom')
 #' 
 #' @importFrom TLMoments PWM
-#' @importFrom lmom pelgam  pelglo pelpe3
+#' @importFrom lmom pelgam pelglo pelpe3 cdfglo cdfgam cdfpe3
 #' @importFrom lmomco are.lmom.valid are.parglo.valid cdfgam cdfpe3 pargam parglo parpe3 pwm.pp pwm2lmom
 #' 
 #' @export
@@ -599,7 +599,7 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
         
         # Calculate parameters based on distribution with `lmom`, then `lmomco`
         f_params = switch(distribution,
-                          'log-Logistic' = tryCatch(lmompelglo(fortran_vec),
+                          'log-Logistic' = tryCatch(pelglo(fortran_vec),
                                                     error = function(e){ parglo(lmom)$para }),
                           'Gamma' = tryCatch(pelgam(fortran_vec),
                                              error = function(e){ pargam(lmom)$para }),
