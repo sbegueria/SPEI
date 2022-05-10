@@ -288,6 +288,7 @@ spei <- function(x, y,...) UseMethod('spei')
 #'  theme_classic() +
 #'  theme(legend.position='bottom')
 #' 
+#' @importFrom zoo rollapplyr
 #' @importFrom TLMoments PWM
 #' @importFrom lmomco are.lmom.valid are.parglo.valid cdfgam cdfpe3 pargam parglo parpe3 pwm.pp pwm2lmom
 #' @importFrom lmom pelgam pelglo pelpe3 cdfglo cdfgam cdfpe3
