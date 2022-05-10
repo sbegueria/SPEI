@@ -763,6 +763,9 @@ summary.spei <- function (object, ...) {
 #' @rdname Generic-methods-for-spei-objects
 #' 
 #' 
+#' @importFrom ggplot2 ggplot geom_bar scale_fill_manual scale_color_manual
+#' @importFrom ggplot2 scale_y_continuous geom_point geom_hline facet_wrap
+#' @importFrom ggplot2 ylab xlab theme theme_bw
 #' @importFrom zoo na.trim
 #' @importFrom reshape melt
 #' @importFrom graphics abline grid lines par plot points polygon
