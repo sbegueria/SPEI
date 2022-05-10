@@ -763,6 +763,7 @@ summary.spei <- function (object, ...) {
 #' @rdname Generic-methods-for-spei-objects
 #' 
 #' 
+#' @importFrom reshape melt
 #' @importFrom graphics abline grid lines par plot points polygon
 #' 
 #' @export
