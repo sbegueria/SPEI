@@ -289,8 +289,8 @@ spei <- function(x, y,...) UseMethod('spei')
 #'  theme(legend.position='bottom')
 #' 
 #' @importFrom TLMoments PWM
-#' @importFrom lmom pelgam pelglo pelpe3 cdfglo cdfgam cdfpe3
 #' @importFrom lmomco are.lmom.valid are.parglo.valid cdfgam cdfpe3 pargam parglo parpe3 pwm.pp pwm2lmom
+#' @importFrom lmom pelgam pelglo pelpe3 cdfglo cdfgam cdfpe3
 #' 
 #' @export
 #' 
@@ -625,9 +625,9 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
       
       # Calculate CDF on `x` using `f_params`
       cdf_res <- switch(distribution,
-                        'log-Logistic' = cdfglo(x[ff], f_params),
-                        'Gamma' = cdfgam(x[ff], f_params),
-                        'PearsonIII' = cdfpe3(x[ff], f_params)
+                        'log-Logistic' = lmom::cdfglo(x[ff], f_params),
+                        'Gamma' = lmom::cdfgam(x[ff], f_params),
+                        'PearsonIII' = lmom::cdfpe3(x[ff], f_params)
       )
       # Adjust for `pze` if distribution is Gamma or PearsonIII
       if(distribution == 'Gamma' | distribution == 'PearsonIII'){ 
