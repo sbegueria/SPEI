@@ -101,7 +101,7 @@ thornthwaite <- function(Tave, lat, na.rm=FALSE, verbose=TRUE) {
   } else {
     mlen <- c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
     msum <- cumsum(mlen) - mlen + 15
-    cyc <- array(c(1:12), dim=int_dims)[,,]
+    cyc <- array(c(1:12), dim=int_dims)[,1,1]
     mlen_array <- array(mlen, dim=int_dims)
     msum_array <- array(msum, dim=int_dims)
     warn$push('Assuming the data are monthly time series starting in January, all regular (non-leap) years.')
