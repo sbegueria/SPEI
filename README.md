@@ -13,20 +13,27 @@ Functions `<spei>` and `<spi>` are the workhorse of the SPEI library. Other func
 
 ## Installation
 
-Install the latest stable development version from GitHub:
+Install the latest stable version from GitHub:
 
 ```r
 library(devtools)
-install_github('sbegueria', 'SPEI')
+install_github('sbegueria/SPEI')
 ```
 
-Or get it from the [CRAN](https://cran.r-project.org) repository:
+Or get the latest version on [CRAN](https://cran.r-project.org):
 
 ```r
 install.packages('SPEI')
 ```
 
 Please, note that the CRAN version may not be the very latest version of the package.
+
+If you are interested in testing the current development version you can do so by installing the `devel` branch:
+
+```r
+library(devtools)
+install_github('sbegueria/SPEI@devel')
+```
 
 
 ## References
@@ -57,19 +64,31 @@ Other (possibly useful) references:
 
 ## Version history
 
-### Version 1.7.2, January 2018 (current on github).
+### Version 1.8, May 2022 (current development version on github)
 
-1. Several code optimizations and improvements (by github user doug-friedman).
-2. Added formal unit testing with testthat (doug-friedman).
-3. Move documentation over to roxygen (doug-friedman).
-4. Update `<spei>` function to allow processing data with frequency different than 12 (by github user MuDestructor).
+1. Solving several minor bugs in `<thornthwaite>`, `<hargreaves>`, and `<penman>` functions (output difference is less than 0.1%).
+2. Solving a bug in `<spei>` that resulted in bad cumulative data when using a non-rectangular kernel, resulting in incorrect SPEI values.
+3. Implementation of more thorough data and options checks, and providing a single error message containing all the errors upon failure.
+4. Implementation of verbosity in all functions: now they print information about the options being used. New argument `verbosity` added, defaulting to TRUE.
+5. All the functions now accept 3-d arrayed data, enabling the possibility of using them on gridded climate data.
+6. Implementation of different versions of the Penman-Monteith ETo calculation in function `<penman>`.
+7. Implementation of an option to include CO2 concentration data in function `<penman>`.
+8. Implementation of a new option for when no wind data are available in function `<penman>`.
+9. Funtion `<plot.spei>` completely rewritten based on `ggplot2`, solving some bugs and enabling more flexibility.
+
+### Version 1.7.2, January 2018 (current stable version on github).
+
+1. Several code optimizations and improvements (by github user @doug-friedman).
+2. Added formal unit testing with `testthat` (@doug-friedman).
+3. Move documentation over to `roxygen` (@doug-friedman).
+4. Update `<spei>` function to allow processing data with frequency different than 12 (by github user @MuDestructor).
 
 ### Version 1.7.1, June 2017.
 
 1. Corrected an error in `<spei>` function, which was not working when distribution was Gamma or PeasonIII and using user provided parameters. (Fixed by Emanuele Cordano, emanuele.cordano@gmail.com -- ecor)
 2. Added probability of monthly precipitation = 0 (pze) when using user provided parameters. (Fixed by Emanuele Cordano, emanuele.cordano@gmail.com -- ecor) 
 
-### Version 1.7, June 2017 (current on CRAN).
+### Version 1.7, June 2017 (current version on CRAN).
 
 1. Corrected a bug in the `<kern>` function which resulted in a multiplicative kernel instead of an additive one such the one expected in the `<spei>` and `<spi>` functions.
 2. Some small corrections to the plotting function and to the examples.
@@ -118,23 +137,15 @@ First release of the SPEI package.
 
 ## To do list (work in progress)
 
-- [ ] Complete the documentation for pwmLC.Rd.
-- [ ] New options for computing reference evapotranspiration.
-- [ ] Review method plot.spei() that produces wrong results in some cases.
-- [ ] Implement parallel processing - see branch parallel.
-- [ ] Analysis function - see branch corel_anal.
-- [ ] Add a warning message to penman function to inform the user about the
-      options being used. A verbose option will control wether or not to display
-      this warning.
-- [ ] A version of penman function for daily data (there is one version on my
-      blog, http://santiago.begueria.es).
-- [ ] Different versions of the Penman-Monteith ET0 calculation (FAO-56, ASDE,
-      etc), as Miquel did.
+- [ ] Implement parallel processing.
+- [ ] Analysis function (find best combination of time scale and time of year for explaining a dependent variable).
+- [ ] Daily Penman-Monteith ETo (there is one version on my blog, http://santiago.begueria.es).
+- [ ] Add more distributions, possibility to standardize other climatic variables.
 
 
 ## Any problems?
 
-Feel free to [write an issue](https://github.com/sbegueria/SPEI/issues) if you have any questions or problems.
+Feel free to [send an issue](https://github.com/sbegueria/SPEI/issues) if you have any questions or problems.
 
 
 ## Copyright and license
