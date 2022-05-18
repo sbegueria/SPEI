@@ -4,17 +4,27 @@
 \alias{Drought-indices}
 \alias{spei}
 \alias{spi}
-\alias{spi}
 \title{Calculation of the Standardized Precipitation-Evapotranspiration 
 Index (SPEI) and the Standardized Precipitation Index (SPI).}
 \usage{
 spei(data, scale, kernel = list(type = 'rectangular', shift = 0),
 distribution = 'log-Logistic', fit = 'ub-pwm', na.rm = FALSE,
-ref.start=NULL, ref.end=NULL, x=FALSE, params=NULL, ...)
+ref.start=NULL, ref.end=NULL, keep.x=FALSE, params=NULL, 
+verbose=TRUE, ...)
 
-spi(data, scale, kernel = list(type = "rectangular", shift = 0),
-  distribution = "Gamma", fit = "ub-pwm", na.rm = FALSE,
-  ref.start = NULL, ref.end = NULL, x = FALSE, params = NULL, ...)
+spi(
+  data,
+  scale,
+  kernel = list(type = "rectangular", shift = 0),
+  distribution = "Gamma",
+  fit = "ub-pwm",
+  na.rm = FALSE,
+  ref.start = NULL,
+  ref.end = NULL,
+  x = FALSE,
+  params = NULL,
+  ...
+)
 }
 \arguments{
 \item{data}{a vector, matrix or data frame with time ordered values 
@@ -49,11 +59,14 @@ first value in data will be used as starting point.}
 for computing the index. Defaults to NULL, indicating that the last 
 value in data will be used as ending point.}
 
-\item{x}{optional, a logical value indicating wether the data used 
+\item{keep.x}{optional, a logical value indicating whether the data used 
 for fitting the model should be kept. Defaults to FALSE.}
 
 \item{params}{optional, an array of parameters for computing the 
 spei. This option overrides computation of fitting parameters.}
+
+\item{verbose}{optional, logical, report the computation options during
+calculation. Either 'TRUE' (default) or 'FALSE'.}
 
 \item{...}{other possible parameters.}
 }
@@ -117,8 +130,6 @@ values starting in January. If it is a (univariate or multivariate) time series
 then the function \code{\link{cycle}} will be used to determine the position of 
 each observation within the year (month), allowing the data to start in a month 
 other than January.
-
-Time series with a frequency other than 12 can also be used. 
 }
 
 \section{Time scales}{
@@ -189,58 +200,94 @@ extremely easy, since no loops need to be used.
 # Load data
 data(wichita)
 
-# One and tvelwe-months SPEI
-wichita$PET <- thornthwaite(wichita$TMED,37.6475)
-spei1 <- spei(wichita$PRCP-wichita$PET,1)
-spei12 <- spei(wichita$PRCP-wichita$PET,12)
+# Compute potential evapotranspiration (PET) and climatic water balance (BAL)
+wichita$PET <- thornthwaite(wichita$TMED, 37.6475)
+wichita$BAL <- wichita$PRCP-wichita$PET
 
-# Extract information from spei object
+# Convert to a ts (time series) for convenience
+wichita <- ts(wichita[,-c(1,2)], end=c(2011,10), frequency=12)
+plot(wichita)
+
+# One and twelve-months SPEI
+spei1 <- spei(wichita[,'BAL'], 1)
+spei12 <- spei(wichita[,'BAL'], 12)
+class(spei1)
+plot(spei1)
+plot(spei12)
+
+# Extract information from `spei` object: summary, call function, fitted values, and coefficients
 summary(spei1)
 names(spei1)
 spei1$call
 spei1$fitted
 spei1$coefficients
 
-# Plot spei object
+# Plot `spei` object
 par(mfrow=c(2,1))
-plot(spei1)
-plot(spei12,'Wichita')
+plot(spei1, main='Wichita, SPEI-1')
+plot(spei12, main='Wichita, SPEI-12')
 
 # One and tvelwe-months SPI
-spi_1 <- spi(wichita$PRCP,1)
-spi_12 <- spi(wichita$PRCP,12)
-par(mfrow=c(2,1))
-plot(spi_1)
-plot(spi_12)
+spi_1 <- spi(wichita[,'PRCP'], 1)
+spi_12 <- spi(wichita[,'PRCP'], 12)
 
-# Define the properties of the time series with ts()
-plot(spei(ts(wichita$PRCP-wichita$PET,freq=12,start=c(1980,1)),12))
+par(mfrow=c(2,1))
+plot(spi_1, 'Wichita, SPI-1')
+plot(spi_12, 'Wichita, SPI-12')
 
 # Time series not starting in January
-plot(spei(ts(wichita$PRCP-wichita$PET,freq=12,start=c(1980,6)),12))
+plot(spei(ts(wichita[,'BAL'], freq=12, start=c(1980,6)), 12))
 
-# Using a particular reference period
-plot(spei(ts(wichita$PRCP-wichita$PET,freq=12,start=c(1980,1)),12,
+# Using a particular reference period (1980-2000) for computing the parameters
+# This can results in unexpected values if data outside the reference period
+# are way higher / lower than those within the reference period.
+plot(spei(ts(wichita[,'BAL'], freq=12, start=c(1980,6)), 12,
 	ref.start=c(1980,1), ref.end=c(2000,1)))
 
 # Using different kernels
-spei24 <- spei(wichita$PRCP-wichita$PET,24)
-spei24_gau <- spei(wichita$PRCP-wichita$PET,24,kernel=list(type='gaussian',shift=0))
+spei24 <- spei(wichita[,'BAL'], 24)
+spei24_gau <- spei(wichita[,'BAL'], 24, kernel=list(type='gaussian', shift=0))
 par(mfrow=c(2,1))
-plot(spei24,'Rectangular kernel')
-plot(spei24_gau,'Gaussian kernel')
+plot(spei24)
+plot(spei24_gau)
+dev.off()
 
-# Computing several time series at a time
-data(balance)
-names(balance)
-bal_spei12 <- spei(balance,12)
-plot(bal_spei12)
+# Using different methods (distributions)
+spi_gam <- spi(wichita[,'PRCP'], 12, distribution='Gamma')
+spi_pe3 <- spi(wichita[,'PRCP'], 12, distribution='PearsonIII')
+plot(spi_gam$fitted, spi_pe3$fitted)
+grid()
 
-# User provided parameters
+# Using custom (user provided) parameters
 coe <- spei1$coefficients
 dim(coe)
-spei(wichita$PRCP-wichita$PET,1,params=coe)
+spei(wichita[,'BAL'], 1, params=coe)
 
+# Matrix input (computing data from several stations at one)
+# Dataset `balance` contains time series of the climatic water balance at 12 locations
+# Note that input must be provided as matrix
+data(balance)
+head(balance)
+bal_spei12 <- spei(as.matrix(balance), 12)
+plot(bal_spei12)
+
+# 3-d array input (computing data from a gridded spatio-temporal dataset)
+# Dataset cruts4 contains monthly time series of the climatic water balance at
+# six locations, in a gridded format (3-d array)
+data(cruts4)
+dim(cruts4)
+spei_12 <- spei(cruts4, 12)
+dim(spei_12$fitted)
+
+# Modding the plot
+# Since plot.spei() returns a ggplot object, it is possible to add or tweak
+# parts of the plot.
+plot(spei(wichita[,'BAL'], 12)) +
+ ggtitle('SPEI1 at Wichita') +
+ scale_fill_manual(values=c('blue','red')) +  # classic SPEI look
+ scale_color_manual(values=c('blue','red')) + # classic SPEI look
+ theme_classic() +
+ theme(legend.position='bottom')
 
 }
 \references{
@@ -248,9 +295,10 @@ S.M. Vicente-Serrano, S. Beguería, J.I. López-Moreno. 2010. A Multi-scalar dro
 to global warming: The Standardized Precipitation Evapotranspiration Index – SPEI. 
 \emph{Journal of Climate} \bold{23}: 1696, DOI: 10.1175/2009JCLI2909.1.
 
-Beguería S, Vicente-Serrano SM, Reig F, Latorre B. 2014. Standardized precipitation evapotranspiration
-index (SPEI) revisited: parameter fitting, evapotranspiration models, tools, datasets and drought
-monitoring. \emph{International Journal of Climatology} \bold{34(10)}: 3001-3023.
+S. Beguería, S.M Vicente-Serrano, F. Reig, B. Latorre. 2014. Standardized precipitation
+evapotranspiration index (SPEI) revisited: parameter fitting, evapotranspiration models, tools,
+datasets and drought monitoring. \emph{International Journal of Climatology}
+\bold{34}(10): 3001-3023.
 
 \url{http://spei.csic.es}
 }

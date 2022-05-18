@@ -8,8 +8,6 @@
 \alias{plot.spi}
 \alias{summary.spei}
 \alias{summary.spi}
-\alias{summary.spei}
-\alias{plot.spei}
 \title{Generic methods for \code{spei} objects.}
 \usage{
 \method{print}{spei}(x, ...)
@@ -18,7 +16,7 @@
 
 \method{summary}{spei}(object, ...)
 
-\method{plot}{spei}(x, ttext = NULL, ...)
+\method{plot}{spei}(x)
 }
 \arguments{
 \item{x}{an object of class \code{spei}.}
@@ -37,17 +35,21 @@ See print.spei
 See print.spei
 }
 \details{
-This functions allow extracting information and plotting \code{spei} 
+These functions allow extracting information and plotting \code{spei} 
 objects. \code{print} yields the fitted values, i.e. a time series of SPEI or SPI values. 
 \code{summary} reports the function call, the parameters of the PDF used, and the time 
 series of SPEI or SPI values. \code{plot} produces a plot of the time series of SPEI or 
 SPI values, with blue and red colors for positive and negative values, respectively. If 
 a reference period was used in the function call it is shown by a shaded area. In the 
-unlikely case that NA or Inf values were produced, these are shown by circles.
+event that NA or Inf values were produced, these are shown by circles.
 
 See print.spei
 
 See print.spei
+}
+\examples{
+See examples of use in the help page of the \code{spei()} function.
+
 }
 \references{
 S.M. Vicente-Serrano, S. Beguería, J.I. López-Moreno. 2010. A Multi-scalar drought index 

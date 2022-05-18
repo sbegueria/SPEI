@@ -1,1 +1,4 @@
 load("/Volumes/My Passport Studio/desarrollo/spei.github/tests/testthat/data/k12_Out.rds")
+load("/Users/sbegueria/Documents/GitHub/SPEI/tests/testthat/data/tho_Out.rds")
+ls()
+load("/Users/sbegueria/Documents/GitHub/SPEI/tests/testthat/data/tho_Out.rds")
