@@ -64,7 +64,7 @@ Other (possibly useful) references:
 
 ## Version history
 
-### Version 1.8, May 2022 (current development version on github)
+### Version 1.8, May 2022 (current version on github).
 
 1. Solving several minor bugs in `<thornthwaite>`, `<hargreaves>`, and `<penman>` functions (output difference is less than 0.1%).
 2. Solving a bug in `<spei>` that resulted in bad cumulative data when using a non-rectangular kernel, resulting in incorrect SPEI values.
@@ -76,7 +76,7 @@ Other (possibly useful) references:
 8. Implementation of a new option for when no wind data are available in function `<penman>`.
 9. Funtion `<plot.spei>` completely rewritten based on `ggplot2`, solving some bugs and enabling more flexibility.
 
-### Version 1.7.2, January 2018 (current stable version on github).
+### Version 1.7.2, January 2018 (latest stable version on github).
 
 1. Several code optimizations and improvements (by github user @doug-friedman).
 2. Added formal unit testing with `testthat` (@doug-friedman).
