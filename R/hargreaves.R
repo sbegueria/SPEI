@@ -435,6 +435,8 @@ hargreaves <- function(Tmin, Tmax, Ra=NULL, lat=NULL, Pre=NULL,
     warn$push("checking dimensions")
     warn$push(dim(Tmean))
     warn$push(dim(Ra))
+    warn$push(dim(Tr))
+    warn$push(dim(Pre))
     warn$push(dim(ab))
     warn$push("calculating")
     ET0 <- 0.0013 * 0.408 * Ra * (Tmean + 17.0) * ab ^ 0.76
