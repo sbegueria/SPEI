@@ -433,11 +433,9 @@ hargreaves <- function(Tmin, Tmax, Ra=NULL, lat=NULL, Pre=NULL,
     # Use modified method (Droogers and Allen, 2002)
     ab <- Tr - 0.0123 * Pre
     warn$push("checking dimensions")
-    warn$push(dim(Tmean))
-    warn$push(dim(Ra))
-    warn$push(dim(ab))
-    warn$push("calculating")
-    dim(ab) <- c(252,120,1); ab  # fix dimensions manually
+    warn$push(int_dims)
+    # dim(ab) <- c(252,120,1); ab  # fix dimensions manually
+    ab <- array(data.matrix(ab), int_dims)
     warn$push(dim(ab))
     ET0 <- 0.0013 * 0.408 * Ra * (Tmean + 17.0) * ab ^ 0.76
     ET0[is.nan(ab ^ 0.76)] <- 0
