@@ -66,15 +66,16 @@ Other (possibly useful) references:
 
 ### Version 1.8, May 2022 (current version on github).
 
-1. Solving several minor bugs in `<thornthwaite>`, `<hargreaves>`, and `<penman>` functions (output difference is less than 0.1%).
-2. Solving a bug in `<spei>` that resulted in bad cumulative data when using a non-rectangular kernel, resulting in incorrect SPEI values.
-3. Implementation of more thorough data and options checks, and providing a single error message containing all the errors upon failure.
-4. Implementation of verbosity in all functions: now they print information about the options being used. New argument `verbosity` added, defaulting to TRUE.
-5. All the functions now accept 3-d arrayed data, enabling the possibility of using them on gridded climate data.
-6. Implementation of different versions of the Penman-Monteith ETo calculation in function `<penman>`.
-7. Implementation of an option to include CO2 concentration data in function `<penman>`.
-8. Implementation of a new option for when no wind data are available in function `<penman>`.
-9. Funtion `<plot.spei>` completely rewritten based on `ggplot2`, solving some bugs and enabling more flexibility.
+1.  Solving several minor bugs in `<thornthwaite>`, `<hargreaves>`, and `<penman>` functions (output difference is lower than 0.1% with respect to version 1.7).
+2.  Solving a bug in `<spei>` that resulted in bad cumulative data when using a non-rectangular kernel, resulting in incorrect SPEI values.
+3.  Implementation of more thorough data and options checks, and providing a single error message containing all the errors upon failure.
+4.  Implementation of verbosity in all functions: now they print information about the options being used. New argument `verbosity` added, defaulting to TRUE, to override this behaviour.
+5.  All the functions now accept 3-d arrayed data, enabling the possibility of using the functions on gridded climate data.
+6.  Implementation of different versions of the Penman-Monteith ETo calculation in function `<penman>`.
+7.  Implementation of an option to include CO2 concentration data in function `<penman>`.
+8.  Implementation of a new option for when no wind data are available in function `<penman>`.
+9.  Functions `<spei>` and `<spi>` now admit time series of any frequency, and not only monthly (frequency 12) data.
+10. Fucntion `<plot.spei>` completely rewritten based on `ggplot2`, solving some bugs and enabling more flexibility.
 
 ### Version 1.7.2, January 2018 (latest stable version on github).
 
