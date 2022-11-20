@@ -308,6 +308,7 @@ hargreaves <- function(Tmin, Tmax, Ra=NULL, lat=NULL, Pre=NULL,
     # 3D array input (gridded data)
     int_dims <- tmin_dims
   } else {
+    int_dims <- tmin_dims
     check$push('Input data can not have more than three dimensions.')
   }
   n_sites <- prod(int_dims[[2]], int_dims[[3]])
@@ -355,7 +356,7 @@ hargreaves <- function(Tmin, Tmax, Ra=NULL, lat=NULL, Pre=NULL,
   # Verify the length of each input variable
   input_len <- prod(int_dims)
   if (sum(lengths(Tmin))!=input_len || sum(lengths(Tmax))!=input_len) {
-    check$push('`Tmin` and `Tmax` should not have different lengths.')
+    check$push('`Tmin` and `Tmax` cannot have different lengths.')
   }
   if (using$Ra && sum(lengths(Ra))!=input_len) {
     check$push('`Ra` has incorrect length.')

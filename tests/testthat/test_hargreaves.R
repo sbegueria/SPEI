@@ -65,7 +65,7 @@ test_that('input more than three dimensions', {
 
 test_that('Tmin and Tmax different size', {
   expect_error(hargreaves(c(1,TMIN), TMAX, lat=37.6475),
-               '`Tmin` and `Tmax`cannot have different lengths.')
+               '`Tmin` and `Tmax` cannot have different lengths.')
 })
 
 test_that('Ra incorrect size', {
