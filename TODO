@@ -1,6 +1,0 @@
-Implement function for correlation analysis between an spei series and any other time series.
-
-Correct bug in plot.spei method that gives strange results when time series does not conform to a jamuary-to-december monthly time series.
-Also, mod plot.spei so that it accepts a main argument for stating the main title of the plot. In the title include the words SPEI or SPI when appropriate, and in the label of the y-axis put (z-values).
-
-
