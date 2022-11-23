@@ -168,7 +168,7 @@ thornthwaite <- function(Tave, lat, na.rm=FALSE, verbose=TRUE) {
   if (out_type=='tsmatrix') {
     PET <- matrix(PET, nrow=n_times)
     PET <- ts(PET, frequency=ts_freq, start=ts_start)
-    colnames(PET) <- rep('PET_tho', ncol(ET0))
+    colnames(PET) <- rep('PET_tho', ncol(PET))
   } else if (out_type=='tsvector') {
     PET <- as.vector(PET)
     PET <- ts(PET, frequency=ts_freq, start=ts_start)

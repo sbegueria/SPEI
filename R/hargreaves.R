@@ -4,12 +4,12 @@
 #' @usage 
 #' thornthwaite(Tave, lat, na.rm = FALSE, verbose=TRUE)
 #' 
-#' hargreaves(Tmin, Tmax, Ra = NA, lat = NA, Pre = NA, na.rm = FALSE, verbose=TRUE)
+#' hargreaves(Tmin, Tmax, Ra = NULL, lat = NULL, Pre = NULL, na.rm = FALSE, verbose=TRUE)
 #' 
-#' penman(Tmin, Tmax, U2, Ra = NA, lat = NA, Rs = NA, tsun = NA,
-#'        CC = NA, ed = NA, Tdew = NA, RH = NA, P = NA, P0 = NA,
-#'               z = NA, crop='short', na.rm = FALSE, method='ICID',
-#'               verbose=TRUE)
+#' penman(Tmin, Tmax, U2, Ra = NULL, lat = NULL, Rs = NULL, tsun = NULL,
+#'        CC = NULL, ed = NULL, Tdew = NULL, RH = NULL, P = NULL, P0 = NULL,
+#'        CO2 = NULL, z = NULL, crop='short', na.rm = FALSE, method='ICID',
+#'        verbose=TRUE)
 #' 
 #' 
 #' @description 

@@ -1,20 +1,41 @@
 spei <- function(x, y,...) UseMethod('spei')
 
-
 #' @name Drought-indices
 #' @title Calculation of the Standardized Precipitation-Evapotranspiration 
 #' Index (SPEI) and the Standardized Precipitation Index (SPI).
-#' @aliases spi
+#' @aliases spei, spi
 #' @description
 #' Given a time series of the climatic water balance (precipitation minus 
 #' potential evapotranspiration), gives a time series of the Standardized 
 #' Precipitation-Evapotranspiration Index (SPEI).
-#' @usage 
-#' spei(data, scale, kernel = list(type = 'rectangular', shift = 0),
-#' distribution = 'log-Logistic', fit = 'ub-pwm', na.rm = FALSE,
-#' ref.start=NULL, ref.end=NULL, keep.x=FALSE, params=NULL, 
-#' verbose=TRUE, ...)
+#' @usage
+#' spei(
+#'  data,
+#'  scale,
+#'  kernel = list(type = 'rectangular', shift = 0),
+#'  distribution = 'log-Logistic',
+#'  fit = 'ub-pwm',
+#'  na.rm = FALSE,
+#'  ref.start=NULL,
+#'  ref.end=NULL,
+#'  keep.x=FALSE,
+#'  params=NULL, 
+#'  verbose=TRUE,
+#'  ...)
 #' 
+#' spi(
+#'  data,
+#'  scale,
+#'  kernel = list(type = 'rectangular', shift = 0),
+#'  distribution = 'Gamma',
+#'  fit = 'ub-pwm',
+#'  na.rm = FALSE,
+#'  ref.start=NULL,
+#'  ref.end=NULL,
+#'  keep.x=FALSE,
+#'  params=NULL, 
+#'  verbose=TRUE,
+#'  ...)
 #' @param data a vector, matrix or data frame with time ordered values 
 #' of precipitation (for the SPI) or of the climatic balance 
 #' precipitation minus potential evapotranspiration (for the SPEI).
@@ -273,17 +294,13 @@ spei <- function(x, y,...) UseMethod('spei')
 #' # Modding the plot
 #' # Since plot.spei() returns a ggplot object, it is possible to add or tweak
 #' # parts of the plot.
+#' require(ggplot2)
 #' plot(spei(wichita[,'BAL'], 12)) +
 #'  ggtitle('SPEI1 at Wichita') +
 #'  scale_fill_manual(values=c('blue','red')) +  # classic SPEI look
 #'  scale_color_manual(values=c('blue','red')) + # classic SPEI look
 #'  theme_classic() +
 #'  theme(legend.position='bottom')
-#' 
-#' @importFrom zoo rollapply
-#' @importFrom TLMoments PWM
-#' @importFrom lmomco are.lmom.valid are.parglo.valid cdfgam cdfpe3 cdfgam pargam parglo parpe3 pwm.pp pwm2lmom
-#' @importFrom lmom pelgam pelglo pelpe3 cdfglo
 #' 
 #' @export
 #' 
@@ -672,7 +689,7 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
 #' 
 #' @title Generic methods for \code{spei} objects.
 #' 
-#' @aliases print.spi plot.spei plot.spi summary.spei summary.spi
+#' @aliases plot.spei summary.spei
 #' 
 #' @description 
 #' Generic methods for extracting information and plotting \code{spei} objects.
@@ -680,11 +697,10 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
 #' @usage
 #' \method{print}{spei}(x, ...)
 #' \method{summary}{spei}(object, ...)
-#' \method{plot}{spei}(x, ttext, ...)
+#' \method{plot}{spei}(x, ...)
 #' 
 #' @param x an object of class \code{spei}.
 #' @param object an object of class \code{spei}.
-#' @param ttext text to use as part of the plot title
 #' @param ... additional parameters, not used at present.
 #' 
 #' 
@@ -705,7 +721,7 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
 #' @author Santiago Beguería
 #'  
 #' @examples 
-#' See examples of use in the help page of the \code{spei()} function.
+#' # See examples of use in the help page of the spei() function.
 #' 
 #' @export
 #' 
@@ -758,6 +774,9 @@ plot.spei <- function (x, ...) {
   
   
   ### Make the plot - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+  
+  # A workaround to avoid R CMD check warning about no visible binding for global variables
+  #utils::globalVariables(na, value)
   
   # Label
   if (grepl('spei', x$call[1])) {
@@ -861,7 +880,7 @@ plot.spei <- function (x, ...) {
   # kk$cat[w] <- '(-0.5,0]'
   
   # Plot it
-  g <- ggplot(kk, aes(time, value, fill=cat, color=cat))
+  g <- ggplot(kk, aes_string('time', 'value', fill='cat', color='cat'))
   # reference period (if different than whole series)
   if (!is.null(x$ref.period)) {
     g <- g +
@@ -877,7 +896,7 @@ plot.spei <- function (x, ...) {
     scale_color_manual(values=c('cyan3','tomato')) # new look
   # add NAs
   g <- g + 
-    geom_point(aes(time, na), shape=21, fill='white', color='black')
+    geom_point(aes_string('time', 'na'), shape=21, fill='white', color='black')
   # add other parts and options
   g <- g +
     geom_hline(yintercept=0, color='grey') +

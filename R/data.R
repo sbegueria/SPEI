@@ -1,6 +1,7 @@
 #' @name Datasets
-#' @aliases balance cabinda cruts4
+#' @aliases wichita balance cabinda cruts4
 #' @title Data sets for illustrating the functions in the SPEI package.
+#' @keywords datasets
 #' @description 
 #' Data used in the examples of the SPEI package: 
 #' \code{wichita} dataset: monthly climate in Wichita (Kansas, lat=37.6475, 
@@ -13,10 +14,6 @@
 #' \code{cruts4}: 120 years of monthly climatic water balance (precipitation 
 #' minus reference evapotranspiration) data at six grid points from CRU TS 4.05. 
 #' @details See description.
-#' @usage 
-#' data(wichita)
-#' data(balance)
-#' data(cabinda)
 #' @format 
 #' \code{wichita} dataset: a data frame with:
 #' \describe{
@@ -85,29 +82,19 @@
 #' summary(wichita)
 #' data(balance)
 #' summary(balance)
+#' data(cruts4)
+#' summary(cruts4)
 #'
+NULL
+
+#' @rdname wichita
 "wichita"
 
-
-#' 
-#' @title cabinda
-#' @rdname Datasets
-#' @description See wichita
-#' @details See wichita
-#' 
+#' @rdname cabinda
 "cabinda"
 
-
-#' 
-#' @title balance
-#' @rdname Datasets
-#' @details See wichita
-#' 
+#' @rdname balance
 "balance"
 
-#' 
-#' @title cruts4
-#' @rdname Datasets
-#' @description See wichita
-#' @details See wichita
+#' @rdname cruts4
 "cruts4"
