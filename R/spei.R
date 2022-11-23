@@ -880,7 +880,7 @@ plot.spei <- function (x, ...) {
   # kk$cat[w] <- '(-0.5,0]'
   
   # Plot it
-  g <- ggplot(kk, aes_string('time', 'value', fill='cat', color='cat'))
+  g <- ggplot(kk, aes(.data[['time']], .data[['value']], fill='cat', color='cat'))
   # reference period (if different than whole series)
   if (!is.null(x$ref.period)) {
     g <- g +
@@ -896,7 +896,7 @@ plot.spei <- function (x, ...) {
     scale_color_manual(values=c('cyan3','tomato')) # new look
   # add NAs
   g <- g + 
-    geom_point(aes_string('time', 'na'), shape=21, fill='white', color='black')
+    geom_point(aes(.data[['time']], .data[['na']]), shape=21, fill='white', color='black')
   # add other parts and options
   g <- g +
     geom_hline(yintercept=0, color='grey') +
