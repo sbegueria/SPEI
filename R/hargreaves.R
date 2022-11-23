@@ -29,10 +29,10 @@
 #' @param Ra   optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean daily external radiation, MJ m-2 d-1.
 #' @param Pre   optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d array  of monthly total precipitation, mm.
 #' @param U2   a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean daily wind speeds at 2 m height, m s-1.
-#' @param Rs   optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean dialy incoming solar radiation, MJ m-2 d-1.
+#' @param Rs   optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean daily incoming solar radiation, MJ m-2 d-1.
 #' @param tsun   optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean daily bright sunshine hours, h.
 #' @param CC   optional, numeric a vector, matrix or time series of monthly mean cloud cover, \%.
-#' @param ed   optional, numeric a vector, matrix or time series of monthly mean actual vapour pressure at 2 m height, kPa.
+#' @param ed   optional, numeric a vector, matrix or time series of monthly mean actual vapor pressure at 2 m height, kPa.
 #' @param Tdew   optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean daily dewpoint temperature (used for estimating ed), ºC.
 #' @param RH   optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean relative humidity (used for estimating ed), \%.
 #' @param P   optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean atmospheric pressure at surface, kPa.
@@ -103,7 +103,7 @@
 #'
 #' @references 
 #' Thornthwaite, C. W., 1948. An approach toward a rational classification of climate. 
-#' \emph{Geographical Review} \bold{38}: 55–94. doi:10.2307/2107309.
+#' \emph{Geographical Review} \bold{38}: 55–94. DOI:10.2307/2107309.
 #' 
 #' Hargreaves G.H., 1994. Defining and using reference evapotranspiration. 
 #' \emph{Journal of Irrigation and Drainage Engineering} \bold{120}: 1132–1139.
@@ -125,7 +125,7 @@
 #' Reston, VA, 57 pp.
 #' 
 #' Yang, Y., Roderick, M.L., Zhang, S. McVicar, T., Donohue, R.J., 2019. Hydrologic implications of vegetation
-#' response to elevated CO2 in climate projections. \emph{Nature Clim Change} \bold{9}: 44–48.
+#' response to elevated CO2 in climate projections. \emph{Nature Climate Change} \bold{9}: 44–48.
 #'
 #'
 #' @author Santiago Beguería

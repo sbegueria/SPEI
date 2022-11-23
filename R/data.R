@@ -30,7 +30,7 @@
 #' \code{balance} dataset: a data frame with monthly climatic water balance
 #'  (precipitation minus potential evapotranspiration) at Indore (India),
 #'  Kimberley (South Africa), Albuquerque (US), Valencia (Spain), Wien (Austria),
-#'  Abashiri (Japan), Tampa (US), Sao Paulo (Brasil), Lahore (India), Punta
+#'  Abashiri (Japan), Tampa (US), Sao Paulo (Brazil), Lahore (India), Punta
 #'  Arenas (Chile) and Helsinki (Finland), in mm.
 #' \code{cabinda} dataset: a data frame with one year of monthly climatic data
 #' at Cabinda (Angola, -5.33S 12.11E 20 m), with:
@@ -42,7 +42,7 @@
 #'   \item{RH}{ monthly mean relative humidity, in \%.}
 #'   \item{U2}{ monthly mean wind speed, in km h-1}
 #'   \item{tsun}{ monthly mean sunshine hours, in h.}
-#'   \item{Rs}{ monthly mean dialy incoming solar radiation, MJ m-2 d-1.}
+#'   \item{Rs}{ monthly mean diaily incoming solar radiation, MJ m-2 d-1.}
 #'   \item{ET0}{ monthly ET0 from the original publication, in mm.}
 #'}
 #'

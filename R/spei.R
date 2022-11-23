@@ -113,7 +113,7 @@ spei <- function(x, y,...) UseMethod('spei')
 #' 
 #' @section Probability distributions:
 #' Following the original definitions \code{spei} uses a log-Logistic distribution 
-#' by default, and \code{spi} uses a Gamma distribution. This behaviour can be modified, 
+#' by default, and \code{spi} uses a Gamma distribution. This behavior can be modified, 
 #' however, through parameter \code{distribution}.
 #' 
 #' 
@@ -138,7 +138,7 @@ spei <- function(x, y,...) UseMethod('spei')
 #' 
 #' 
 #' @section Reference period:
-#' The default behaviour of the functions is using all the values provided in \code{data} 
+#' The default behavior of the functions is using all the values provided in \code{data} 
 #' for parameter fitting. However, this can be modified with help of parameters \code{ref.start} 
 #' and \code{ref.end}. These parameters allow defining a subset of values that will be used 
 #' for parameter fitting, i.e. a reference period. The functions, however, will compute the 

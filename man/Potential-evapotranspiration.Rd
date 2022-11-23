@@ -57,13 +57,13 @@ thornthwaite(Tave, lat, na.rm = FALSE, verbose = TRUE)
 
 \item{U2}{a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean daily wind speeds at 2 m height, m s-1.}
 
-\item{Rs}{optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean dialy incoming solar radiation, MJ m-2 d-1.}
+\item{Rs}{optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean daily incoming solar radiation, MJ m-2 d-1.}
 
 \item{tsun}{optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean daily bright sunshine hours, h.}
 
 \item{CC}{optional, numeric a vector, matrix or time series of monthly mean cloud cover, \%.}
 
-\item{ed}{optional, numeric a vector, matrix or time series of monthly mean actual vapour pressure at 2 m height, kPa.}
+\item{ed}{optional, numeric a vector, matrix or time series of monthly mean actual vapor pressure at 2 m height, kPa.}
 
 \item{Tdew}{optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean daily dewpoint temperature (used for estimating ed), ºC.}
 
@@ -263,7 +263,7 @@ plot(ts(cbind(pen_300, pen_co2), fr=12))
 }
 \references{
 Thornthwaite, C. W., 1948. An approach toward a rational classification of climate. 
-\emph{Geographical Review} \bold{38}: 55–94. doi:10.2307/2107309.
+\emph{Geographical Review} \bold{38}: 55–94. DOI:10.2307/2107309.
 
 Hargreaves G.H., 1994. Defining and using reference evapotranspiration. 
 \emph{Journal of Irrigation and Drainage Engineering} \bold{120}: 1132–1139.
@@ -285,7 +285,7 @@ Rep. Task Com. on Standardized Reference Evapotranspiration July 9, 2002, EWRI�
 Reston, VA, 57 pp.
 
 Yang, Y., Roderick, M.L., Zhang, S. McVicar, T., Donohue, R.J., 2019. Hydrologic implications of vegetation
-response to elevated CO2 in climate projections. \emph{Nature Clim Change} \bold{9}: 44–48.
+response to elevated CO2 in climate projections. \emph{Nature Climate Change} \bold{9}: 44–48.
 }
 \author{
 Santiago Beguería
