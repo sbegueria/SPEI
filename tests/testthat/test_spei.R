@@ -10,9 +10,9 @@ data(balance)
 data(cruts4)
 
 x_vec <- as.numeric(wichita$BAL)
-x_tsvec <- ts(bal_vec, c(1980,1), fr=12)
+x_tsvec <- ts(x_vec, c(1980,1), fr=12)
 x_mat <- as.matrix(balance)
-x_tsmat <- ts(bal_mat, c(1980,1), fr=12)
+x_tsmat <- ts(x_mat, c(1980,1), fr=12)
 x_array <- cruts4
 
 # Test input data checks and error messages
@@ -91,7 +91,7 @@ test_that('Incorrect data type: passing a data.frame', {
 #saveRDS(out, file='./tests/testthat/data/spei_1_vector.rds')
 test_that('example with vector data, scale 1', {
   expect_equal(
-    readRDS('./tests/testthat/data/spei_1_vector.rds'),
+    readRDS('data/spei_1_vector.rds'),
     spei(x_vec, 1)$fitted
   )
 })
@@ -100,7 +100,7 @@ test_that('example with vector data, scale 1', {
 #saveRDS(out, file='./tests/testthat/data/spei_12_vector.rds')
 test_that('example with vector data, scale 12', {
   expect_equal(
-    readRDS('./tests/testthat/data/spei_12_vector.rds'),
+    readRDS('data/spei_12_vector.rds'),
     spei(x_vec, 12)$fitted
   )
 })
@@ -109,7 +109,7 @@ test_that('example with vector data, scale 12', {
 #saveRDS(out, file='./tests/testthat/data/spei_1_tsvector.rds')
 test_that('example with tsvector data, scale 1', {
   expect_equal(
-    readRDS('./tests/testthat/data/spei_1_tsvector.rds'),
+    readRDS('data/spei_1_tsvector.rds'),
     spei(x_tsvec, 1)$fitted
   )
 })
@@ -118,7 +118,7 @@ test_that('example with tsvector data, scale 1', {
 #saveRDS(out, file='./tests/testthat/data/spei_12_tsvector.rds')
 test_that('example with tsvector data, scale 12', {
   expect_equal(
-    readRDS('./tests/testthat/data/spei_12_tsvector.rds'),
+    readRDS('data/spei_12_tsvector.rds'),
     spei(x_tsvec, 12)$fitted
   )
 })
@@ -127,7 +127,7 @@ test_that('example with tsvector data, scale 12', {
 #saveRDS(out, file='./tests/testthat/data/spei_1_matrix.rds')
 test_that('example with matrix data, scale 1', {
   expect_equal(
-    readRDS('./tests/testthat/data/spei_1_matrix.rds'),
+    readRDS('data/spei_1_matrix.rds'),
     spei(x_mat, 1)$fitted
   )
 })
@@ -136,7 +136,7 @@ test_that('example with matrix data, scale 1', {
 #saveRDS(out, file='./tests/testthat/data/spei_12_matrix.rds')
 test_that('example with matrix data, scale 12', {
   expect_equal(
-    readRDS('./tests/testthat/data/spei_12_matrix.rds'),
+    readRDS('data/spei_12_matrix.rds'),
     spei(x_mat, 12)$fitted
   )
 })
@@ -145,7 +145,7 @@ test_that('example with matrix data, scale 12', {
 #saveRDS(out, file='./tests/testthat/data/spei_1_tsmatrix.rds')
 test_that('example with tsmatrix data, scale 1', {
   expect_equal(
-    readRDS('./tests/testthat/data/spei_1_tsmatrix.rds'),
+    readRDS('data/spei_1_tsmatrix.rds'),
     spei(x_tsmat, 1)$fitted
   )
 })
@@ -154,7 +154,7 @@ test_that('example with tsmatrix data, scale 1', {
 #saveRDS(out, file='./tests/testthat/data/spei_12_tsmatrix.rds')
 test_that('example with tsmatrix data, scale 12', {
   expect_equal(
-    readRDS('./tests/testthat/data/spei_12_tsmatrix.rds'),
+    readRDS('data/spei_12_tsmatrix.rds'),
     spei(x_tsmat, 12)$fitted
   )
 })
@@ -163,7 +163,7 @@ test_that('example with tsmatrix data, scale 12', {
 #saveRDS(out, file='./tests/testthat/data/spei_1_array.rds')
 test_that('example with 3-d array data, scale 1', {
   expect_equal(
-    readRDS('./tests/testthat/data/spei_1_array.rds'),
+    readRDS('data/spei_1_array.rds'),
     spei(x_array, 1)$fitted
   )
 })
@@ -172,7 +172,7 @@ test_that('example with 3-d array data, scale 1', {
 #saveRDS(out, file='./tests/testthat/data/spei_12_array.rds')
 test_that('example with 3-d array data, scale 12', {
   expect_equal(
-    readRDS('./tests/testthat/data/spei_12_array.rds'),
+    readRDS('data/spei_12_array.rds'),
     spei(x_array, 12)$fitted
   )
 })
@@ -184,7 +184,7 @@ re <- c(25,12)
 #saveRDS(out, file='./tests/testthat/data/spei_refst_refend.rds')
 test_that('example with both ref.start and ref.end', {
   expect_equal(
-    readRDS('./tests/testthat/data/spei_refst_refend.rds'),
+    readRDS('data/spei_refst_refend.rds'),
     spei(x_vec, 12, ref.start=rs, ref.end=re)$fitted
   )
 })
@@ -193,7 +193,7 @@ test_that('example with both ref.start and ref.end', {
 #saveRDS(out, file='./tests/testthat/data/spei_refst.rds')
 test_that('example with only ref.start', {
   expect_equal(
-    readRDS('./tests/testthat/data/spei_refst.rds'),
+    readRDS('data/spei_refst.rds'),
     spei(x_vec, 12, ref.start=rs)$fitted
   )
 })
@@ -202,7 +202,7 @@ test_that('example with only ref.start', {
 #saveRDS(out, file='./tests/testthat/data/spei_refend.rds')
 test_that('example with only ref.end', {
   expect_equal(
-    readRDS('./tests/testthat/data/spei_refend.rds'),
+    readRDS('data/spei_refend.rds'),
     spei(x_vec, 12, ref.end=rs)$fitted
   )
 })
@@ -211,7 +211,7 @@ test_that('example with only ref.end', {
 #saveRDS(out, file='./tests/testthat/data/spei_gamma.rds')
 test_that('example with Gamma distribution', {
   expect_equal(
-    readRDS('./tests/testthat/data/spei_gamma.rds'),
+    readRDS('data/spei_gamma.rds'),
     spei(x_vec, 1, distribution='Gamma')$fitted
   )
 })
@@ -220,7 +220,7 @@ test_that('example with Gamma distribution', {
 #saveRDS(out, file='./tests/testthat/data/spei_pe3.rds')
 test_that('example with PearsonIII distribution', {
   expect_equal(
-    readRDS('./tests/testthat/data/spei_pe3.rds'),
+    readRDS('data/spei_pe3.rds'),
     spei(x_vec, 1, distribution='PearsonIII')$fitted # , tol = 1e-7 
   )
 })
@@ -228,7 +228,7 @@ test_that('example with PearsonIII distribution', {
 pars <- spei(x_vec, 1)$coefficients
 test_that('example with user-provided parameters', {
   expect_equal(
-    readRDS('./tests/testthat/data/spei_1_vector.rds'),
+    readRDS('data/spei_1_vector.rds'),
     spei(x_vec, 1, params=pars)$fitted
   )
 })

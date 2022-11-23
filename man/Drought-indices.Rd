@@ -7,10 +7,19 @@
 \title{Calculation of the Standardized Precipitation-Evapotranspiration 
 Index (SPEI) and the Standardized Precipitation Index (SPI).}
 \usage{
-spei(data, scale, kernel = list(type = 'rectangular', shift = 0),
-distribution = 'log-Logistic', fit = 'ub-pwm', na.rm = FALSE,
-ref.start=NULL, ref.end=NULL, keep.x=FALSE, params=NULL, 
-verbose=TRUE, ...)
+spei(
+  data,
+  scale,
+  kernel = list(type = 'rectangular', shift = 0),
+  distribution = 'log-Logistic',
+  fit = 'ub-pwm',
+  na.rm = FALSE,
+  ref.start=NULL,
+  ref.end=NULL,
+  keep.x=FALSE,
+  params=NULL,
+  verbose=TRUE,
+  ...)
 
 spi(
   data,

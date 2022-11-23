@@ -419,6 +419,7 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
     # 3D array input (gridded data)
     int_dims <- data_dims
   } else {
+    int_dims <- data_dims
     check$push('Input data can not have more than three dimensions.')
   }
   n_sites <- prod(int_dims[[2]], int_dims[[3]])

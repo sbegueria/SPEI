@@ -53,7 +53,7 @@ thornthwaite <- function(Tave, lat, na.rm=FALSE, verbose=TRUE) {
     int_dims <- tmin_dims
   } else {
     int_dims <- tmin_dims
-    check$push('Input data can not have more than 3 dimensions')
+    check$push('Input data can not have more than three dimensions')
   }
   n_sites <- prod(int_dims[[2]], int_dims[[3]])
   n_times <- int_dims[[1]]
@@ -93,7 +93,7 @@ thornthwaite <- function(Tave, lat, na.rm=FALSE, verbose=TRUE) {
   } else {
     mlen <- c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
     msum <- cumsum(mlen) - mlen + 15
-    cyc <- array(c(1:12), dim=int_dims)[,1,1]
+    cyc <- array(c(1:12), dim=int_dims[1])
     mlen_array <- array(mlen, dim=int_dims)
     msum_array <- array(msum, dim=int_dims)
     warn$push('Assuming the data are monthly time series starting in January, all regular (non-leap) years.')
