@@ -21,13 +21,11 @@
   \item{ACSH}{ monthly mean sun hours, in h.}
   \item{ACSH}{ monthly mean cloud cover, in \%.}
 }
-
 \code{balance} dataset: a data frame with monthly climatic water balance
  (precipitation minus potential evapotranspiration) at Indore (India),
  Kimberley (South Africa), Albuquerque (US), Valencia (Spain), Wien (Austria),
  Abashiri (Japan), Tampa (US), Sao Paulo (Brasil), Lahore (India), Punta
  Arenas (Chile) and Helsinki (Finland), in mm.
-
 \code{cabinda} dataset: a data frame with one year of monthly climatic data
 at Cabinda (Angola, -5.33S 12.11E 20 m), with:
  
@@ -89,8 +87,6 @@ minus reference evapotranspiration) data at six grid points from CRU TS 4.05.
 See wichita
 
 See wichita
-
-See wichita
 }
 \details{
 See description.
@@ -107,8 +103,6 @@ names(wichita)
 summary(wichita)
 data(balance)
 summary(balance)
-
-
 
 }
 \references{

@@ -1,12 +1,6 @@
 #' @name Datasets
-#' 
-#' 
 #' @aliases balance cabinda cruts4
-#' 
-#' 
 #' @title Data sets for illustrating the functions in the SPEI package.
-#'
-#' 
 #' @description 
 #' Data used in the examples of the SPEI package: 
 #' \code{wichita} dataset: monthly climate in Wichita (Kansas, lat=37.6475, 
@@ -18,19 +12,11 @@
 #' Allen et al. (1998);
 #' \code{cruts4}: 120 years of monthly climatic water balance (precipitation 
 #' minus reference evapotranspiration) data at six grid points from CRU TS 4.05. 
-#' 
-#' 
-#'
-#'  
 #' @details See description.
-#' 
-#'
 #' @usage 
 #' data(wichita)
 #' data(balance)
 #' data(cabinda)
-#'
-#'
 #' @format 
 #' \code{wichita} dataset: a data frame with:
 #' \describe{
@@ -44,13 +30,11 @@
 #'   \item{ACSH}{ monthly mean sun hours, in h.}
 #'   \item{ACSH}{ monthly mean cloud cover, in \%.}
 #'}
-#'
 #' \code{balance} dataset: a data frame with monthly climatic water balance
 #'  (precipitation minus potential evapotranspiration) at Indore (India),
 #'  Kimberley (South Africa), Albuquerque (US), Valencia (Spain), Wien (Austria),
 #'  Abashiri (Japan), Tampa (US), Sao Paulo (Brasil), Lahore (India), Punta
 #'  Arenas (Chile) and Helsinki (Finland), in mm.
-#' 
 #' \code{cabinda} dataset: a data frame with one year of monthly climatic data
 #' at Cabinda (Angola, -5.33S 12.11E 20 m), with:
 #'  
@@ -102,21 +86,13 @@
 #' data(balance)
 #' summary(balance)
 #'
-#'
-#'
 "wichita"
 
 
 #' 
 #' @title cabinda
-#' 
-#' 
 #' @rdname Datasets
-#' 
-#' 
 #' @description See wichita
-#' 
-#' 
 #' @details See wichita
 #' 
 "cabinda"
@@ -124,27 +100,14 @@
 
 #' 
 #' @title balance
-#' 
-#' 
 #' @rdname Datasets
-#' 
-#' 
-#' @description See wichita
-#' 
-#' 
 #' @details See wichita
 #' 
 "balance"
 
 #' 
 #' @title cruts4
-#' 
-#' 
 #' @rdname Datasets
-#' 
-#' 
 #' @description See wichita
-#' 
-#' 
 #' @details See wichita
 "cruts4"

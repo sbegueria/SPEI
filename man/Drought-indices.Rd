@@ -23,6 +23,7 @@ spi(
   ref.end = NULL,
   x = FALSE,
   params = NULL,
+  verbose = TRUE,
   ...
 )
 }

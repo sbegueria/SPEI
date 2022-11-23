@@ -1,12 +1,6 @@
 #' @name Potential-evapotranspiration
-#' 
-#' 
 #' @title Computation of potential and reference evapotranspiration.
-#' 
-#' 
 #' @aliases thornthwaite penman
-#' 
-#' 
 #' @usage 
 #' thornthwaite(Tave, lat, na.rm = FALSE, verbose=TRUE)
 #' 

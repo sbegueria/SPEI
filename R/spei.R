@@ -2,26 +2,18 @@ spei <- function(x, y,...) UseMethod('spei')
 
 
 #' @name Drought-indices
-#' 
-#' @aliases spi
-#' 
 #' @title Calculation of the Standardized Precipitation-Evapotranspiration 
 #' Index (SPEI) and the Standardized Precipitation Index (SPI).
-#' 
-#' 
+#' @aliases spi
 #' @description
 #' Given a time series of the climatic water balance (precipitation minus 
 #' potential evapotranspiration), gives a time series of the Standardized 
 #' Precipitation-Evapotranspiration Index (SPEI).
-#' 
-#' 
 #' @usage 
 #' spei(data, scale, kernel = list(type = 'rectangular', shift = 0),
 #' distribution = 'log-Logistic', fit = 'ub-pwm', na.rm = FALSE,
 #' ref.start=NULL, ref.end=NULL, keep.x=FALSE, params=NULL, 
 #' verbose=TRUE, ...)
-#'
-#' 
 #' 
 #' @param data a vector, matrix or data frame with time ordered values 
 #' of precipitation (for the SPI) or of the climatic balance 
@@ -290,8 +282,8 @@ spei <- function(x, y,...) UseMethod('spei')
 #' 
 #' @importFrom zoo rollapply
 #' @importFrom TLMoments PWM
-#' @importFrom lmomco are.lmom.valid are.parglo.valid cdfgam cdfpe3 pargam parglo parpe3 pwm.pp pwm2lmom
-#' @importFrom lmom pelgam pelglo pelpe3 cdfglo cdfgam cdfpe3
+#' @importFrom lmomco are.lmom.valid are.parglo.valid cdfgam cdfpe3 cdfgam pargam parglo parpe3 pwm.pp pwm2lmom
+#' @importFrom lmom pelgam pelglo pelpe3 cdfglo
 #' 
 #' @export
 #' 
@@ -722,17 +714,9 @@ print.spei <- function (x, ...) {
 
 #' 
 #' @title summary of spei/spi
-#' 
-#' 
 #' @description See print.spei
-#' 
-#' 
 #' @details See print.spei
-#' 
-#' 
 #' @rdname Generic-methods-for-spei-objects
-#' 
-#' 
 #' @export
 #' 
 summary.spei <- function (object, ...) {
@@ -752,16 +736,9 @@ summary.spei <- function (object, ...) {
 
 #' 
 #' @title plot spei/spi
-#' 
-#' 
 #' @description See print.spei
-#' 
-#' 
 #' @details See print.spei
-#' 
-#' 
 #' @rdname Generic-methods-for-spei-objects
-#' 
 #' 
 #' @import ggplot2
 #' @importFrom zoo na.trim

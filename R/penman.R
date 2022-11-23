@@ -1,12 +1,6 @@
 #' @title Computation of potential evapotranspiration.
-#' 
-#' 
 #' @description See hargreaves
-#' 
-#' 
 #' @details See hargreaves
-#' 
-#' 
 #' @return  A time series with the values of monthly potential or reference 
 #' evapotranspiration, in mm. 
 #' If the input is a matrix or a multivariate time series each column will be 
@@ -157,6 +151,7 @@ penman <- function(Tmin, Tmax, U2=NULL, Ra=NULL, lat=NULL, Rs=NULL,
     # 3D array input (gridded data)
     int_dims <- tmin_dims
   } else {
+    int_dims <- tmin_dims
     check$push('Input data can not have more than 3 dimensions')
   }
   n_sites <- prod(int_dims[[2]], int_dims[[3]])
@@ -204,7 +199,7 @@ penman <- function(Tmin, Tmax, U2=NULL, Ra=NULL, lat=NULL, Rs=NULL,
   # Verify the length of each input variable
   input_len <- prod(int_dims)
   if (sum(lengths(Tmin))!=input_len || sum(lengths(Tmax))!=input_len) {
-    check$push('`Tmin` and `Tmax`cannot have different lengths.')
+    check$push('`Tmin` and `Tmax` cannot have different lengths.')
   }
   if (using$U2 && sum(lengths(U2))!=input_len) {
     check$push('`U2` has incorrect length.')
@@ -230,7 +225,7 @@ penman <- function(Tmin, Tmax, U2=NULL, Ra=NULL, lat=NULL, Rs=NULL,
   if (using$Tdew && sum(lengths(Tdew))!=input_len) {
     check$push('`Tdew` has incorrect length.')
   }
-  if (using$RH && sum(lengths(RRHa))!=input_len) {
+  if (using$RH && sum(lengths(RH))!=input_len) {
     check$push('`RH` has incorrect length.')
   }
   if (using$P && sum(lengths(P))!=input_len) {
