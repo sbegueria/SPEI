@@ -86,7 +86,7 @@ kern <- function(scale, type='rectangular', shift=0) {
 	
 	if(s == 1) type == "rectangular"
 	
-	k = switch(type,
+	k <- switch(type,
 	       rectangular = rep(1,s),
 	       triangular = s:1,
 	       circular = (s^2+(1-(1:s)^2)),

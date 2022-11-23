@@ -502,7 +502,7 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
   
   # Instantiate an object to store the distribution coefficients
   # ADD PZE TO GAMMA AND PEARSONIII
-  coef = switch(distribution,
+  coef <- switch(distribution,
                 "Gamma" = array(NA, c(2, n_sites, ts_freq),
                                 list(par=c('alpha','beta'), colnames(data), NULL)),
                 "PearsonIII" = coef <- array(NA, c(3, n_sites, ts_freq),
@@ -571,7 +571,7 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
       # Probability of zero (pze)
       if(distribution != 'log-Logistic'){
         pze <- sum(x.mon==0) / length(x.mon)
-        x.mon = x.mon[x.mon > 0]
+        x.mon <- x.mon[x.mon > 0]
       }
       
       ## Compute coefficients - - - - - - - - - - - - - -
@@ -579,7 +579,7 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
       # Distribution parameters (f_params)
       if (!using$params) {
         # Fit distribution parameters
-        x.mon_sd = sd(x.mon, na.rm=TRUE)
+        x.mon_sd <- sd(x.mon, na.rm=TRUE)
         
         # Early stopping
         if (is.na(x.mon_sd) || (x.mon_sd == 0)) {
@@ -587,13 +587,13 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
           next()
         }
         if(length(x.mon) < 4){
-          spei[ff,s] = NA
+          spei[ff,s] <- NA
           coef[,s,c] <- NA
           next()
         }
         
         # Calculate probability weighted moments based on `lmomco` or `TLMoments`
-        pwm = switch(fit,
+        pwm <- switch(fit,
                      'pp-pwm' = pwm.pp(x.mon, -0.35, 0, nmom=3, sort=TRUE),
                      'ub-pwm' = PWM(x.mon, order=0:2)
         )
@@ -607,10 +607,10 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
         
         # `lmom` fortran functions need specific inputs L1, L2, T3
         # This is handled internally by `lmomco` with `lmorph`
-        fortran_vec = c(lmom$lambdas[1:2], lmom$ratios[3])
+        fortran_vec <- c(lmom$lambdas[1:2], lmom$ratios[3])
         
         # Calculate parameters based on distribution with `lmom`, then `lmomco`
-        f_params = switch(distribution,
+        f_params <- switch(distribution,
                           'log-Logistic' = tryCatch(pelglo(fortran_vec),
                                                     error = function(e){ parglo(lmom)$para }),
                           'Gamma' = tryCatch(pelgam(fortran_vec),
@@ -621,12 +621,12 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
         
         # Adjust if user chose `log-Logistic` and `max-lik`
         if(distribution == 'log-Logistic' && fit=='max-lik'){
-          f_params = parglo.maxlik(x.mon, f_params)$para
+          f_params <- parglo.maxlik(x.mon, f_params)$para
         }
       } else {
         # User-provided distribution parameters
         
-        f_params = as.vector(params[,s,c])
+        f_params <- as.vector(params[,s,c])
         
       }
       
