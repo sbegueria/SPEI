@@ -336,7 +336,7 @@ hargreaves <- function(Tmin, Tmax, Ra=NULL, lat=NULL, Pre=NULL,
     }
     ym <- as.yearmon(time(Tmin))
     warn$push(paste0('Time series spanning ', ym[1], ' to ', ym[n_times], '.'))
-    date <- as.Date(ym)
+    date <- as.Date.yearmon(ym)
     mlen_array <- array(as.numeric(lubridate::days_in_month(date)), dim=int_dims)
     msum_array <- array(yday(date) + round((mlen_array/2) - 1), dim=int_dims)
   } else {

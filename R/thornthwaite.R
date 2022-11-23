@@ -6,7 +6,6 @@
 #' data (e.g., diferent observatories), and the output will be a multivariate time series.
 #' 
 #' @rdname Potential-evapotranspiration
-#' 
 #' @export
 #' 
 thornthwaite <- function(Tave, lat, na.rm=FALSE, verbose=TRUE) {
@@ -53,6 +52,7 @@ thornthwaite <- function(Tave, lat, na.rm=FALSE, verbose=TRUE) {
     # 3D array input (gridded data)
     int_dims <- tmin_dims
   } else {
+    int_dims <- tmin_dims
     check$push('Input data can not have more than 3 dimensions')
   }
   n_sites <- prod(int_dims[[2]], int_dims[[3]])
@@ -87,7 +87,7 @@ thornthwaite <- function(Tave, lat, na.rm=FALSE, verbose=TRUE) {
     }
     ym <- as.yearmon(time(Tave))
     warn$push(paste0('Time series spanning ', ym[1], ' to ', ym[n_times], '.'))
-    date <- as.Date(ym)
+    date <- as.Date.yearmon(ym)
     mlen_array <- array(as.numeric(lubridate::days_in_month(date)), dim=int_dims)
     msum_array <- array(yday(date) + round((mlen_array/2) - 1), dim=int_dims)
   } else {
