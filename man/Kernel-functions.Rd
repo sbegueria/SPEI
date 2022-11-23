@@ -18,7 +18,7 @@ kern.plot(scale = 12, shift = 0)
 \item{shift}{numeric, shifting of the kernel peak.}
 }
 \value{
-A vector of lenght equal to \code{scale} with weights used for computing the drought index.
+A vector of length equal to \code{scale} with weights used for computing the drought index.
 }
 \description{
 Function \code{kern} is used internally by \code{\link{spei}} and
@@ -29,7 +29,7 @@ See kern
 \details{
 Drought indices, such as the SPEI or the SPI, are usually 
 computed at different time scales to adapt to the different response 
-times of systems affected by drought. This is acomplished by applying 
+times of systems affected by drought. This is accomplished by applying 
 a kernel function to the data prior to computation of the SPEI. 
 Application of a kernel has the effect of smoothing the temporal 
 variability of the resulting SPEI, allowing for the major patterns 

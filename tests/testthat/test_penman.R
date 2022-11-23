@@ -32,9 +32,9 @@ test_that('No Rs nor CC provided', {
                'One of `Rs`, the pair `tsun` and `lat`, or `CC` must be provided.')
 })
 
-test_that('No Rs nor CC provided', {
+test_that('No Tmin provided', {
   expect_error(penman(Tmax=TMAX, U2=AWND, tsun=TSUN, lat=37.6475, z=402.6, na.rm=TRUE),
-               'One of `ed`, `Tdew`, `RH` or `Tmin` must be provided.')
+               'argument \"Tmin\" is missing, with no default')
 })
 
 test_that('No P nor z provided', {
@@ -59,12 +59,12 @@ test_that('NAs in Tmin', {
 
 test_that('NAs in Tmax', {
   expect_error(penman(c(1,TMIN), c(NA,TMAX), c(1,TMIN), tsun=c(1,TMIN), lat=37.6475, z=402.6, na.rm=FALSE),
-               'Data must not contain NA values if argument `na.rm` is set to FALSE.')
+               '`Tmin`, `Tmax` and `U2` must not contain NA values if argument `na.rm` is set to FALSE.')
 })
 
 test_that('NAs in U2', {
   expect_error(penman(c(1,TMIN), c(1,TMAX), c(NA,TMIN), tsun=c(1,TMIN), lat=37.6475, z=402.6, na.rm=FALSE),
-               'Data must not contain NA values if argument `na.rm` is set to FALSE.')
+               '`Tmin`, `Tmax` and `U2` must not contain NA values if argument `na.rm` is set to FALSE.')
 })
 
 test_that('NAs in Tsun', {
@@ -89,7 +89,7 @@ tmin <- array(TMIN, dim=c(nt, 2, 2, 2))
 # tsun <- array(TSUN, dim=c(nt, 2, 2, 2))
 test_that('input more than three dimensions', {
   expect_error(penman(tmin, TMAX, AWND, tsun=TSUN, lat=37.6475, z=402.6, na.rm=TRUE),
-               'Input data can not have more than three dimensions.')
+               'Input data can not have more than 3 dimensions.')
 })
 
 test_that('Tmax incorrect length', {

@@ -1,7 +1,6 @@
 Package: SPEI
 Type: Package
-Version: 1.8
-Date: 2022-05-05
+Version: 1.8.0
 Title: Calculation of the Standardised Precipitation-Evapotranspiration Index
 Authors@R: c(
 	person('Santiago', 'Beguería', role=c('aut','cre'),
@@ -12,8 +11,9 @@ Description: A set of functions for computing potential evapotranspiration and s
 Depends: R (>= 3.5.0)
 Imports: lmomco, lmom, TLMoments, reshape, ggplot2, checkmate, zoo, lubridate
 License: GPL-2
-URL: http://spei.csic.es
-LazyLoad: yes
+URL: http://spei.csic.es, https://github.com/sbegueria/SPEI
+BugReports: https://github.com/sbegueria/SPEI/issues
+LazyLoad: true
 Encoding: UTF-8
 Suggests: covr, testthat
-RoxygenNote: 7.1.1
+RoxygenNote: 7.2.0

@@ -6,7 +6,7 @@
 
 __Version history:
 
-_Version 1.8, May 2022 (current development version on github).
+_### _Version 1.8.0, November 2022 (current version on GitHub, submitted to CRAN).
 
 1. Solving several minor bugs in `<thornthwaite>`, `<hargreaves>`, and `<penman>` functions (output difference less than 0.1%).
 2. Solving a bug in `<spei>` that resulted in bad cumulative data when using a non-rectangular kernel, resulting in incorrect SPEI values.
@@ -16,16 +16,16 @@ _Version 1.8, May 2022 (current development version on github).
 6. Implementation of different versions of the Penman-Monteith ETo calculation in function `<penman>`.
 7. Implementation of an option to include CO2 concentration data in function `<penman>`.
 8. Implementation of a new option for when no wind data are available in function `<penman>`.
-9. Funtion `<plot.spei>` completely rewritten based on `ggplot2`, solving some bugs and enabling more flexibility.
+9. Function `<plot.spei>` completely rewritten based on `ggplot2`, solving some bugs and enabling more flexibility.
 
-_Version 1.7.2, June 2019 (current stable version on github).
+_Version 1.7.2, June 2019 (only on GitHub).
 
 1. Allowing for data with frequency other than 12 in `<spei>` function.
 
 _Version 1.7.1, June 2017.
 
-1. Corrected an error in `<spei>` function, which was not working when distribution was Gamma or PeasonIII and using user provided parameters. (Fixed by Emanuele Cordano, emanuele.cordano@gmail.com -- ecor)
-2. Added probability of monthly precipitation = 0 (pze) when using user provided parameters. (Fixed by Emanuele Cordano, emanuele.cordano@gmail.com -- ecor) 
+1. Corrected an error in `<spei>` function, which was not working when distribution was Gamma or PeasonIII and using user provided parameters. (Fixed by Emanuele Cordano, emanuele.cordano@gmail.com -- 'ecor')
+2. Added probability of monthly precipitation = 0 (pze) when using user provided parameters. (Fixed by Emanuele Cordano, emanuele.cordano@gmail.com -- 'ecor') 
 
 _Version 1.7, June 2017 (current on CRAN).
 
@@ -45,7 +45,7 @@ _Version 1.5, May 2013.
 
 _Version 1.4, May 2013.
 1. Minor fixes to functions \code{\link{penman}} and \code{\link{pwm}}.
-2. Documentation of the penman function defined by mistake ed as the saturation vapour pressure, while it should read 'actual vapour pressure'.
+2. Documentation of the penman function defined by mistake ed as the saturation vapor pressure, while it should read 'actual vapor pressure'.
 3. Function zzz.R added to display basic information about the SPEI package at startup.
 4. Function \code{\link{SPEINews}} added to display the NEWS file.
 
@@ -56,7 +56,7 @@ _Version 1.3, March 2013.
 
 _Version 1.2, October 2012.
 1. Fixed a bug causing several functions to fail when a time series not belonging to matrix class was provided.
-2. Function \code{\link{plot.spei}} now distinguises between calls to spei and spi and labels the axis accordingly.
+2. Function \code{\link{plot.spei}} now distinguishes between calls to \code{\link{spei}} and \code{\link{spi}} and labels the axis accordingly.
 
 _Version 1.1, March 2012.
 1. Functions \code{\link{spei}} and \code{\link{spi}} now yield an object of class "spei".
@@ -69,6 +69,6 @@ First release of the SPEI package.
 __To do (work in progress):
 
 1. Complete documentation for pwmLC.Rd.
-2. Review method plot.spei() that produces wrong results in some cases.
+2. Review method \code{\link{plot.speispei}} that produces wrong results in some cases.
 3. Implement parallel processing.
 4. Analysis functions.

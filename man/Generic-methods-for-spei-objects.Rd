@@ -3,20 +3,17 @@
 \name{Generic-methods-for-spei-objects}
 \alias{Generic-methods-for-spei-objects}
 \alias{print.spei}
-\alias{print.spi}
 \alias{plot.spei}
-\alias{plot.spi}
 \alias{summary.spei}
-\alias{summary.spi}
 \title{Generic methods for \code{spei} objects.}
 \usage{
 \method{print}{spei}(x, ...)
 \method{summary}{spei}(object, ...)
-\method{plot}{spei}(x, ttext, ...)
+\method{plot}{spei}(x, ...)
 
 \method{summary}{spei}(object, ...)
 
-\method{plot}{spei}(x)
+\method{plot}{spei}(x, ...)
 }
 \arguments{
 \item{x}{an object of class \code{spei}.}
@@ -24,8 +21,6 @@
 \item{...}{additional parameters, not used at present.}
 
 \item{object}{an object of class \code{spei}.}
-
-\item{ttext}{text to use as part of the plot title}
 }
 \description{
 Generic methods for extracting information and plotting \code{spei} objects.
@@ -48,7 +43,7 @@ See print.spei
 See print.spei
 }
 \examples{
-See examples of use in the help page of the \code{spei()} function.
+# See examples of use in the help page of the spei() function.
 
 }
 \references{

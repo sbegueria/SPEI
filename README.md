@@ -1,6 +1,6 @@
 # SPEI
 
-An R package incorporating a set of functions for computing potential or reference evapotranspiration and several widely used drought indices, currently including the **Standardized Precipitation-Evapotranspiration Index (SPEI)** and the **Standardized Precipitation Index (SPE)**.
+An R package incorporating a set of functions for computing potential or reference evapotranspiration and several widely used drought indices, currently including the **Standardized Precipitation-Evapotranspiration Index (SPEI)** and the **Standardized Precipitation Index (SPI)**.
 
 The package is centered on the SPEI. For more information on this drought index, please visit 
 [spei.csic.es](http://spei.csic.es/).
@@ -46,17 +46,17 @@ You can cite this references if you use the SPEI library on your work:
 
 Other (possibly useful) references:
 
-* Vicente-Serrano, S.M., Beguería, S., López-Moreno, J.I., Angulo, M., El Kenawy, A. 2010. A new global 0.5° gridded dataset (1901-2006) of a multiscalar drought index: comparison with current drought index datasets based on the Palmer Drought Severity Index. *Journal of Hydrometeorology* **11**: 1033--1043.
+* Vicente-Serrano, S.M., Beguería, S., López-Moreno, J.I., Angulo, M., El Kenawy, A. 2010. A new global 0.5° gridded dataset (1901-2006) of a multi-scalar drought index: comparison with current drought index datasets based on the Palmer Drought Severity Index. *Journal of Hydrometeorology* **11**: 1033--1043.
 
 * Beguería, S., Vicente-Serrano, S.M. y Angulo, M. 2010. A multi-scalar global drought data set: the SPEIbase: A new gridded product for the analysis of drought variability and impacts. *Bulletin of the American Meteorological Society* **91**: 1351--1354.
 
 * Vicente-Serrano, S.M., Beguería, S. and Juan I. López-Moreno. 2011. Comment on “Characteristics and trends in various forms of the Palmer Drought Severity Index (PDSI) during 1900-2008” by A. Dai. *Journal of Geophysical Research-Atmosphere* **116**: D19112, doi:10.1029/2011JD016410.
 
-* Vicente-Serrano, S.M., Santiago Beguería, Jorge Lorenzo-Lacruz, Jesús Julio Camarero, Juan I. López-Moreno, Cesar Azorin-Molina, Jesús Revuelto, Enrique Morán-Tejeda and Arturo Sánchez-Lorenzo. 2012. Performance of drought indices for ecological, agricultural and hydrological applications. *Earth Interactions* **16**: 1--27.
+* Vicente-Serrano, S.M., Santiago Beguería, Jorge Lorenzo-Lacruz, Jesús Julio Camarero, Juan I. López-Moreno, Cesar Azorín-Molina, Jesús Revuelto, Enrique Morán-Tejeda and Arturo Sánchez-Lorenzo. 2012. Performance of drought indices for ecological, agricultural and hydrological applications. *Earth Interactions* **16**: 1--27.
 
 * Vicente-Serrano, S.M., Célia Gouveia, Jesús Julio Camarero, Santiago Beguería, Ricardo Trigo, Juan I. López-Moreno, César Azorín-Molina, Edmond Pasho, Jorge Lorenzo-Lacruz, Jesús Revuelto, Enrique Morán-Tejeda and Arturo Sanchez-Lorenzo. 2012. The response of vegetation to drought time-scales across global land biomes. *Proceedings of the National Academy of Sciences of the United States of America*, doi: 10.1073/pnas.1207068110.
 
-* Vicente-Serrano, S.M., Gerard Van der Schrier, Santiago Beguería, Cesar Azorin-Molina, Juan-I. Lopez-Moreno. 2015. Contribution of precipitation and reference evapotranspiration to drought indices under different climates. Journal of Hydrology 426: 42--54.
+* Vicente-Serrano, S.M., Gerard Van der Schrier, Santiago Beguería, Cesar Azorín-Molina, Juan-I. Lopez-Moreno. 2015. Contribution of precipitation and reference evapotranspiration to drought indices under different climates. Journal of Hydrology 426: 42--54.
 
 * Vicente-Serrano, S.M., Beguería, S. 2016. Comment on "Candidate Distributions for Climatological Drought Indices (SPI and SPEI)" by James H. Stagge et al. *International Journal of Climatology* **36**: 2120--213.
 
@@ -64,7 +64,7 @@ Other (possibly useful) references:
 
 ## Version history
 
-### Version 1.8, May 2022 (current version on github).
+### Version 1.8.0, November 2022 (current version on GitHub, submitted to CRAN).
 
 1.  Solving several minor bugs in `<thornthwaite>`, `<hargreaves>`, and `<penman>` functions (output difference is lower than 0.1% with respect to version 1.7).
 2.  Solving a bug in `<spei>` that resulted in bad cumulative data when using a non-rectangular kernel, resulting in incorrect SPEI values.
@@ -75,9 +75,9 @@ Other (possibly useful) references:
 7.  Implementation of an option to include CO2 concentration data in function `<penman>`.
 8.  Implementation of a new option for when no wind data are available in function `<penman>`.
 9.  Functions `<spei>` and `<spi>` now admit time series of any frequency, and not only monthly (frequency 12) data.
-10. Fucntion `<plot.spei>` completely rewritten based on `ggplot2`, solving some bugs and enabling more flexibility.
+10. Function `<plot.spei>` completely rewritten based on `ggplot2`, solving some bugs and enabling more flexibility.
 
-### Version 1.7.2, January 2018 (latest stable version on github).
+### Version 1.7.2, January 2018 (only on GitHub).
 
 1. Several code optimizations and improvements (by github user @doug-friedman).
 2. Added formal unit testing with `testthat` (@doug-friedman).
@@ -110,7 +110,7 @@ Other (possibly useful) references:
 ### Version 1.4, May 2013.
 
 1. Minor fixes to functions `<penman>` and `<pwm>`.
-2. Documentation of the penman function defined by mistake ed as the saturation vapour pressure, while it should read 'actual vapour pressure'.
+2. Documentation of the penman function defined by mistake ed as the saturation vapor pressure, while it should read 'actual vapor pressure'.
 3. Function zzz.R added to display basic information about the SPEI package at startup.
 4. Function `<SPEINews>` added to display the NEWS file.
 

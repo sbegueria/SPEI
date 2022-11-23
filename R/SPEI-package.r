@@ -43,5 +43,10 @@
 #' 
 #' @importFrom checkmate makeAssertCollection
 #' @importFrom stats cycle end frequency start ts optim
-#' @importFrom zoo as.yearmon rollapply
+#' @importFrom zoo as.yearmon as.Date.yearmon rollapply na.trim
+#' @importFrom stats aggregate is.ts pnorm qnorm sd time window
+#' @importFrom TLMoments PWM
+#' @importFrom lmomco are.lmom.valid are.parglo.valid cdfgam cdfpe3 cdfgam pargam parglo parpe3 pwm.pp pwm2lmom
+#' @importFrom lmom pelgam pelglo pelpe3 cdfglo
+
 NULL

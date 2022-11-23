@@ -1,25 +1,15 @@
 #' @name Kernel-functions
-#' 
-#' 
 #' @title Time kernel for computing the SPEI at different time scales.
-#'
-#'
 #' @aliases kern.plot
-#'
-#'
 #' @description Function \code{kern} is used internally by \code{\link{spei}} and
 #'  \code{\link{spi}}for computing drought indices at different time scales.
-#' 
-#' 
 #' @param scale numeric, time scale or length of the kernel.
 #' @param type character, shape of the kernel function.
 #' @param shift numeric, shifting of the kernel peak.
-#' 
-#' 
 #' @details 
 #' Drought indices, such as the SPEI or the SPI, are usually 
 #' computed at different time scales to adapt to the different response 
-#' times of systems affected by drought. This is acomplished by applying 
+#' times of systems affected by drought. This is accomplished by applying 
 #' a kernel function to the data prior to computation of the SPEI. 
 #' Application of a kernel has the effect of smoothing the temporal 
 #' variability of the resulting SPEI, allowing for the major patterns 
@@ -50,7 +40,7 @@
 #'  time lag for the four different kernel shapes so they can be compared.
 #'  
 #'  
-#' @return A vector of lenght equal to \code{scale} with weights used for computing the drought index.
+#' @return A vector of length equal to \code{scale} with weights used for computing the drought index.
 #' 
 #' 
 #' @references 
@@ -96,7 +86,7 @@ kern <- function(scale, type='rectangular', shift=0) {
 	
 	if(s == 1) type == "rectangular"
 	
-	k = switch(type,
+	k <- switch(type,
 	       rectangular = rep(1,s),
 	       triangular = s:1,
 	       circular = (s^2+(1-(1:s)^2)),

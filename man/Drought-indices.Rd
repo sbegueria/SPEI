@@ -3,14 +3,38 @@
 \name{Drought-indices}
 \alias{Drought-indices}
 \alias{spei}
+\alias{spei,}
 \alias{spi}
 \title{Calculation of the Standardized Precipitation-Evapotranspiration 
 Index (SPEI) and the Standardized Precipitation Index (SPI).}
 \usage{
-spei(data, scale, kernel = list(type = 'rectangular', shift = 0),
-distribution = 'log-Logistic', fit = 'ub-pwm', na.rm = FALSE,
-ref.start=NULL, ref.end=NULL, keep.x=FALSE, params=NULL, 
-verbose=TRUE, ...)
+spei(
+ data,
+ scale,
+ kernel = list(type = 'rectangular', shift = 0),
+ distribution = 'log-Logistic',
+ fit = 'ub-pwm',
+ na.rm = FALSE,
+ ref.start=NULL,
+ ref.end=NULL,
+ keep.x=FALSE,
+ params=NULL, 
+ verbose=TRUE,
+ ...)
+
+spi(
+ data,
+ scale,
+ kernel = list(type = 'rectangular', shift = 0),
+ distribution = 'Gamma',
+ fit = 'ub-pwm',
+ na.rm = FALSE,
+ ref.start=NULL,
+ ref.end=NULL,
+ keep.x=FALSE,
+ params=NULL, 
+ verbose=TRUE,
+ ...)
 
 spi(
   data,
@@ -21,8 +45,9 @@ spi(
   na.rm = FALSE,
   ref.start = NULL,
   ref.end = NULL,
-  x = FALSE,
+  keep.x = FALSE,
   params = NULL,
+  verbose = TRUE,
   ...
 )
 }
@@ -150,7 +175,7 @@ These parameters are then passed to the function \code{\link{kern}}.
 \section{Probability distributions}{
 
 Following the original definitions \code{spei} uses a log-Logistic distribution 
-by default, and \code{spi} uses a Gamma distribution. This behaviour can be modified, 
+by default, and \code{spi} uses a Gamma distribution. This behavior can be modified, 
 however, through parameter \code{distribution}.
 }
 
@@ -178,7 +203,7 @@ this option in order to know what distribution function should be used.
 
 \section{Reference period}{
 
-The default behaviour of the functions is using all the values provided in \code{data} 
+The default behavior of the functions is using all the values provided in \code{data} 
 for parameter fitting. However, this can be modified with help of parameters \code{ref.start} 
 and \code{ref.end}. These parameters allow defining a subset of values that will be used 
 for parameter fitting, i.e. a reference period. The functions, however, will compute the 
@@ -282,6 +307,7 @@ dim(spei_12$fitted)
 # Modding the plot
 # Since plot.spei() returns a ggplot object, it is possible to add or tweak
 # parts of the plot.
+require(ggplot2)
 plot(spei(wichita[,'BAL'], 12)) +
  ggtitle('SPEI1 at Wichita') +
  scale_fill_manual(values=c('blue','red')) +  # classic SPEI look

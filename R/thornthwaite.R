@@ -1,20 +1,11 @@
 #' @title Computation of potential evapotranspiration.
-#' 
-#' 
 #' @description See hargreaves
-#' 
-#' 
 #' @details See hargreaves
-#' 
-#' 
 #' @return A time series with the values of monthly potential or reference evapotranspiration, in mm. 
 #' If the input is a matrix or a multivariate time series each column will be treated as independent 
 #' data (e.g., diferent observatories), and the output will be a multivariate time series.
 #' 
-#' 
 #' @rdname Potential-evapotranspiration
-#' 
-#' 
 #' @export
 #' 
 thornthwaite <- function(Tave, lat, na.rm=FALSE, verbose=TRUE) {
@@ -61,7 +52,8 @@ thornthwaite <- function(Tave, lat, na.rm=FALSE, verbose=TRUE) {
     # 3D array input (gridded data)
     int_dims <- tmin_dims
   } else {
-    check$push('Input data can not have more than 3 dimensions')
+    int_dims <- tmin_dims
+    check$push('Input data can not have more than three dimensions')
   }
   n_sites <- prod(int_dims[[2]], int_dims[[3]])
   n_times <- int_dims[[1]]
@@ -95,13 +87,13 @@ thornthwaite <- function(Tave, lat, na.rm=FALSE, verbose=TRUE) {
     }
     ym <- as.yearmon(time(Tave))
     warn$push(paste0('Time series spanning ', ym[1], ' to ', ym[n_times], '.'))
-    date <- as.Date(ym)
+    date <- as.Date.yearmon(ym)
     mlen_array <- array(as.numeric(lubridate::days_in_month(date)), dim=int_dims)
     msum_array <- array(yday(date) + round((mlen_array/2) - 1), dim=int_dims)
   } else {
     mlen <- c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
     msum <- cumsum(mlen) - mlen + 15
-    cyc <- array(c(1:12), dim=int_dims)[,1,1]
+    cyc <- array(c(1:12), dim=int_dims[1])
     mlen_array <- array(mlen, dim=int_dims)
     msum_array <- array(msum, dim=int_dims)
     warn$push('Assuming the data are monthly time series starting in January, all regular (non-leap) years.')
@@ -176,7 +168,7 @@ thornthwaite <- function(Tave, lat, na.rm=FALSE, verbose=TRUE) {
   if (out_type=='tsmatrix') {
     PET <- matrix(PET, nrow=n_times)
     PET <- ts(PET, frequency=ts_freq, start=ts_start)
-    colnames(PET) <- rep('PET_tho', ncol(ET0))
+    colnames(PET) <- rep('PET_tho', ncol(PET))
   } else if (out_type=='tsvector') {
     PET <- as.vector(PET)
     PET <- ts(PET, frequency=ts_freq, start=ts_start)

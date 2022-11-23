@@ -65,7 +65,7 @@ test_that('input more than three dimensions', {
 
 test_that('Tmin and Tmax different size', {
   expect_error(hargreaves(c(1,TMIN), TMAX, lat=37.6475),
-               '`Tmin` and `Tmax`cannot have different lengths.')
+               '`Tmin` and `Tmax` cannot have different lengths.')
 })
 
 test_that('Ra incorrect size', {
@@ -107,7 +107,7 @@ test_that('example with lat', {
 #out <- hargreaves(TMIN, TMAX, Ra=TMAX)
 #saveRDS(out, file='./tests/testthat/data/hargreaves_out_ra.rds')
 test_that('example with Ra', {
-  harModOut = readRDS('data/hargreaves_out_ra.rds')
+  harModOut <- readRDS('data/hargreaves_out_ra.rds')
   expect_equal(harModOut, hargreaves(TMIN, TMAX, Ra=TMAX)
   )
 })
@@ -115,7 +115,7 @@ test_that('example with Ra', {
 #out <- hargreaves(TMIN, TMAX, lat=37.6475, Pre=TMAX)
 #saveRDS(out, file='./tests/testthat/data/hargreaves_out_pre.rds')
 test_that('example with Pre', {
-  harModOut = readRDS('data/hargreaves_out_pre.rds')
+  harModOut <- readRDS('data/hargreaves_out_pre.rds')
   expect_equal(harModOut, hargreaves(TMIN, TMAX, lat=37.6475, Pre=TMAX)
   )
 })

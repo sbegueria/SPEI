@@ -1,21 +1,15 @@
 #' @name Potential-evapotranspiration
-#' 
-#' 
 #' @title Computation of potential and reference evapotranspiration.
-#' 
-#' 
 #' @aliases thornthwaite penman
-#' 
-#' 
 #' @usage 
 #' thornthwaite(Tave, lat, na.rm = FALSE, verbose=TRUE)
 #' 
-#' hargreaves(Tmin, Tmax, Ra = NA, lat = NA, Pre = NA, na.rm = FALSE, verbose=TRUE)
+#' hargreaves(Tmin, Tmax, Ra = NULL, lat = NULL, Pre = NULL, na.rm = FALSE, verbose=TRUE)
 #' 
-#' penman(Tmin, Tmax, U2, Ra = NA, lat = NA, Rs = NA, tsun = NA,
-#'        CC = NA, ed = NA, Tdew = NA, RH = NA, P = NA, P0 = NA,
-#'               z = NA, crop='short', na.rm = FALSE, method='ICID',
-#'               verbose=TRUE)
+#' penman(Tmin, Tmax, U2, Ra = NULL, lat = NULL, Rs = NULL, tsun = NULL,
+#'        CC = NULL, ed = NULL, Tdew = NULL, RH = NULL, P = NULL, P0 = NULL,
+#'        CO2 = NULL, z = NULL, crop='short', na.rm = FALSE, method='ICID',
+#'        verbose=TRUE)
 #' 
 #' 
 #' @description 
@@ -35,10 +29,10 @@
 #' @param Ra   optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean daily external radiation, MJ m-2 d-1.
 #' @param Pre   optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d array  of monthly total precipitation, mm.
 #' @param U2   a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean daily wind speeds at 2 m height, m s-1.
-#' @param Rs   optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean dialy incoming solar radiation, MJ m-2 d-1.
+#' @param Rs   optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean daily incoming solar radiation, MJ m-2 d-1.
 #' @param tsun   optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean daily bright sunshine hours, h.
 #' @param CC   optional, numeric a vector, matrix or time series of monthly mean cloud cover, \%.
-#' @param ed   optional, numeric a vector, matrix or time series of monthly mean actual vapour pressure at 2 m height, kPa.
+#' @param ed   optional, numeric a vector, matrix or time series of monthly mean actual vapor pressure at 2 m height, kPa.
 #' @param Tdew   optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean daily dewpoint temperature (used for estimating ed), ºC.
 #' @param RH   optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean relative humidity (used for estimating ed), \%.
 #' @param P   optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean atmospheric pressure at surface, kPa.
@@ -109,7 +103,7 @@
 #'
 #' @references 
 #' Thornthwaite, C. W., 1948. An approach toward a rational classification of climate. 
-#' \emph{Geographical Review} \bold{38}: 55–94. doi:10.2307/2107309.
+#' \emph{Geographical Review} \bold{38}: 55–94. DOI:10.2307/2107309.
 #' 
 #' Hargreaves G.H., 1994. Defining and using reference evapotranspiration. 
 #' \emph{Journal of Irrigation and Drainage Engineering} \bold{120}: 1132–1139.
@@ -131,7 +125,7 @@
 #' Reston, VA, 57 pp.
 #' 
 #' Yang, Y., Roderick, M.L., Zhang, S. McVicar, T., Donohue, R.J., 2019. Hydrologic implications of vegetation
-#' response to elevated CO2 in climate projections. \emph{Nature Clim Change} \bold{9}: 44–48.
+#' response to elevated CO2 in climate projections. \emph{Nature Climate Change} \bold{9}: 44–48.
 #'
 #'
 #' @author Santiago Beguería
@@ -308,6 +302,7 @@ hargreaves <- function(Tmin, Tmax, Ra=NULL, lat=NULL, Pre=NULL,
     # 3D array input (gridded data)
     int_dims <- tmin_dims
   } else {
+    int_dims <- tmin_dims
     check$push('Input data can not have more than three dimensions.')
   }
   n_sites <- prod(int_dims[[2]], int_dims[[3]])
@@ -341,7 +336,7 @@ hargreaves <- function(Tmin, Tmax, Ra=NULL, lat=NULL, Pre=NULL,
     }
     ym <- as.yearmon(time(Tmin))
     warn$push(paste0('Time series spanning ', ym[1], ' to ', ym[n_times], '.'))
-    date <- as.Date(ym)
+    date <- as.Date.yearmon(ym)
     mlen_array <- array(as.numeric(lubridate::days_in_month(date)), dim=int_dims)
     msum_array <- array(yday(date) + round((mlen_array/2) - 1), dim=int_dims)
   } else {
@@ -355,7 +350,7 @@ hargreaves <- function(Tmin, Tmax, Ra=NULL, lat=NULL, Pre=NULL,
   # Verify the length of each input variable
   input_len <- prod(int_dims)
   if (sum(lengths(Tmin))!=input_len || sum(lengths(Tmax))!=input_len) {
-    check$push('`Tmin` and `Tmax` should not have different lengths.')
+    check$push('`Tmin` and `Tmax` cannot have different lengths.')
   }
   if (using$Ra && sum(lengths(Ra))!=input_len) {
     check$push('`Ra` has incorrect length.')

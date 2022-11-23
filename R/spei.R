@@ -1,28 +1,41 @@
 spei <- function(x, y,...) UseMethod('spei')
 
-
 #' @name Drought-indices
-#' 
-#' @aliases spi
-#' 
 #' @title Calculation of the Standardized Precipitation-Evapotranspiration 
 #' Index (SPEI) and the Standardized Precipitation Index (SPI).
-#' 
-#' 
+#' @aliases spei, spi
 #' @description
 #' Given a time series of the climatic water balance (precipitation minus 
 #' potential evapotranspiration), gives a time series of the Standardized 
 #' Precipitation-Evapotranspiration Index (SPEI).
+#' @usage
+#' spei(
+#'  data,
+#'  scale,
+#'  kernel = list(type = 'rectangular', shift = 0),
+#'  distribution = 'log-Logistic',
+#'  fit = 'ub-pwm',
+#'  na.rm = FALSE,
+#'  ref.start=NULL,
+#'  ref.end=NULL,
+#'  keep.x=FALSE,
+#'  params=NULL, 
+#'  verbose=TRUE,
+#'  ...)
 #' 
-#' 
-#' @usage 
-#' spei(data, scale, kernel = list(type = 'rectangular', shift = 0),
-#' distribution = 'log-Logistic', fit = 'ub-pwm', na.rm = FALSE,
-#' ref.start=NULL, ref.end=NULL, keep.x=FALSE, params=NULL, 
-#' verbose=TRUE, ...)
-#'
-#' 
-#' 
+#' spi(
+#'  data,
+#'  scale,
+#'  kernel = list(type = 'rectangular', shift = 0),
+#'  distribution = 'Gamma',
+#'  fit = 'ub-pwm',
+#'  na.rm = FALSE,
+#'  ref.start=NULL,
+#'  ref.end=NULL,
+#'  keep.x=FALSE,
+#'  params=NULL, 
+#'  verbose=TRUE,
+#'  ...)
 #' @param data a vector, matrix or data frame with time ordered values 
 #' of precipitation (for the SPI) or of the climatic balance 
 #' precipitation minus potential evapotranspiration (for the SPEI).
@@ -100,7 +113,7 @@ spei <- function(x, y,...) UseMethod('spei')
 #' 
 #' @section Probability distributions:
 #' Following the original definitions \code{spei} uses a log-Logistic distribution 
-#' by default, and \code{spi} uses a Gamma distribution. This behaviour can be modified, 
+#' by default, and \code{spi} uses a Gamma distribution. This behavior can be modified, 
 #' however, through parameter \code{distribution}.
 #' 
 #' 
@@ -125,7 +138,7 @@ spei <- function(x, y,...) UseMethod('spei')
 #' 
 #' 
 #' @section Reference period:
-#' The default behaviour of the functions is using all the values provided in \code{data} 
+#' The default behavior of the functions is using all the values provided in \code{data} 
 #' for parameter fitting. However, this can be modified with help of parameters \code{ref.start} 
 #' and \code{ref.end}. These parameters allow defining a subset of values that will be used 
 #' for parameter fitting, i.e. a reference period. The functions, however, will compute the 
@@ -281,17 +294,13 @@ spei <- function(x, y,...) UseMethod('spei')
 #' # Modding the plot
 #' # Since plot.spei() returns a ggplot object, it is possible to add or tweak
 #' # parts of the plot.
+#' require(ggplot2)
 #' plot(spei(wichita[,'BAL'], 12)) +
 #'  ggtitle('SPEI1 at Wichita') +
 #'  scale_fill_manual(values=c('blue','red')) +  # classic SPEI look
 #'  scale_color_manual(values=c('blue','red')) + # classic SPEI look
 #'  theme_classic() +
 #'  theme(legend.position='bottom')
-#' 
-#' @importFrom zoo rollapply
-#' @importFrom TLMoments PWM
-#' @importFrom lmomco are.lmom.valid are.parglo.valid cdfgam cdfpe3 pargam parglo parpe3 pwm.pp pwm2lmom
-#' @importFrom lmom pelgam pelglo pelpe3 cdfglo cdfgam cdfpe3
 #' 
 #' @export
 #' 
@@ -427,6 +436,7 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
     # 3D array input (gridded data)
     int_dims <- data_dims
   } else {
+    int_dims <- data_dims
     check$push('Input data can not have more than three dimensions.')
   }
   n_sites <- prod(int_dims[[2]], int_dims[[3]])
@@ -492,7 +502,7 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
   
   # Instantiate an object to store the distribution coefficients
   # ADD PZE TO GAMMA AND PEARSONIII
-  coef = switch(distribution,
+  coef <- switch(distribution,
                 "Gamma" = array(NA, c(2, n_sites, ts_freq),
                                 list(par=c('alpha','beta'), colnames(data), NULL)),
                 "PearsonIII" = coef <- array(NA, c(3, n_sites, ts_freq),
@@ -523,7 +533,7 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
   
   # Convert to time series
   if (!is.ts(acu)) {
-    acu <- ts(acu, start=ts_start, fr=ts_freq)
+    acu <- ts(acu, start=ts_start, frequency=ts_freq)
   }
   
   # Trim data set to reference period for fitting (acu.ref)
@@ -561,7 +571,7 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
       # Probability of zero (pze)
       if(distribution != 'log-Logistic'){
         pze <- sum(x.mon==0) / length(x.mon)
-        x.mon = x.mon[x.mon > 0]
+        x.mon <- x.mon[x.mon > 0]
       }
       
       ## Compute coefficients - - - - - - - - - - - - - -
@@ -569,7 +579,7 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
       # Distribution parameters (f_params)
       if (!using$params) {
         # Fit distribution parameters
-        x.mon_sd = sd(x.mon, na.rm=TRUE)
+        x.mon_sd <- sd(x.mon, na.rm=TRUE)
         
         # Early stopping
         if (is.na(x.mon_sd) || (x.mon_sd == 0)) {
@@ -577,13 +587,13 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
           next()
         }
         if(length(x.mon) < 4){
-          spei[ff,s] = NA
+          spei[ff,s] <- NA
           coef[,s,c] <- NA
           next()
         }
         
         # Calculate probability weighted moments based on `lmomco` or `TLMoments`
-        pwm = switch(fit,
+        pwm <- switch(fit,
                      'pp-pwm' = pwm.pp(x.mon, -0.35, 0, nmom=3, sort=TRUE),
                      'ub-pwm' = PWM(x.mon, order=0:2)
         )
@@ -597,10 +607,10 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
         
         # `lmom` fortran functions need specific inputs L1, L2, T3
         # This is handled internally by `lmomco` with `lmorph`
-        fortran_vec = c(lmom$lambdas[1:2], lmom$ratios[3])
+        fortran_vec <- c(lmom$lambdas[1:2], lmom$ratios[3])
         
         # Calculate parameters based on distribution with `lmom`, then `lmomco`
-        f_params = switch(distribution,
+        f_params <- switch(distribution,
                           'log-Logistic' = tryCatch(pelglo(fortran_vec),
                                                     error = function(e){ parglo(lmom)$para }),
                           'Gamma' = tryCatch(pelgam(fortran_vec),
@@ -611,12 +621,12 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
         
         # Adjust if user chose `log-Logistic` and `max-lik`
         if(distribution == 'log-Logistic' && fit=='max-lik'){
-          f_params = parglo.maxlik(x.mon, f_params)$para
+          f_params <- parglo.maxlik(x.mon, f_params)$para
         }
       } else {
         # User-provided distribution parameters
         
-        f_params = as.vector(params[,s,c])
+        f_params <- as.vector(params[,s,c])
         
       }
       
@@ -679,7 +689,7 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
 #' 
 #' @title Generic methods for \code{spei} objects.
 #' 
-#' @aliases print.spi plot.spei plot.spi summary.spei summary.spi
+#' @aliases plot.spei summary.spei
 #' 
 #' @description 
 #' Generic methods for extracting information and plotting \code{spei} objects.
@@ -687,11 +697,10 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
 #' @usage
 #' \method{print}{spei}(x, ...)
 #' \method{summary}{spei}(object, ...)
-#' \method{plot}{spei}(x, ttext, ...)
+#' \method{plot}{spei}(x, ...)
 #' 
 #' @param x an object of class \code{spei}.
 #' @param object an object of class \code{spei}.
-#' @param ttext text to use as part of the plot title
 #' @param ... additional parameters, not used at present.
 #' 
 #' 
@@ -712,7 +721,7 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
 #' @author Santiago Beguería
 #'  
 #' @examples 
-#' See examples of use in the help page of the \code{spei()} function.
+#' # See examples of use in the help page of the spei() function.
 #' 
 #' @export
 #' 
@@ -722,17 +731,9 @@ print.spei <- function (x, ...) {
 
 #' 
 #' @title summary of spei/spi
-#' 
-#' 
 #' @description See print.spei
-#' 
-#' 
 #' @details See print.spei
-#' 
-#' 
 #' @rdname Generic-methods-for-spei-objects
-#' 
-#' 
 #' @export
 #' 
 summary.spei <- function (object, ...) {
@@ -752,16 +753,9 @@ summary.spei <- function (object, ...) {
 
 #' 
 #' @title plot spei/spi
-#' 
-#' 
 #' @description See print.spei
-#' 
-#' 
 #' @details See print.spei
-#' 
-#' 
 #' @rdname Generic-methods-for-spei-objects
-#' 
 #' 
 #' @import ggplot2
 #' @importFrom zoo na.trim
@@ -770,7 +764,7 @@ summary.spei <- function (object, ...) {
 #' 
 #' @export
 #' 
-plot.spei <- function (x) {
+plot.spei <- function (x, ...) {
   
   ### Argument check - - - - - - - - - - - - - - - - - - - - - - - - - - - 
   
@@ -780,6 +774,9 @@ plot.spei <- function (x) {
   
   
   ### Make the plot - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+  
+  # A workaround to avoid R CMD check warning about no visible binding for global variables
+  #utils::globalVariables(na, value)
   
   # Label
   if (grepl('spei', x$call[1])) {
@@ -834,7 +831,7 @@ plot.spei <- function (x) {
   
   # Convert to time series
   if (!is.ts(data)) {
-    data <- ts(data, start=ts_start, fr=ts_freq)
+    data <- ts(data, start=ts_start, frequency=ts_freq)
   }
   
   # Determine reference period
@@ -883,7 +880,7 @@ plot.spei <- function (x) {
   # kk$cat[w] <- '(-0.5,0]'
   
   # Plot it
-  g <- ggplot(kk, aes(time, value, fill=cat, color=cat))
+  g <- ggplot(kk, aes(.data[['time']], .data[['value']], fill='cat', color='cat'))
   # reference period (if different than whole series)
   if (!is.null(x$ref.period)) {
     g <- g +
@@ -899,7 +896,7 @@ plot.spei <- function (x) {
     scale_color_manual(values=c('cyan3','tomato')) # new look
   # add NAs
   g <- g + 
-    geom_point(aes(time, na), shape=21, fill='white', color='black')
+    geom_point(aes(.data[['time']], .data[['na']]), shape=21, fill='white', color='black')
   # add other parts and options
   g <- g +
     geom_hline(yintercept=0, color='grey') +

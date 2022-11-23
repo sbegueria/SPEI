@@ -1,2 +1,5 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
+^data-raw$
+^_config\.yml$
+^cran-comments\.md$
