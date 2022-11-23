@@ -44,4 +44,5 @@
 #' @importFrom checkmate makeAssertCollection
 #' @importFrom stats cycle end frequency start ts optim
 #' @importFrom zoo as.yearmon as.Date.yearmon rollapply
+#' @importFrom stats aggregate is.ts pnorm qnorm sd time window
 NULL

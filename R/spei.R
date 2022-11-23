@@ -516,7 +516,7 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
   
   # Convert to time series
   if (!is.ts(acu)) {
-    acu <- ts(acu, start=ts_start, fr=ts_freq)
+    acu <- ts(acu, start=ts_start, frequency=ts_freq)
   }
   
   # Trim data set to reference period for fitting (acu.ref)
@@ -748,7 +748,7 @@ summary.spei <- function (object, ...) {
 #' 
 #' @export
 #' 
-plot.spei <- function (x) {
+plot.spei <- function (x, ...) {
   
   ### Argument check - - - - - - - - - - - - - - - - - - - - - - - - - - - 
   
@@ -812,7 +812,7 @@ plot.spei <- function (x) {
   
   # Convert to time series
   if (!is.ts(data)) {
-    data <- ts(data, start=ts_start, fr=ts_freq)
+    data <- ts(data, start=ts_start, frequency=ts_freq)
   }
   
   # Determine reference period
