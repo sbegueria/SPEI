@@ -64,7 +64,7 @@ Other (possibly useful) references:
 
 ## Version history
 
-### Version 1.8, May 2022 (current version on github).
+### Version 1.8.0, November 2022 (current version on GitHub, submitted to CRAN).
 
 1.  Solving several minor bugs in `<thornthwaite>`, `<hargreaves>`, and `<penman>` functions (output difference is lower than 0.1% with respect to version 1.7).
 2.  Solving a bug in `<spei>` that resulted in bad cumulative data when using a non-rectangular kernel, resulting in incorrect SPEI values.
@@ -77,7 +77,7 @@ Other (possibly useful) references:
 9.  Functions `<spei>` and `<spi>` now admit time series of any frequency, and not only monthly (frequency 12) data.
 10. Function `<plot.spei>` completely rewritten based on `ggplot2`, solving some bugs and enabling more flexibility.
 
-### Version 1.7.2, January 2018 (latest stable version on github).
+### Version 1.7.2, January 2018 (only on GitHub).
 
 1. Several code optimizations and improvements (by github user @doug-friedman).
 2. Added formal unit testing with `testthat` (@doug-friedman).
