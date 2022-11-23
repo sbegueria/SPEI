@@ -465,7 +465,7 @@ penman <- function(Tmin, Tmax, U2=NULL, Ra=NULL, lat=NULL, Rs=NULL,
   # Daily ET0 (eq. 2.18)
   if (crop=='short') {
     c1 <- 900; c2 <- 0.34 # short reference crop (e.g. clipped grass, 0.12 m)
-  } else if (crop=='long') {
+  } else if (crop=='tall') {
     c1 <- 1600; c2 <- 0.38 # tall reference crop (e.g. alfalfa, 0.5 m)
   } else {
     stop(paste('An error occurred while estimating the daily ET0',
