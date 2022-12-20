@@ -1,5 +1,5 @@
 #' @name Datasets
-#' @aliases wichita balance cabinda cruts4
+#' @aliases wichita balance cabinda cruts4 campinas
 #' @title Data sets for illustrating the functions in the SPEI package.
 #' @keywords datasets
 #' @description 
@@ -12,7 +12,9 @@
 #' \code{cabinda}: one year of data for computing Penman-Monteith ET0 from
 #' Allen et al. (1998);
 #' \code{cruts4}: 120 years of monthly climatic water balance (precipitation 
-#' minus reference evapotranspiration) data at six grid points from CRU TS 4.05. 
+#' minus reference evapotranspiration) data at six grid points from CRU TS 4.05.
+#' \code{campinas} dataset: weekly precipitation for Campinas (SP, Brazil,
+#' lat = -23, lon -47) from 1981 to Nov 2022. Data extreacted fom CHIRPS dataset. 
 #' @details See description.
 #' @format 
 #' \code{wichita} dataset: a data frame with:
@@ -53,6 +55,19 @@
 #' are (0.25, 0.75), and latitudes (42.25, 42.75, 43.25), corresponding to the
 #' Central Pyrenees between Spain and France.
 #'
+#' \code{campinas} dataset: weekly precipitation for Campinas (SP, Brazil,
+#' lat = -23, lon -47) from 1981 to Nov 2022.
+#' Data aggregated using \code{lubridate::week} rules, so every year has 53 weeks.
+#' Must be converted to a TS object before extractin SPI.
+#' Daily precipitation obtained from CHIRPS v2.0 dataset on 2022-12-19.
+#' URL: https://www.chc.ucsb.edu/data/chirps
+#' see \code{data-raw/campinas_daily2weekly.R} for daily data processing steps
+#' 
+#' \describe{
+#'   \item{year_week}{ year and week, followin ISO 8601 definitions}
+#'   \item{date}{ first day of the year-week period, date}
+#'   \item{prcp}{ accumulated precipitation for the year-week period, mm}
+#'}
 #'
 #' @references 
 #' S.M. Vicente-Serrano, S. Beguería, J.I. López-Moreno. 2010. A Multi-scalar 
@@ -72,8 +87,10 @@
 #' Data for the \code{balance} dataset were taken from Allen et al. (1998), page 69, figure 18.
 #' The \code{cruts4} data were obtained from the CRU (Climatic Research Unit, University
 #' of East Anglia \url{https://crudata.uea.ac.uk/cru/data/hrg/cru_ts_4.05/}) TS V4.05 data set.
+#' Data for the \code{campinas} dataset were aggregated from daily 
+#'    CHIRPS v2.0 precipitation - https://www.chc.ucsb.edu/data/chirps 
 #'
-#' @author Data ported to R by S. Beguería.
+#' @author Data ported to R by S. Beguería. \code{campinas} data prepared by Daniel C. Victoria
 #' 
 #' 
 #' @examples 
@@ -98,3 +115,10 @@ NULL
 
 #' @rdname cruts4
 "cruts4"
+
+#' @rdname campinas
+#' @example 
+#' data(campinas)
+#' campinas_ts <- ts(campinas$prcp, frequency = 53, start = c(1981, 1))
+#' spi(campinas_ts, scale = 12)
+"campinas"
