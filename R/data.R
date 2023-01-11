@@ -42,7 +42,7 @@
 #'   \item{RH}{ monthly mean relative humidity, in \%.}
 #'   \item{U2}{ monthly mean wind speed, in km h-1}
 #'   \item{tsun}{ monthly mean sunshine hours, in h.}
-#'   \item{Rs}{ monthly mean diaily incoming solar radiation, MJ m-2 d-1.}
+#'   \item{Rs}{ monthly mean daily incoming solar radiation, MJ m-2 d-1.}
 #'   \item{ET0}{ monthly ET0 from the original publication, in mm.}
 #'}
 #'
