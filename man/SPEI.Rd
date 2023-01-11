@@ -31,7 +31,7 @@ S.M. Vicente-Serrano, S. Beguería, J.I. López-Moreno. 2010. A Multi-scalar dro
 index sensitive to global warming: The Standardized Precipitation Evapotranspiration 
 Index – SPEI. \emph{Journal of Climate} \bold{23}: 1696, DOI: 10.1175/2009JCLI2909.1.
 
-\url{http://sac.csic.es/spei/}
+\url{http://spei.csic.es/}
 }
 \author{
 Santiago Beguería and Sergio M. Vicente-Serrano

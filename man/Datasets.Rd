@@ -48,11 +48,11 @@ Central Pyrenees between Spain and France.
 }
 \source{
 The \code{wichita} data were obtained from the Global Historical Climatology Network 
-(GHCN, \url{http://www.ncdc.noaa.gov/oa/climate/ghcn-daily/}. Data for the \code{balance} 
+(GHCN, \url{https://www.ncdc.noaa.gov/}. Data for the \code{balance} 
 dataset were extracted from CRU TS V3.1 and from the 20th Century Reanalysis V2 data set.
 Data for the \code{balance} dataset were taken from Allen et al. (1998), page 69, figure 18.
 The \code{cruts4} data were obtained from the CRU (Climatic Research Unit, University
-of East Anglia \url{https://crudata.uea.ac.uk/cru/data/hrg/cru_ts_4.05/}) TS V4.05 data set.
+of East Anglia \url{https://crudata.uea.ac.uk/}) TS V4.05 data set.
 }
 \description{
 Data used in the examples of the SPEI package: 
