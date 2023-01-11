@@ -340,10 +340,10 @@ spei <- function(data, scale, kernel=list(type='rectangular', shift=0),
   } else if (length(kernel) != 2 | names(kernel)[1] != 'type' | names(kernel)[2] != 'shift') {
     check$push('Argument `kernel` must be a list with components `type` and `shift`.')
 #  } else if (class(kernel$type) != 'character' | length(kernel$type) != 1) {
-  } else if (inherits(kernel$type, 'character') | length(kernel$type) != 1) {
+  } else if (!inherits(kernel$type, 'character') | length(kernel$type) != 1) {
     check$push('Element `type` of `kernel` must be a single valued character vector')
 #  } else if (class(kernel$shift) != 'numeric' | length(kernel$shift) != 1) {
-  } else if (inherits(kernel$shift, 'numeric') | length(kernel$shift) != 1) {
+  } else if (!inherits(kernel$shift, 'numeric') | length(kernel$shift) != 1) {
     check$push('Element `shift` of `kernel` must be a single valued numeric.')
   } else {
     warn$push(paste0('Using kernel type \'', kernel$type, '\'', ', with ',
@@ -771,7 +771,7 @@ plot.spei <- function (x, ...) {
   ### Argument check - - - - - - - - - - - - - - - - - - - - - - - - - - - 
   
 #  if (class(x) != 'spei') {
-  if (inherits(x, 'spei')) {
+  if (!inherits(x, 'spei')) {
     stop('Data must be an `spei` object resulting from a call to spi() or spei() functions.')
   }
   
