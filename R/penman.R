@@ -476,7 +476,8 @@ penman <- function(Tmin, Tmax, U2=NULL, Ra=NULL, lat=NULL, Rs=NULL,
               (ea - ed)) / (Delta + gamma * (1 + c2 * U2))
   } else {
     ET0 <- (0.408 * Delta * (Rn - G) + gamma * (c1 / (Tmean + 273)) * U2 *
-              (ea - ed)) / (Delta + gamma * (1 + U2 * (c2 + 0.00024 * (CO2 - 300))))
+              (ea - ed)) / (Delta + gamma * (1 + U2 * (c2 + 0.00024 *
+                                                         (CO2 - 300))))
   }
   
   # Transform ET0 to mm month-1

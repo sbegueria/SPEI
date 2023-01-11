@@ -87,7 +87,8 @@ test_that('lat length does not correspond with number of sites', {
 })
 
 # test_that('TS wrong frequency', {
-#   expect_error(hargreaves(ts(TMIN, frequency=4),ts(TMAX, frequency=4),lat=37.6475),
+#   expect_error(hargreaves(ts(TMIN, frequency=4),ts(TMAX, frequency=4),
+#                 lat=37.6475),
 #                'Error: Data should be a monthly time series*'
 #   )
 # })

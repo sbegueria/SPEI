@@ -4,7 +4,8 @@
 #' @usage 
 #' thornthwaite(Tave, lat, na.rm = FALSE, verbose=TRUE)
 #' 
-#' hargreaves(Tmin, Tmax, Ra = NULL, lat = NULL, Pre = NULL, na.rm = FALSE, verbose=TRUE)
+#' hargreaves(Tmin, Tmax, Ra = NULL, lat = NULL, Pre = NULL, na.rm = FALSE,
+#' verbose=TRUE)
 #' 
 #' penman(Tmin, Tmax, U2, Ra = NULL, lat = NULL, Rs = NULL, tsun = NULL,
 #'        CC = NULL, ed = NULL, Tdew = NULL, RH = NULL, P = NULL, P0 = NULL,
@@ -14,118 +15,163 @@
 #' 
 #' @description 
 #' Potential evapotranspiration (PET) is the amount of evaporation and 
-#' transpiration that would occur if a sufficient water source were available. Reference 
-#' evapotranspiration (ETo) is the amount of evaporation and transpiration from a reference 
-#' vegetation of grass. They are usually considered equivalent. This set of functions 
-#' calculate PET or ETo according to the Thornthwaite, Hargreaves or Penman-Monteith 
-#' equations.
+#' transpiration that would occur if a sufficient water source were available.
+#' Reference evapotranspiration (ETo) is the amount of evaporation and
+#' transpiration from a reference vegetation of grass. They are usually
+#' considered equivalent. This set of functions calculate PET or ETo according
+#' to the Thornthwaite, Hargreaves or Penman-Monteith equations.
 #'
 #'
-#' @param Tave   a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean temperatures, ºC.
-#' @param lat   a numeric vector or matrix with the latitude of the site or sites, in degrees.
-#' @param na.rm   optional, a logical value indicating whether NA values should be stripped from the computations.
-#' @param Tmax   a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean daily maximum temperatures, ºC.
-#' @param Tmin   a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean daily minimum temperatures, ºC.
-#' @param Ra   optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean daily external radiation, MJ m-2 d-1.
-#' @param Pre   optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d array  of monthly total precipitation, mm.
-#' @param U2   a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean daily wind speeds at 2 m height, m s-1.
-#' @param Rs   optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean daily incoming solar radiation, MJ m-2 d-1.
-#' @param tsun   optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean daily bright sunshine hours, h.
-#' @param CC   optional, numeric a vector, matrix or time series of monthly mean cloud cover, \%.
-#' @param ed   optional, numeric a vector, matrix or time series of monthly mean actual vapor pressure at 2 m height, kPa.
-#' @param Tdew   optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean daily dewpoint temperature (used for estimating ed), ºC.
-#' @param RH   optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean relative humidity (used for estimating ed), \%.
-#' @param P   optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean atmospheric pressure at surface, kPa.
-#' @param P0   optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of monthly mean atmospheric pressure at sea level (used for estimating P), kPa.
-#' @param CO2   optional, a single numeric value, a numeric vector, or a tsvector of monthly mean CO2 atmospheric concentration, ppm.
-#' @param z   optional, a numeric vector or matrix of the elevation of the site or sites, m above sea level.
-#' @param crop   optional, character string, type of reference crop. Either one of 'short' (default) or 'tall'.
-#' @param method   optional, character string, Penman-Monteith calculation method. Either one of 'ICID' (default), 'FAO', or 'ASCE'.
-#' @param verbose   optional, logical, report the computation options during calculation. Either 'TRUE' (default) or 'FALSE'.
+#' @param Tave   a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of
+#' monthly mean temperatures, ºC.
+#' @param lat   a numeric vector or matrix with the latitude of the site or
+#' sites, in degrees.
+#' @param na.rm   optional, a logical value indicating whether NA values should
+#' be stripped from the computations.
+#' @param Tmax   a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of
+#' monthly mean daily maximum temperatures, ºC.
+#' @param Tmin   a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of
+#' monthly mean daily minimum temperatures, ºC.
+#' @param Ra   optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d
+#' array of monthly mean daily external radiation, MJ m-2 d-1.
+#' @param Pre   optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d
+#' array  of monthly total precipitation, mm.
+#' @param U2   a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of
+#' monthly mean daily wind speeds at 2 m height, m s-1.
+#' @param Rs   optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d
+#' array of monthly mean daily incoming solar radiation, MJ m-2 d-1.
+#' @param tsun   optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d
+#' array of monthly mean daily bright sunshine hours, h.
+#' @param CC   optional, numeric a vector, matrix or time series of monthly
+#' mean cloud cover, \%.
+#' @param ed   optional, numeric a vector, matrix or time series of monthly
+#' mean actual vapor pressure at 2 m height, kPa.
+#' @param Tdew   optional, a numeric vector, tsvector, matrix, tsmatrix,
+#' or 3-d array of monthly mean daily dewpoint temperature (used for
+#' estimating ed), ºC.
+#' @param RH   optional, a numeric vector, tsvector, matrix, tsmatrix,
+#' or 3-d array of monthly mean relative humidity (used for estimating ed), \%.
+#' @param P   optional, a numeric vector, tsvector, matrix, tsmatrix,
+#' or 3-d array of monthly mean atmospheric pressure at surface, kPa.
+#' @param P0   optional, a numeric vector, tsvector, matrix, tsmatrix,
+#' or 3-d array of monthly mean atmospheric pressure at sea level (used for
+#' estimating P), kPa.
+#' @param CO2   optional, a single numeric value, a numeric vector,
+#' or a tsvector of monthly mean CO2 atmospheric concentration, ppm.
+#' @param z   optional, a numeric vector or matrix of the elevation of the
+#' site or sites, m above sea level.
+#' @param crop   optional, character string, type of reference crop. Either
+#' one of 'short' (default) or 'tall'.
+#' @param method   optional, character string, Penman-Monteith calculation
+#' method. Either one of 'ICID' (default), 'FAO', or 'ASCE'.
+#' @param verbose   optional, logical, report the computation options during
+#' calculation. Either 'TRUE' (default) or 'FALSE'.
 #'
 #'
-#' @details \code{thornthwaite} computes the monthly potential evapotranspiration (PE) according to the
-#' Thornthwaite (1948) equation. It is the simplest of the three methods, and can be used when only 
+#' @details \code{thornthwaite} computes the monthly potential
+#' evapotranspiration (PE) according to the Thornthwaite (1948) equation.
+#' It is the simplest of the three methods, and can be used when only 
 #' mean temperature data are available.
 #'
 #'
-#' \code{hargreaves} computes the monthly reference evapotranspiration (ETo) of a grass crop based 
-#' on the original Hargreaves equation (1994). However, if precipitation data \code{Pre} is provided 
-#' a modified form due to Droogers and Allen (2002) will be used; this equation corrects ETo using 
-#' the amount of rain of each month as a proxy for irradiation The Hargreaves method requires data 
-#' on the mean external radiation, \code{Ra}. If \code{Ra} is not available it can be estimated 
-#' from the latitude \code{lat} and the month of the year.
+#' \code{hargreaves} computes the monthly reference evapotranspiration (ETo)
+#' of a grass crop based on the original Hargreaves equation (1994). However,
+#' if precipitation data \code{Pre} is provided a modified form due to Droogers
+#' and Allen (2002) will be used; this equation corrects ETo using 
+#' the amount of rain of each month as a proxy for irradiation The Hargreaves
+#' method requires data on the mean external radiation, \code{Ra}. If \code{Ra} is not available it
+#' can be estimated from the latitude \code{lat} and the month of the year.
 #' 
 #'
-#' \code{penman} calculates the monthly reference evapotranspiration (ETo) of a hypothetical 
-#' reference crop according to the Penman-Monteith equation (Monteith, 1965). This is widely considered
-#' the most accurate method for estimating ETo, and is the method recommended by the UN Food and Agriculture
-#' Organization (FAO). There are several methods which simplify the original Penman-Monteith equation and
-#' are used in practice. Here we follow by default the procedure described in Allen et al. (1994), aka the
-#' `ICID` method. However, other versions are also implemented and can be used by setting the \code{method}
-#' parameter to the appropriate value. The FAO-56 method (Allen et al., 1998) can be used by setting
-#' \code{method} to `FAO`, while the variation of the American Society of Civil Engineers (Walter et al., 2002)
-#' is used when setting it to `ASCE`.
-#' By default the original parameterization corresponding to a short reference crop of 0.12 m height is used,
-#' although the parameterization for a tall reference crop of 0.5 m height (Walter et al. (2002) can also be
-#' used, by setting the \code{crop} parameter to 'tall'.
-#' The method requires data on the incoming solar radiation, \code{Rs}; since this is seldom available, 
-#' the code will estimate it from data on the bright sunshine duration \code{tsun}, or alternatively 
-#' from data on the percent cloud cover \code{CC}. Similarly, if data on the saturation water 
-#' pressure \code{ed} are not available, it is possible to estimate it from the dew point temperature
-#' \code{Tdew}, from the relative humidity \code{RH} or even from the minimum temperature \code{Tmin} 
-#' (sorted from least to most uncertain method). Similarly, the atmospheric surface pressure \code{P} 
-#' required for computing the psychrometric constant can be calculated from the atmospheric pressure at 
-#' sea level \code{P0} and the elevation \code{z}, or else it will be assumed to be constant (101.3 kPa).
-#' If no wind speed data \code{U2} are available, a constant value of 2 m per second is used. Custom CO2
-#' atmospheric concentration \code{CO2} can also be provided, following Yang et al. (2019).
+#' \code{penman} calculates the monthly reference evapotranspiration (ETo) of
+#' a hypothetical reference crop according to the Penman-Monteith equation
+#' (Monteith, 1965). This is widely considered the most accurate method for
+#' estimating ETo, and is the method recommended by the UN Food and Agriculture
+#' Organization (FAO). There are several methods which simplify the original
+#' Penman-Monteith equation and are used in practice. Here we follow by default
+#' the procedure described in Allen et al. (1994), aka the `ICID` method.
+#' However, other versions are also implemented and can be used by setting the
+#' \code{method} parameter to the appropriate value. The FAO-56 method
+#' (Allen et al., 1998) can be used by setting \code{method} to `FAO`,
+#' while the variation of the American Society of Civil Engineers (Walter et
+#' al., 2002 is used when setting it to `ASCE`.
+#' By default the original parameterization corresponding to a short reference
+#' crop of 0.12 m height is used, although the parameterization for a tall
+#' reference crop of 0.5 m height (Walter et al. (2002) can also be used,
+#' by setting the \code{crop} parameter to 'tall'.
+#' The method requires data on the incoming solar radiation, \code{Rs};
+#' since this is seldom available, the code will estimate it from data on the
+#' bright sunshine duration \code{tsun}, or alternatively from data on the
+#' percent cloud cover \code{CC}. Similarly, if data on the saturation water 
+#' pressure \code{ed} are not available, it is possible to estimate it from
+#' the dew point temperature \code{Tdew}, from the relative humidity \code{RH}
+#' or even from the minimum temperature \code{Tmin} (sorted from least to most
+#' uncertain method). Similarly, the atmospheric surface pressure \code{P} 
+#' required for computing the psychrometric constant can be calculated from the
+#' atmospheric pressure at sea level \code{P0} and the elevation \code{z},
+#' or else it will be assumed to be constant (101.3 kPa). If no wind speed
+#' data \code{U2} are available, a constant value of 2 m per second is used.
+#' Custom CO2 atmospheric concentration \code{CO2} can also be provided,
+#' following Yang et al. (2019).
 #'
-#' The function will produce an error message if a valid combination of input parameters is not provided.
-#' If \code{verbose} is `TRUE` (the default value), a message will be produced informing on the computation
-#' options selected.
+#' The function will produce an error message if a valid combination of input
+#' parameters is not provided.
+#' If \code{verbose} is `TRUE` (the default value), a message will be produced
+#' informing on the computation options selected.
 #' 
-#' The function accepts data in a variety of formats, including 1-D vectors, 2-D matrices and 3-D arrays.
+#' The function accepts data in a variety of formats, including 1-D vectors,
+#' 2-D matrices and 3-D arrays.
 #' The input data format will determine the output format.
-#' Vector input can be used for single-station data. Matrix input can be used to produce output for a
-#' number of locations, where each column in the matrix will be considered as one location. 3-D arrays
-#' can be used to process gridded data, with the first dimension being time and the two other dimensions
-#' representing spatial coordinates. See the examples below for a guidance on how to use these options.
+#' Vector input can be used for single-station data. Matrix input can be used
+#' to produce output for a number of locations, where each column in the matrix
+#' will be considered as one location. 3-D arrays can be used to process
+#' gridded data, with the first dimension being time and the two other
+#' dimensions representing spatial coordinates. See the examples below for a
+#' guidance on how to use these options.
 #' 
-#' If the main input object (\code{Tave}, \code{Tmin}, \code{Tmax}) is a time series then the 
-#' function \code{\link{cycle}} will be used to determine the position of each observation within the 
-#' year (month), allowing the data to start in a month different than January. If no time information is
-#' provided, then the input data will be treated as a sequence of monthly values starting in January.
+#' If the main input object (\code{Tave}, \code{Tmin}, \code{Tmax}) is a time
+#' series then the function \code{\link{cycle}} will be used to determine the
+#' position of each observation within the 
+#' year (month), allowing the data to start in a month different than January.
+#' If no time information is provided, then the input data will be treated as
+#' a sequence of monthly values starting in January.
 #'
 #'
-#' @return A vector, matrix or 3-d array with the values of monthly potential or reference
-#' evapotranspiration, in mm.
+#' @return A vector, matrix or 3-d array with the values of monthly potential
+#' or reference evapotranspiration, in mm.
 #'
 #'
 #' @references 
-#' Thornthwaite, C. W., 1948. An approach toward a rational classification of climate. 
+#' Thornthwaite, C. W., 1948. An approach toward a rational classification of
+#' climate. 
 #' \emph{Geographical Review} \bold{38}: 55–94. DOI:10.2307/2107309.
 #' 
 #' Hargreaves G.H., 1994. Defining and using reference evapotranspiration. 
 #' \emph{Journal of Irrigation and Drainage Engineering} \bold{120}: 1132–1139.
 #' 
-#' Droogers P., Allen R. G., 2002. Estimating reference evapotranspiration under inaccurate data conditions. 
-#' \emph{Irrigation and Drainage Systems} \bold{16}: 33–45.
+#' Droogers P., Allen R. G., 2002. Estimating reference evapotranspiration
+#' under inaccurate data conditions. \emph{Irrigation and Drainage Systems}
+#' \bold{16}: 33–45.
 #' 
-#' Monteith, J. L., 1965. Evaporation and environment. \emph{Symposia of the Society for Experimental
-#' Biology} \bold{19}: 205–234.
+#' Monteith, J. L., 1965. Evaporation and environment. \emph{Symposia of the
+#' Society for Experimental Biology} \bold{19}: 205–234.
 #' 
-#' Allen R. G., Smith M., Pereira L. S., Perrier A., 1994. An update for the calculation of reference 
-#' evapotranspiration. \emph{ICID Bulletin of the International Commission on Irrigation and Drainage}, 35–92.
+#' Allen R. G., Smith M., Pereira L. S., Perrier A., 1994. An update for the
+#' calculation of reference evapotranspiration. \emph{ICID Bulletin of the
+#' International Commission on Irrigation and Drainage}, 35–92.
 #' 
-#' Allen R.G., Pereira L.S.,Raes D., Smith, M., 1998. \emph{J. Crop evapotranspiration - Guidelines for 
-#' computing crop water requirements - FAO Irrigation and drainage paper 56}. FAO, Rome. ISBN 92-5-104219-5.
+#' Allen R.G., Pereira L.S.,Raes D., Smith, M., 1998. \emph{J. Crop
+#' evapotranspiration - Guidelines for computing crop water requirements - FAO
+#' Irrigation and drainage paper 56}. FAO, Rome. ISBN 92-5-104219-5.
 #' 
-#' Walter I.A. and 14 co-authors, 2002. \emph{The ASCE standardized reference evapotranspiration equation.} 
-#' Rep. Task Com. on Standardized Reference Evapotranspiration July 9, 2002, EWRI–Am. Soc. Civil Engr., 
-#' Reston, VA, 57 pp.
+#' Walter I.A. and 14 co-authors, 2002. \emph{The ASCE standardized reference
+#' evapotranspiration equation.} Rep. Task Com. on Standardized Reference
+#' Evapotranspiration July 9, 2002, EWRI–Am. Soc. Civil Engr., Reston, VA,
+#' 57 pp.
 #' 
-#' Yang, Y., Roderick, M.L., Zhang, S. McVicar, T., Donohue, R.J., 2019. Hydrologic implications of vegetation
-#' response to elevated CO2 in climate projections. \emph{Nature Climate Change} \bold{9}: 44–48.
+#' Yang, Y., Roderick, M.L., Zhang, S. McVicar, T., Donohue, R.J., 2019.
+#' Hydrologic implications of vegetation response to elevated CO2 in climate
+#' projections. \emph{Nature Climate Change} \bold{9}: 44–48.
 #'
 #'
 #' @author Santiago Beguería
@@ -204,24 +250,27 @@
 #'
 #' # Different Penman-Monteith flavors
 #'
-#' pen_icid <- penman(TMIN, TMAX, AWND, tsun=TSUN, lat=37.6475, z=402.6, na.rm=TRUE,
-#'                    method='ICID')
-#' pen_asce <- penman(TMIN, TMAX, AWND, tsun=TSUN, lat=37.6475, z=402.6, na.rm=TRUE,
-#'                    method='ASCE')
-#' pen_fao <- penman(TMIN, TMAX, AWND, tsun=TSUN, lat=37.6475, z=402.6, na.rm=TRUE,
-#'                   method='FAO')
+#' pen_icid <- penman(TMIN, TMAX, AWND, tsun=TSUN, lat=37.6475, z=402.6,
+#'                    na.rm=TRUE, method='ICID')
+#' pen_asce <- penman(TMIN, TMAX, AWND, tsun=TSUN, lat=37.6475, z=402.6,
+#'                    na.rm=TRUE, method='ASCE')
+#' pen_fao <- penman(TMIN, TMAX, AWND, tsun=TSUN, lat=37.6475, z=402.6,
+#'                   na.rm=TRUE, method='FAO')
 #' plot(ts(cbind(pen_icid, pen_asce, pen_fao), fr=12))
 #'
 #' # Different CO2 concentrations
 #'
 #' # Default (300 ppm)
-#' pen_300 <- penman(TMIN, TMAX, AWND, tsun=TSUN, lat=37.6475, z=402.6, na.rm=TRUE)
+#' pen_300 <- penman(TMIN, TMAX, AWND, tsun=TSUN, lat=37.6475, z=402.6,
+#'                   na.rm=TRUE)
 #' # Increased to 450 ppm
-#' pen_450 <- penman(TMIN, TMAX, AWND, tsun=TSUN, lat=37.6475, z=402.6, CO2=450, na.rm=TRUE)
+#' pen_450 <- penman(TMIN, TMAX, AWND, tsun=TSUN, lat=37.6475, z=402.6,
+#'                  CO2=450, na.rm=TRUE)
 #' plot(pen_450, pen_300); abline(0, 1)
 #' # Increasing from 300 to 450
 #' co2 <- seq(300, 450, length.out=length(TMIN))
-#' pen_co2 <- penman(TMIN, TMAX, AWND, tsun=TSUN, lat=37.6475, z=402.6, CO2=co2, na.rm=TRUE)
+#' pen_co2 <- penman(TMIN, TMAX, AWND, tsun=TSUN, lat=37.6475, z=402.6,
+#'                  CO2=co2, na.rm=TRUE)
 #' plot(ts(cbind(pen_300, pen_co2), fr=12))
 #'
 #'

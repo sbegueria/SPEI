@@ -18,11 +18,14 @@ kern.plot(scale = 12, shift = 0)
 \item{shift}{numeric, shifting of the kernel peak.}
 }
 \value{
-A vector of length equal to \code{scale} with weights used for computing the drought index.
+A vector of length equal to \code{scale} with weights used for
+computing the drought index.
 }
 \description{
-Function \code{kern} is used internally by \code{\link{spei}} and
- \code{\link{spi}}for computing drought indices at different time scales.
+Function \code{kern} is used internally by
+\code{\link{spei}}
+and \code{\link{spi}}for computing drought indices at different
+time scales.
 
 See kern
 }

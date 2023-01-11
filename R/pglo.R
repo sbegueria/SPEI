@@ -1,4 +1,5 @@
-# Cumulative distribution function of the Generalized Logistic probability distribution function.
+# Cumulative distribution function of the Generalized Logistic probability
+# distribution function.
 #
 pglo <-
 function (x, para) {

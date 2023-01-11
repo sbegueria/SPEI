@@ -12,7 +12,8 @@
 #' \code{cabinda}: one year of data for computing Penman-Monteith ET0 from
 #' Allen et al. (1998);
 #' \code{cruts4}: 120 years of monthly climatic water balance (precipitation 
-#' minus reference evapotranspiration) data at six grid points from CRU TS 4.05. 
+#' minus reference evapotranspiration) data at six grid points from
+#' CRU TS 4.05. 
 #' @details See description.
 #' @format 
 #' \code{wichita} dataset: a data frame with:
@@ -29,9 +30,9 @@
 #'}
 #' \code{balance} dataset: a data frame with monthly climatic water balance
 #'  (precipitation minus potential evapotranspiration) at Indore (India),
-#'  Kimberley (South Africa), Albuquerque (US), Valencia (Spain), Wien (Austria),
-#'  Abashiri (Japan), Tampa (US), Sao Paulo (Brazil), Lahore (India), Punta
-#'  Arenas (Chile) and Helsinki (Finland), in mm.
+#'  Kimberley (South Africa), Albuquerque (US), Valencia (Spain),
+#'  Wien (Austria), Abashiri (Japan), Tampa (US), Sao Paulo (Brazil),
+#'  Lahore (India), Punta Arenas (Chile) and Helsinki (Finland), in mm.
 #' \code{cabinda} dataset: a data frame with one year of monthly climatic data
 #' at Cabinda (Angola, -5.33S 12.11E 20 m), with:
 #'  
@@ -60,18 +61,21 @@
 #' Evapotranspiration Index – SPEI. \emph{Journal of Climate} \bold{23}: 1696, 
 #' DOI: 10.1175/2009JCLI2909.1.
 #' 
-#' R.G. Allen, L.S. Pereira, D. Raes, M. Smith. 1998. \emph{JCrop evapotranspiration
-#'  - Guidelines for computing crop water requirements - FAO Irrigation and drainage 
-#' paper 56}. FAO, Rome. ISBN 92-5-104219-5.
+#' R.G. Allen, L.S. Pereira, D. Raes, M. Smith. 1998. \emph{JCrop 
+#' evapotranspiration - Guidelines for computing crop water requirements - FAO
+#' Irrigation and drainage  paper 56}. FAO, Rome. ISBN 92-5-104219-5.
 #'
 #'
 #' @source 
-#' The \code{wichita} data were obtained from the Global Historical Climatology Network 
-#' (GHCN, \url{http://www.ncdc.noaa.gov/oa/climate/ghcn-daily/}. Data for the \code{balance} 
-#' dataset were extracted from CRU TS V3.1 and from the 20th Century Reanalysis V2 data set.
-#' Data for the \code{balance} dataset were taken from Allen et al. (1998), page 69, figure 18.
-#' The \code{cruts4} data were obtained from the CRU (Climatic Research Unit, University
-#' of East Anglia \url{https://crudata.uea.ac.uk/cru/data/hrg/cru_ts_4.05/}) TS V4.05 data set.
+#' The \code{wichita} data were obtained from the Global Historical Climatology
+#' Network (GHCN, \url{http://www.ncei.noaa.gov/}. Data for the \code{balance} 
+#' dataset were extracted from CRU TS V3.1 and from the 20th Century Reanalysis
+#' V2 data set.
+#' Data for the \code{balance} dataset were taken from Allen et al. (1998),
+#' page 69, figure 18.
+#' The \code{cruts4} data were obtained from the CRU (Climatic Research Unit,
+#' University of East Anglia \url{https://crudata.uea.ac.uk/}) TS V4.05
+#' data set.
 #'
 #' @author Data ported to R by S. Beguería.
 #' 

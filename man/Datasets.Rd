@@ -22,9 +22,9 @@
 }
 \code{balance} dataset: a data frame with monthly climatic water balance
  (precipitation minus potential evapotranspiration) at Indore (India),
- Kimberley (South Africa), Albuquerque (US), Valencia (Spain), Wien (Austria),
- Abashiri (Japan), Tampa (US), Sao Paulo (Brazil), Lahore (India), Punta
- Arenas (Chile) and Helsinki (Finland), in mm.
+ Kimberley (South Africa), Albuquerque (US), Valencia (Spain),
+ Wien (Austria), Abashiri (Japan), Tampa (US), Sao Paulo (Brazil),
+ Lahore (India), Punta Arenas (Chile) and Helsinki (Finland), in mm.
 \code{cabinda} dataset: a data frame with one year of monthly climatic data
 at Cabinda (Angola, -5.33S 12.11E 20 m), with:
  
@@ -35,7 +35,7 @@ at Cabinda (Angola, -5.33S 12.11E 20 m), with:
   \item{RH}{ monthly mean relative humidity, in \%.}
   \item{U2}{ monthly mean wind speed, in km h-1}
   \item{tsun}{ monthly mean sunshine hours, in h.}
-  \item{Rs}{ monthly mean diaily incoming solar radiation, MJ m-2 d-1.}
+  \item{Rs}{ monthly mean daily incoming solar radiation, MJ m-2 d-1.}
   \item{ET0}{ monthly ET0 from the original publication, in mm.}
 }
 
@@ -47,12 +47,15 @@ are (0.25, 0.75), and latitudes (42.25, 42.75, 43.25), corresponding to the
 Central Pyrenees between Spain and France.
 }
 \source{
-The \code{wichita} data were obtained from the Global Historical Climatology Network 
-(GHCN, \url{https://www.ncei.noaa.gov/}. Data for the \code{balance} 
-dataset were extracted from CRU TS V3.1 and from the 20th Century Reanalysis V2 data set.
-Data for the \code{balance} dataset were taken from Allen et al. (1998), page 69, figure 18.
-The \code{cruts4} data were obtained from the CRU (Climatic Research Unit, University
-of East Anglia \url{https://crudata.uea.ac.uk/}) TS V4.05 data set.
+The \code{wichita} data were obtained from the Global Historical Climatology
+Network (GHCN, \url{http://www.ncei.noaa.gov/}. Data for the \code{balance} 
+dataset were extracted from CRU TS V3.1 and from the 20th Century Reanalysis
+V2 data set.
+Data for the \code{balance} dataset were taken from Allen et al. (1998),
+page 69, figure 18.
+The \code{cruts4} data were obtained from the CRU (Climatic Research Unit,
+University of East Anglia \url{https://crudata.uea.ac.uk/}) TS V4.05
+data set.
 }
 \description{
 Data used in the examples of the SPEI package: 
@@ -64,7 +67,8 @@ since January 1900;
 \code{cabinda}: one year of data for computing Penman-Monteith ET0 from
 Allen et al. (1998);
 \code{cruts4}: 120 years of monthly climatic water balance (precipitation 
-minus reference evapotranspiration) data at six grid points from CRU TS 4.05.
+minus reference evapotranspiration) data at six grid points from
+CRU TS 4.05.
 }
 \details{
 See description.
@@ -85,9 +89,9 @@ drought index sensitive to global warming: The Standardized Precipitation
 Evapotranspiration Index – SPEI. \emph{Journal of Climate} \bold{23}: 1696, 
 DOI: 10.1175/2009JCLI2909.1.
 
-R.G. Allen, L.S. Pereira, D. Raes, M. Smith. 1998. \emph{JCrop evapotranspiration
- - Guidelines for computing crop water requirements - FAO Irrigation and drainage 
-paper 56}. FAO, Rome. ISBN 92-5-104219-5.
+R.G. Allen, L.S. Pereira, D. Raes, M. Smith. 1998. \emph{JCrop 
+evapotranspiration - Guidelines for computing crop water requirements - FAO
+Irrigation and drainage  paper 56}. FAO, Rome. ISBN 92-5-104219-5.
 }
 \author{
 Data ported to R by S. Beguería.

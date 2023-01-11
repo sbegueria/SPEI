@@ -1,8 +1,10 @@
 #' @name Kernel-functions
 #' @title Time kernel for computing the SPEI at different time scales.
 #' @aliases kern.plot
-#' @description Function \code{kern} is used internally by \code{\link{spei}} and
-#'  \code{\link{spi}}for computing drought indices at different time scales.
+#' @description Function \code{kern} is used internally by
+#' \code{\link{spei}}
+#' and \code{\link{spi}}for computing drought indices at different
+#' time scales.
 #' @param scale numeric, time scale or length of the kernel.
 #' @param type character, shape of the kernel function.
 #' @param shift numeric, shifting of the kernel peak.
@@ -40,7 +42,8 @@
 #'  time lag for the four different kernel shapes so they can be compared.
 #'  
 #'  
-#' @return A vector of length equal to \code{scale} with weights used for computing the drought index.
+#' @return A vector of length equal to \code{scale} with weights used for
+#' computing the drought index.
 #' 
 #' 
 #' @references 

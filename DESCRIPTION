@@ -16,4 +16,4 @@ BugReports: https://github.com/sbegueria/SPEI/issues
 LazyLoad: true
 Encoding: UTF-8
 Suggests: covr, testthat
-RoxygenNote: 7.2.0
+RoxygenNote: 7.2.3

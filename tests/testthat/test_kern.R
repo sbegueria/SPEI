@@ -21,12 +21,12 @@ test_that("plot works without errors/warnings", {
 
 test_that("type error", {
   expect_error(kern(12, 'gaussiann'), 
-               'type must be one of: rectangular, triangular, circular, gaussian')
+          'type must be one of: rectangular, triangular, circular, gaussian')
 })
 
 test_that("shift lower than scale", {
   expect_error(kern(12, 'gaussian', shift=13), 
-               'Parameter "shift" must be lower than "scale"')
+          'Parameter "shift" must be lower than "scale"')
 })
 
 test_that("negative shift", {

@@ -81,7 +81,7 @@ test_that('Incorrect input dimensions', {
 
 test_that('Incorrect data type: passing a data.frame', {
   expect_error(spei(as.data.frame(x_mat), 1),
-      'Bad data type: input must be a vector, tsvector, matrix, tsmatrix, or 3-d array.')
+               'Bad data type: input must be a vector, tsvector, matrix, tsmatrix, or 3-d array.')
 })
 
 

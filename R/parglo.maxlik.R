@@ -31,7 +31,8 @@
 parglo.maxlik <- function(x,ini) {
 	# generalized logistic log-likelihood function
 	glo.loglik <- function(theta,x){
-		if (!are.parglo.valid(list(type='glo',para=theta),nowarn=TRUE) | theta[[3]]==0) 
+		if (!are.parglo.valid(list(type='glo',para=theta),nowarn=TRUE) |
+		                            theta[[3]]==0) 
 			return(1000000)
 		gamma <- theta[1]
 		alpha <- theta[2]
