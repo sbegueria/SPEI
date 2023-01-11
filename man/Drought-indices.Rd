@@ -61,7 +61,7 @@ the SPEI / SPI will be computed.}
 
 \item{kernel}{optional, a list defining the type of kernel used 
 for computing the SPEI / SPI at scales higher than one. Defaults 
-to unshifted rectangular kernel.}
+to non-shifted rectangular kernel.}
 
 \item{distribution}{optional, name of the distribution function 
 to be used for computing the SPEI / SPI (one of 'log-Logistic', 

@@ -69,7 +69,7 @@ Other (possibly useful) references:
 1.  Solving several minor bugs in `<thornthwaite>`, `<hargreaves>`, and `<penman>` functions (output difference is lower than 0.1% with respect to version 1.7).
 2.  Solving a bug in `<spei>` that resulted in bad cumulative data when using a non-rectangular kernel, resulting in incorrect SPEI values.
 3.  Implementation of more thorough data and options checks, and providing a single error message containing all the errors upon failure.
-4.  Implementation of verbosity in all functions: now they print information about the options being used. New argument `verbosity` added, defaulting to TRUE, to override this behaviour.
+4.  Implementation of verbosity in all functions: now they print information about the options being used. New argument `verbosity` added, defaulting to TRUE, to override this behavior.
 5.  All the functions now accept 3-d arrayed data, enabling the possibility of using the functions on gridded climate data.
 6.  Implementation of different versions of the Penman-Monteith ETo calculation in function `<penman>`.
 7.  Implementation of an option to include CO2 concentration data in function `<penman>`.
@@ -123,7 +123,7 @@ Other (possibly useful) references:
 ### Version 1.2, October 2012.
 
 1. Fixed a bug causing several functions to fail when a time series not belonging to matrix class was provided.
-2. Function `<plot.spei>` now distinguises between calls to spei and spi and labels the axis accordingly.
+2. Function `<plot.spei>` now distinguishes between calls to spei and spi and labels the axis accordingly.
 
 ### Version 1.1, March 2012.
 

@@ -79,7 +79,7 @@ mean cloud cover, \%.}
 mean actual vapor pressure at 2 m height, kPa.}
 
 \item{Tdew}{optional, a numeric vector, tsvector, matrix, tsmatrix,
-or 3-d array of monthly mean daily dewpoint temperature (used for
+or 3-d array of monthly mean daily dew point temperature (used for
 estimating ed), ºC.}
 
 \item{RH}{optional, a numeric vector, tsvector, matrix, tsmatrix,
@@ -119,7 +119,7 @@ will be a multivariate time series.
 
 A time series with the values of monthly potential or reference
 evapotranspiration, in mm. If the input is a matrix or a multivariate time
-series each column will be treated as independent data (e.g., diferent
+series each column will be treated as independent data (e.g., different
 observatories), and the output will be a multivariate time series.
 }
 \description{
