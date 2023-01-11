@@ -4,3 +4,4 @@
 ^_config\.yml$
 ^cran-comments\.md$
 ^README\.md
+^CRAN-SUBMISSION$
