@@ -5,7 +5,7 @@
 \alias{spei}
 \alias{spei,}
 \alias{spi}
-\title{Calculation of the Standardized Precipitation-Evapotranspiration 
+\title{Calculation of the Standardized Precipitation-Evapotranspiration
 Index (SPEI) and the Standardized Precipitation Index (SPI).}
 \usage{
 spei(
@@ -18,7 +18,7 @@ spei(
  ref.start=NULL,
  ref.end=NULL,
  keep.x=FALSE,
- params=NULL, 
+ params=NULL,
  verbose=TRUE,
  ...)
 
@@ -32,7 +32,7 @@ spi(
  ref.start=NULL,
  ref.end=NULL,
  keep.x=FALSE,
- params=NULL, 
+ params=NULL,
  verbose=TRUE,
  ...)
 
@@ -52,42 +52,42 @@ spi(
 )
 }
 \arguments{
-\item{data}{a vector, matrix or data frame with time ordered values 
-of precipitation (for the SPI) or of the climatic balance 
+\item{data}{a vector, matrix or data frame with time ordered values
+of precipitation (for the SPI) or of the climatic balance
 precipitation minus potential evapotranspiration (for the SPEI).}
 
-\item{scale}{an integer, representing the time scale at which 
+\item{scale}{an integer, representing the time scale at which
 the SPEI / SPI will be computed.}
 
-\item{kernel}{optional, a list defining the type of kernel used 
-for computing the SPEI / SPI at scales higher than one. Defaults 
+\item{kernel}{optional, a list defining the type of kernel used
+for computing the SPEI / SPI at scales higher than one. Defaults
 to unshifted rectangular kernel.}
 
-\item{distribution}{optional, name of the distribution function 
-to be used for computing the SPEI / SPI (one of 'log-Logistic', 
-'Gamma' and 'PearsonIII'). Defaults to 'log-Logistic' for \code{spei}, 
+\item{distribution}{optional, name of the distribution function
+to be used for computing the SPEI / SPI (one of 'log-Logistic',
+'Gamma' and 'PearsonIII'). Defaults to 'log-Logistic' for \code{spei},
 and to 'Gamma' for \code{spi}.}
 
-\item{fit}{optional, name of the method used for computing the 
-distribution function parameters (one of 'ub-pwm', 'pp-pwm' and 
+\item{fit}{optional, name of the method used for computing the
+distribution function parameters (one of 'ub-pwm', 'pp-pwm' and
 'max-lik'). Defaults to 'ub-pwm'.}
 
-\item{na.rm}{optional, a logical value indicating whether NA values 
-should be stripped from the computations. Defaults to FALSE, i.e. 
+\item{na.rm}{optional, a logical value indicating whether NA values
+should be stripped from the computations. Defaults to FALSE, i.e.
 no NA are allowed in the data.}
 
-\item{ref.start}{optional, starting point of the reference period 
-used for computing the index. Defaults to NULL, indicating that the 
+\item{ref.start}{optional, starting point of the reference period
+used for computing the index. Defaults to NULL, indicating that the
 first value in data will be used as starting point.}
 
-\item{ref.end}{optional, ending point of the reference period used 
-for computing the index. Defaults to NULL, indicating that the last 
+\item{ref.end}{optional, ending point of the reference period used
+for computing the index. Defaults to NULL, indicating that the last
 value in data will be used as ending point.}
 
-\item{keep.x}{optional, a logical value indicating whether the data used 
+\item{keep.x}{optional, a logical value indicating whether the data used
 for fitting the model should be kept. Defaults to FALSE.}
 
-\item{params}{optional, an array of parameters for computing the 
+\item{params}{optional, an array of parameters for computing the
 spei. This option overrides computation of fitting parameters.}
 
 \item{verbose}{optional, logical, report the computation options during
@@ -109,7 +109,7 @@ following components:
   object.
   \item fitted: time series with the values of the Standardized
   Precipitation-Evapotranspiration Index (SPEI) or the Standardized
-  Precipitation Index (SPI). If data consists of several columns the 
+  Precipitation Index (SPI). If data consists of several columns the
   function will treat each column as independent data, and the result will
   be a multivariate time series. The names of the columns in \code{data}
   will be used as column names in fitted.
@@ -132,31 +132,31 @@ following components:
 }
 }
 \description{
-Given a time series of the climatic water balance (precipitation minus 
-potential evapotranspiration), gives a time series of the Standardized 
+Given a time series of the climatic water balance (precipitation minus
+potential evapotranspiration), gives a time series of the Standardized
 Precipitation-Evapotranspiration Index (SPEI).
 }
 \details{
-The \code{spei} and \code{spi} functions allow computing the SPEI 
-and the SPI indices. These are climatic proxies widely used for drought 
-quantification and monitoring. Both functions are identical (in fact, 
-\code{spi} is just a wrapper for \code{spei}), but they are kept 
-separated for clarity. Basically, the functions standardize a variable 
-following a log-Logistic (or Gamma, or PearsonIII) distribution function 
-(i.e., they transform it to a standard Gaussian variate with zero mean 
+The \code{spei} and \code{spi} functions allow computing the SPEI
+and the SPI indices. These are climatic proxies widely used for drought
+quantification and monitoring. Both functions are identical (in fact,
+\code{spi} is just a wrapper for \code{spei}), but they are kept
+separated for clarity. Basically, the functions standardize a variable
+following a log-Logistic (or Gamma, or PearsonIII) distribution function
+(i.e., they transform it to a standard Gaussian variate with zero mean
 and standard deviation of one).
 }
 \section{Input data}{
 
-The input variable is a time ordered series of precipitation values 
-for \code{spi}, or a series of the climatic water balance (precipitation 
-minus potential evapotranspiration) for \code{spei}. When used with the 
-default options, it would yield values of both indices exactly as defined 
+The input variable is a time ordered series of precipitation values
+for \code{spi}, or a series of the climatic water balance (precipitation
+minus potential evapotranspiration) for \code{spei}. When used with the
+default options, it would yield values of both indices exactly as defined
 in the references given below.
 
 The SPEI and the SPI were defined for monthly data. Since the PDFs of the
 data are not homogenous from month to month, the data is split into twelve
-series (one for each month) and independent PDFs are fit to each series. If 
+series (one for each month) and independent PDFs are fit to each series. If
 \code{data} is a vector or a matrix it will be treated as a sequence of
 monthly values starting in January. If it is a (univariate or multivariate)
 time series then the function \code{\link{cycle}} will be used to determine
@@ -242,15 +242,15 @@ data(wichita)
 # Compute potential evapotranspiration (PET) and climatic water
 # balance (BAL).
 wichita$PET <- thornthwaite(wichita$TMED, 37.6475)
-wichita$BAL <- wichita$PRCP-wichita$PET
+wichita$BAL <- wichita$PRCP - wichita$PET
 
 # Convert to a ts (time series) for convenience
-wichita <- ts(wichita[,-c(1,2)], end=c(2011,10), frequency=12)
+wichita <- ts(wichita[, -c(1, 2)], end = c(2011, 10), frequency = 12)
 plot(wichita)
 
 # One and twelve-months SPEI
-spei1 <- spei(wichita[,'BAL'], 1)
-spei12 <- spei(wichita[,'BAL'], 12)
+spei1 <- spei(wichita[, "BAL"], 1)
+spei12 <- spei(wichita[, "BAL"], 12)
 class(spei1)
 plot(spei1)
 plot(spei12)
@@ -264,47 +264,49 @@ spei1$fitted
 spei1$coefficients
 
 # Plot `spei` object
-par(mfrow=c(2,1))
-plot(spei1, main='Wichita, SPEI-1')
-plot(spei12, main='Wichita, SPEI-12')
+par(mfrow = c(2, 1))
+plot(spei1, main = "Wichita, SPEI-1")
+plot(spei12, main = "Wichita, SPEI-12")
 
 # One and tvelwe-months SPI
-spi_1 <- spi(wichita[,'PRCP'], 1)
-spi_12 <- spi(wichita[,'PRCP'], 12)
+spi_1 <- spi(wichita[, "PRCP"], 1)
+spi_12 <- spi(wichita[, "PRCP"], 12)
 
-par(mfrow=c(2,1))
-plot(spi_1, 'Wichita, SPI-1')
-plot(spi_12, 'Wichita, SPI-12')
+par(mfrow = c(2, 1))
+plot(spi_1, "Wichita, SPI-1")
+plot(spi_12, "Wichita, SPI-12")
 
 # Time series not starting in January
-plot(spei(ts(wichita[,'BAL'], freq=12, start=c(1980,6)), 12))
+plot(spei(ts(wichita[, "BAL"], freq = 12, start = c(1980, 6)), 12))
 
 # Using a particular reference period (1980-2000) for computing the
 # parameters. This may result in unexpected values (Inf, NaN) if data
 # outside the reference period are way higher or lower than those within
 # the reference period.
-plot(spei(ts(wichita[,'BAL'], freq=12, start=c(1980,6)), 12,
-	ref.start=c(1980,1), ref.end=c(2000,1)))
+plot(spei(ts(wichita[, "BAL"], freq = 12, start = c(1980, 6)), 12,
+  ref.start = c(1980, 1), ref.end = c(2000, 1)
+))
 
 # Using different kernels
-spei24 <- spei(wichita[,'BAL'], 24)
-     spei24_gau <- spei(wichita[,'BAL'], 24,
-kernel=list(type='gaussian', shift=0))
-par(mfrow=c(2,1))
+spei24 <- spei(wichita[, "BAL"], 24)
+spei24_gau <- spei(wichita[, "BAL"], 24,
+  kernel = list(type = "gaussian", shift = 0)
+)
+par(mfrow = c(2, 1))
 plot(spei24)
 plot(spei24_gau)
 dev.off()
 
 # Using different methods (distributions)
-spi_gam <- spi(wichita[,'PRCP'], 12, distribution='Gamma')
-spi_pe3 <- spi(wichita[,'PRCP'], 12, distribution='PearsonIII')
+spi_gam <- spi(wichita[, "PRCP"], 12, distribution = "Gamma")
+spi_pe3 <- spi(wichita[, "PRCP"], 12, distribution = "PearsonIII")
 plot(spi_gam$fitted, spi_pe3$fitted)
 grid()
 
 # Using custom (user provided) parameters
 coe <- spei1$coefficients
 dim(coe)
-spei(wichita[,'BAL'], 1, params=coe)
+spei(wichita[, "BAL"], 1, params = coe)
 
 # Matrix input (computing data from several stations at one)
 # Dataset `balance` contains time series of the climatic water balance at
@@ -326,17 +328,17 @@ dim(spei_12$fitted)
 # Since plot.spei() returns a ggplot object, it is possible to add or tweak
 # parts of the plot.
 require(ggplot2)
-plot(spei(wichita[,'BAL'], 12)) +
- ggtitle('SPEI1 at Wichita') +
- scale_fill_manual(values=c('blue','red')) +  # classic SPEI look
- scale_color_manual(values=c('blue','red')) + # classic SPEI look
- theme_classic() +
- theme(legend.position='bottom')
+plot(spei(wichita[, "BAL"], 12)) +
+  ggtitle("SPEI1 at Wichita") +
+  scale_fill_manual(values = c("blue", "red")) + # classic SPEI look
+  scale_color_manual(values = c("blue", "red")) + # classic SPEI look
+  theme_classic() +
+  theme(legend.position = "bottom")
 
 }
 \references{
 S.M. Vicente-Serrano, S. Beguería, J.I. López-Moreno. 2010. A Multi-scalar
-drought index sensitive 
+drought index sensitive
 to global warming: The Standardized Precipitation Evapotranspiration
 Index – SPEI. \emph{Journal of Climate} \bold{23}: 1696,
 DOI: 10.1175/2009JCLI2909.1.
@@ -350,11 +352,11 @@ evapotranspiration models, tools, datasets and drought monitoring.
 }
 \seealso{
 \code{\link{kern}} for different kernel functions available.
-\code{\link{thornthwaite}}, 
+\code{\link{thornthwaite}},
 \code{\link{hargreaves}} and \code{\link{penman}} for ways of calculating
-potential evapotranspiration. 
+potential evapotranspiration.
 \code{\link{summary.spei}} and \code{\link{print.spei}} for summaries of
-\code{spei} objects. 
+\code{spei} objects.
 \code{\link{plot.spei}} for plotting \code{spei} objects.
 }
 \author{

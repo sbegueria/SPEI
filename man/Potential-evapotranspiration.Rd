@@ -111,9 +111,9 @@ monthly mean temperatures, ºC.}
 A vector, matrix or 3-d array with the values of monthly potential
 or reference evapotranspiration, in mm.
 
-A time series with the values of monthly potential or reference 
-evapotranspiration, in mm. 
-If the input is a matrix or a multivariate time series each column will be 
+A time series with the values of monthly potential or reference
+evapotranspiration, in mm.
+If the input is a matrix or a multivariate time series each column will be
 treated as independent data (e.g., different observatories), and the output
 will be a multivariate time series.
 
@@ -123,7 +123,7 @@ series each column will be treated as independent data (e.g., diferent
 observatories), and the output will be a multivariate time series.
 }
 \description{
-Potential evapotranspiration (PET) is the amount of evaporation and 
+Potential evapotranspiration (PET) is the amount of evaporation and
 transpiration that would occur if a sufficient water source were available.
 Reference evapotranspiration (ETo) is the amount of evaporation and
 transpiration from a reference vegetation of grass. They are usually
@@ -137,14 +137,14 @@ See hargreaves
 \details{
 \code{thornthwaite} computes the monthly potential
 evapotranspiration (PE) according to the Thornthwaite (1948) equation.
-It is the simplest of the three methods, and can be used when only 
+It is the simplest of the three methods, and can be used when only
 mean temperature data are available.
 
 
 \code{hargreaves} computes the monthly reference evapotranspiration (ETo)
 of a grass crop based on the original Hargreaves equation (1994). However,
 if precipitation data \code{Pre} is provided a modified form due to Droogers
-and Allen (2002) will be used; this equation corrects ETo using 
+and Allen (2002) will be used; this equation corrects ETo using
 the amount of rain of each month as a proxy for irradiation The Hargreaves
 method requires data on the mean external radiation, \code{Ra}. If \code{Ra} is not available it
 can be estimated from the latitude \code{lat} and the month of the year.
@@ -169,11 +169,11 @@ by setting the \code{crop} parameter to 'tall'.
 The method requires data on the incoming solar radiation, \code{Rs};
 since this is seldom available, the code will estimate it from data on the
 bright sunshine duration \code{tsun}, or alternatively from data on the
-percent cloud cover \code{CC}. Similarly, if data on the saturation water 
+percent cloud cover \code{CC}. Similarly, if data on the saturation water
 pressure \code{ed} are not available, it is possible to estimate it from
 the dew point temperature \code{Tdew}, from the relative humidity \code{RH}
 or even from the minimum temperature \code{Tmin} (sorted from least to most
-uncertain method). Similarly, the atmospheric surface pressure \code{P} 
+uncertain method). Similarly, the atmospheric surface pressure \code{P}
 required for computing the psychrometric constant can be calculated from the
 atmospheric pressure at sea level \code{P0} and the elevation \code{z},
 or else it will be assumed to be constant (101.3 kPa). If no wind speed
@@ -198,7 +198,7 @@ guidance on how to use these options.
 
 If the main input object (\code{Tave}, \code{Tmin}, \code{Tmax}) is a time
 series then the function \code{\link{cycle}} will be used to determine the
-position of each observation within the 
+position of each observation within the
 year (month), allowing the data to start in a month different than January.
 If no time information is provided, then the input data will be treated as
 a sequence of monthly values starting in January.
@@ -219,19 +219,19 @@ names(wichita)
 tho <- thornthwaite(TMED, 37.6475)
 
 # ETo by Hargreaves
-har <- hargreaves(TMIN, TMAX, lat=37.6475)
+har <- hargreaves(TMIN, TMAX, lat = 37.6475)
 
 # ETo by Penman, based on sun hours, ignore NAs
-pen <- penman(TMIN, TMAX, AWND, tsun=TSUN, lat=37.6475, z=402.6, na.rm=TRUE)
+pen <- penman(TMIN, TMAX, AWND, tsun = TSUN, lat = 37.6475, z = 402.6, na.rm = TRUE)
 
 # Penman, based on cloud cover
-pen2 <- penman(TMIN, TMAX, AWND, CC=ACSH, lat=37.6475, z=402.6, na.rm=TRUE)
+pen2 <- penman(TMIN, TMAX, AWND, CC = ACSH, lat = 37.6475, z = 402.6, na.rm = TRUE)
 
 # Penman, with constant wind
-pen3 <- penman(TMIN, TMAX, tsun=TSUN, lat=37.6475, z=402.6, na.rm=TRUE)
+pen3 <- penman(TMIN, TMAX, tsun = TSUN, lat = 37.6475, z = 402.6, na.rm = TRUE)
 
 # Plot them together
-plot(ts(cbind(tho, har, pen, pen2, pen3), fr=12))
+plot(ts(cbind(tho, har, pen, pen2, pen3), fr = 12))
 
 # Compare between methods
 pairs(cbind(tho, har, pen, pen2, pen3))
@@ -239,78 +239,94 @@ pairs(cbind(tho, har, pen, pen2, pen3))
 # Input data as a time series vector; note that only the first parameter
 # needs to be a `ts` object.
 
-thornthwaite(ts(TMED, start=c(1980, 1), frequency=12), 37.6475)
-hargreaves(ts(TMIN, start=c(1980, 1), frequency=12), TMAX, lat=37.6475)
-penman(ts(TMIN, start=c(1980, 1), frequency=12), TMAX, AWND, tsun=TSUN,
- lat=37.6475, z=402.6, na.rm=TRUE)
+thornthwaite(ts(TMED, start = c(1980, 1), frequency = 12), 37.6475)
+hargreaves(ts(TMIN, start = c(1980, 1), frequency = 12), TMAX, lat = 37.6475)
+penman(ts(TMIN, start = c(1980, 1), frequency = 12), TMAX, AWND,
+  tsun = TSUN,
+  lat = 37.6475, z = 402.6, na.rm = TRUE
+)
 
 # Input data as a time series. Consider the data started in June 1980
-thornthwaite(ts(TMED, start=c(1980, 6), frequency=12), 37.6475)
+thornthwaite(ts(TMED, start = c(1980, 6), frequency = 12), 37.6475)
 
 # Comparison with example from Allen et al. (1998), p. 69, fig. 18:
 # Data from Cabinda, Angola (-5.33S, 12.11E, 20 m a.s.l.)
 
 data(cabinda)
 pen.cab <- penman(cabinda$Tmin, cabinda$Tmax, cabinda$U2,
-	Rs=cabinda$Rs, tsun=cabinda$tsun, RH=cabinda$RH, lat=-5.33, z=20)
+  Rs = cabinda$Rs, tsun = cabinda$tsun, RH = cabinda$RH, lat = -5.33, z = 20
+)
 plot(cabinda$ET0, pen.cab)
-abline(0, 1, lt='dashed')
-summary(lm(pen.cab~cabinda$ET0))$r.squared
+abline(0, 1, lt = "dashed")
+summary(lm(pen.cab ~ cabinda$ET0))$r.squared
 
 # Matrix input (data from several stations)
 # Replicating Wichita data twice to simulate data at two locations.
 
-tmin <- cbind(TMIN, TMIN+1.5)
-tmax <- cbind(TMAX, TMAX+1.5)
+tmin <- cbind(TMIN, TMIN + 1.5)
+tmax <- cbind(TMAX, TMAX + 1.5)
 lat <- c(37.6475, 35.000)
-har <- hargreaves(tmin, tmax, lat=lat, na.rm=TRUE)
-plot(har); abline(0,1)
-plot(ts(har, fr=12))
+har <- hargreaves(tmin, tmax, lat = lat, na.rm = TRUE)
+plot(har)
+abline(0, 1)
+plot(ts(har, fr = 12))
 
 # Array input (gridded data)
 # Replicating Wichita data to simulate data from a grid. Note that the time
 # dimension (`nt`) comes first. Latitude is provided as a 2-d array.
 
 nt <- length(TMIN)
-tmin <- array(TMIN, dim=c(nt, 2, 2))
-tmax <- array(TMAX, dim=c(nt, 2, 2))
-lat <- array(c(40, 30, 40, 30), dim=c(2,2))
-har <- hargreaves(tmin, tmax, lat=lat, na.rm=TRUE)
+tmin <- array(TMIN, dim = c(nt, 2, 2))
+tmax <- array(TMAX, dim = c(nt, 2, 2))
+lat <- array(c(40, 30, 40, 30), dim = c(2, 2))
+har <- hargreaves(tmin, tmax, lat = lat, na.rm = TRUE)
 dim(har)
 
 # Different Penman-Monteith flavors
 
-pen_icid <- penman(TMIN, TMAX, AWND, tsun=TSUN, lat=37.6475, z=402.6,
-                   na.rm=TRUE, method='ICID')
-pen_asce <- penman(TMIN, TMAX, AWND, tsun=TSUN, lat=37.6475, z=402.6,
-                   na.rm=TRUE, method='ASCE')
-pen_fao <- penman(TMIN, TMAX, AWND, tsun=TSUN, lat=37.6475, z=402.6,
-                  na.rm=TRUE, method='FAO')
-plot(ts(cbind(pen_icid, pen_asce, pen_fao), fr=12))
+pen_icid <- penman(TMIN, TMAX, AWND,
+  tsun = TSUN, lat = 37.6475, z = 402.6,
+  na.rm = TRUE, method = "ICID"
+)
+pen_asce <- penman(TMIN, TMAX, AWND,
+  tsun = TSUN, lat = 37.6475, z = 402.6,
+  na.rm = TRUE, method = "ASCE"
+)
+pen_fao <- penman(TMIN, TMAX, AWND,
+  tsun = TSUN, lat = 37.6475, z = 402.6,
+  na.rm = TRUE, method = "FAO"
+)
+plot(ts(cbind(pen_icid, pen_asce, pen_fao), fr = 12))
 
 # Different CO2 concentrations
 
 # Default (300 ppm)
-pen_300 <- penman(TMIN, TMAX, AWND, tsun=TSUN, lat=37.6475, z=402.6,
-                  na.rm=TRUE)
+pen_300 <- penman(TMIN, TMAX, AWND,
+  tsun = TSUN, lat = 37.6475, z = 402.6,
+  na.rm = TRUE
+)
 # Increased to 450 ppm
-pen_450 <- penman(TMIN, TMAX, AWND, tsun=TSUN, lat=37.6475, z=402.6,
-                 CO2=450, na.rm=TRUE)
-plot(pen_450, pen_300); abline(0, 1)
+pen_450 <- penman(TMIN, TMAX, AWND,
+  tsun = TSUN, lat = 37.6475, z = 402.6,
+  CO2 = 450, na.rm = TRUE
+)
+plot(pen_450, pen_300)
+abline(0, 1)
 # Increasing from 300 to 450
-co2 <- seq(300, 450, length.out=length(TMIN))
-pen_co2 <- penman(TMIN, TMAX, AWND, tsun=TSUN, lat=37.6475, z=402.6,
-                 CO2=co2, na.rm=TRUE)
-plot(ts(cbind(pen_300, pen_co2), fr=12))
-
+co2 <- seq(300, 450, length.out = length(TMIN))
+pen_co2 <- penman(TMIN, TMAX, AWND,
+  tsun = TSUN, lat = 37.6475, z = 402.6,
+  CO2 = co2, na.rm = TRUE
+)
+plot(ts(cbind(pen_300, pen_co2), fr = 12))
 
 }
 \references{
 Thornthwaite, C. W., 1948. An approach toward a rational classification of
-climate. 
+climate.
 \emph{Geographical Review} \bold{38}: 55–94. DOI:10.2307/2107309.
 
-Hargreaves G.H., 1994. Defining and using reference evapotranspiration. 
+Hargreaves G.H., 1994. Defining and using reference evapotranspiration.
 \emph{Journal of Irrigation and Drainage Engineering} \bold{120}: 1132–1139.
 
 Droogers P., Allen R. G., 2002. Estimating reference evapotranspiration

@@ -18,13 +18,13 @@ Precipitation-Evapotranspiration Index (SPEI).
   License: \tab GPL version 2 or newer\cr
   LazyLoad: \tab yes\cr
 }
-  
-Functions \code{\link{spei}} and \code{\link{spi}} are the workhorse of the 
+
+Functions \code{\link{spei}} and \code{\link{spi}} are the workhorse of the
 SPEI library. Other functions such as \code{\link{kern}},
 \code{\link{parglo.maxlik}} is an auxiliary low-level function and
 will not be used directly by the typical user. Functions for computing
 potential evapotranspiration are provided, too, for helping computing
-the SPEI. They are: \code{\link{thornthwaite}}, 
+the SPEI. They are: \code{\link{thornthwaite}},
 \code{\link{hargreaves}} and \code{\link{penman}}.
 }
 \references{
@@ -33,7 +33,7 @@ drought index sensitive to global warming: The Standardized Precipitation
 Evapotranspiration Index – SPEI. \emph{Journal of Climate} \bold{23}: 1696,
 DOI: 10.1175/2009JCLI2909.1.
 
-\url{https://spei.csic.es/}
+\url{http://sac.csic.es/spei/}
 }
 \author{
 Santiago Beguería and Sergio M. Vicente-Serrano
