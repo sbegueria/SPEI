@@ -229,6 +229,7 @@ spei <- function(x, y, ...) UseMethod("spei")
 #'
 #'
 #' @examples
+#' \donttest{
 #' # Load data
 #' data(wichita)
 #'
@@ -327,6 +328,7 @@ spei <- function(x, y, ...) UseMethod("spei")
 #'   scale_color_manual(values = c("blue", "red")) + # classic SPEI look
 #'   theme_classic() +
 #'   theme(legend.position = "bottom")
+#'}
 #'
 #' @export
 #'

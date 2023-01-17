@@ -236,6 +236,7 @@ datasets extremely easy, since no loops need to be used.
 }
 
 \examples{
+\donttest{
 # Load data
 data(wichita)
 
@@ -334,6 +335,7 @@ plot(spei(wichita[, "BAL"], 12)) +
   scale_color_manual(values = c("blue", "red")) + # classic SPEI look
   theme_classic() +
   theme(legend.position = "bottom")
+}
 
 }
 \references{
