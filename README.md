@@ -1,4 +1,4 @@
-# ![SPEI sticker](./SPEI_low.png)
+# ![SPEI sticker](./SPEI.png)
 
 SPEI is an R package incorporating a set of functions for computing potential or reference evapotranspiration and several widely used drought indices,  including the **Standardized Precipitation-Evapotranspiration Index (SPEI)** and the **Standardized Precipitation Index (SPI)**.
 
