@@ -11,7 +11,7 @@ Description: A set of functions for computing potential evapotranspiration and s
 Depends: R (>= 3.5.0)
 Imports: lmomco, lmom, TLMoments, reshape, ggplot2, checkmate, zoo, lubridate
 License: GPL-2
-URL: http://spei.csic.es, https://github.com/sbegueria/SPEI
+URL: https://spei.csic.es, https://github.com/sbegueria/SPEI
 Language: en-US
 BugReports: https://github.com/sbegueria/SPEI/issues
 LazyLoad: true
