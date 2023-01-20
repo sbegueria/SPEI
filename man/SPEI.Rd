@@ -14,7 +14,7 @@ Precipitation-Evapotranspiration Index (SPEI).
   Package: \tab SPEI\cr
   Type: \tab Package\cr
   Version: \tab 1.8\cr
-  Date: \tab 2022-09-05\cr
+  Date: \tab 2023-01-20\cr
   License: \tab GPL version 2 or newer\cr
   LazyLoad: \tab yes\cr
 }
@@ -33,7 +33,7 @@ drought index sensitive to global warming: The Standardized Precipitation
 Evapotranspiration Index – SPEI. \emph{Journal of Climate} \bold{23}: 1696,
 DOI: 10.1175/2009JCLI2909.1.
 
-\url{http://sac.csic.es/spei/}
+\url{https://spei.csic.es}
 }
 \author{
 Santiago Beguería and Sergio M. Vicente-Serrano
