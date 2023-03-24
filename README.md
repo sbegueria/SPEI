@@ -136,14 +136,6 @@ Other (possibly useful) references:
 First release of the SPEI package.
 
 
-## To do list (work in progress)
-
-- [ ] Implement parallel processing.
-- [ ] Analysis function (find best combination of time scale and time of year for explaining a dependent variable).
-- [ ] Daily Penman-Monteith ETo (there is one version on my blog, http://santiago.begueria.es).
-- [ ] Add more distributions, possibility to standardize other climatic variables.
-
-
 ## Any problems?
 
 Feel free to [send an issue](https://github.com/sbegueria/SPEI/issues) if you have any questions or problems.
