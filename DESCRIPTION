@@ -4,11 +4,11 @@ Version: 1.8.1
 Title: Calculation of the Standardized Precipitation-Evapotranspiration Index
 Authors@R: c(
 	person('Santiago', 'Beguería', role=c('aut','cre'),
-	email='santiago.begueria@csic.es',
-	comment=c(ORCID='0000-0002-3974-2947')),
+		email='santiago.begueria@csic.es',
+		comment=c(ORCID='0000-0002-3974-2947')),
 	person(c('Sergio','M.'), 'Vicente-Serrano', role='aut',
-	email='svicen@ipe.csic.es'),
-	comment=c(ORCID='0000-0003-2892-518X'))
+		email='svicen@ipe.csic.es',
+		comment=c(ORCID='0000-0003-2892-518X'))
 Description: A set of functions for computing potential evapotranspiration and several widely used drought indices including the Standardized Precipitation-Evapotranspiration Index (SPEI).
 Depends: R (>= 3.5.0)
 Imports: lmomco, lmom, TLMoments, reshape, ggplot2, checkmate, zoo, lubridate
