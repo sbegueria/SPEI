@@ -38,7 +38,19 @@ install_github('sbegueria/SPEI@devel')
 
 ## References
 
-You can cite this references if you use the SPEI library on your work:
+To cite package ‘SPEI’ in publications use:
+
+* Beguería S, Vicente-Serrano SM (2023). _SPEI: Calculation of the Standardized Precipitation-Evapotranspiration Index_. https://spei.csic.es, https://github.com/sbegueria/SPEI.
+
+A BibTeX entry for LaTeX users is:
+@Manual{,
+    title = {SPEI: Calculation of the Standardized Precipitation-Evapotranspiration Index},
+    author = {Santiago Beguería and Sergio M. Vicente-Serrano},
+    year = {2023},
+    note = {https://spei.csic.es, https://github.com/sbegueria/SPEI},
+}
+  
+If you use the SPEI index, consider citing these references:
 
 * S.M. Vicente-Serrano, S. Beguería, J.I. López-Moreno. 2010. A Multi-scalar drought index sensitive to global warming: The Standardized Precipitation Evapotranspiration Index – SPEI. *Journal of Climate* **23**: 1696, DOI: 10.1175/2009JCLI2909.1.
 
