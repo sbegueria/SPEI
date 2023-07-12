@@ -969,8 +969,8 @@ plot.spei <- function(x, ...) {
 
   # Plot it
   g <- ggplot(kk, aes(.data[["time"]], .data[["value"]],
-    fill = "cat",
-    color = "cat"
+    fill = .data[["cat"]],
+    color = .data[["cat"]]
   ))
   # reference period (if different than whole series)
   if (!is.null(x$ref.period)) {
@@ -981,10 +981,10 @@ plot.spei <- function(x, ...) {
   # add the bars with the SPEI values
   g <- g +
     geom_bar(stat = "identity") + # color='white' helps separate between values
-    #    scale_fill_manual(values=c('blue','red')) +  # classic SPEI look
-    #    scale_color_manual(values=c('blue','red')) + # classic SPEI look
-    scale_fill_manual(values = c("cyan3", "tomato")) + # new look
-    scale_color_manual(values = c("cyan3", "tomato")) # new look
+      #scale_fill_manual(values=c('blue','red')) +  # classic SPEI look
+      #scale_color_manual(values=c('blue','red'))   # classic SPEI look
+      scale_fill_manual(values = c("cyan3", "tomato")) + # new look
+      scale_color_manual(values = c("cyan3", "tomato")) # new look
   # add NAs
   g <- g +
     geom_point(aes(.data[["time"]], .data[["na"]]),
