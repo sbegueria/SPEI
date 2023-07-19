@@ -490,7 +490,7 @@ hargreaves <- function(Tmin, Tmax, Ra = NULL, lat = NULL, Pre = NULL,
     ET0 <- 0.0023 * 0.408 * Ra * (Tmean + 17.8) * Tr^0.5
   } else {
     # Use modified method (Droogers and Allen, 2002)
-    ab <- Tr - 0.0123 * Pre
+    ab <- Tr - 0.0123 * Rs
     ET0 <- 0.0013 * 0.408 * Ra * (Tmean + 17.0) * ab^0.76
     ET0[is.nan(ab^0.76)] <- 0
   }
