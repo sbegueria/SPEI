@@ -1,5 +1,9 @@
 # ![SPEI sticker](./SPEI.png) [![](https://cranlogs.r-pkg.org/badges/SPEI)](https://cran.r-project.org/package=SPEI)
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![GitHub issues](https://img.shields.io/github/issues/sbegueria/agroclim.svg)](https://github.com/sbegueria/agroclim/issues)
+[![GitHub stars](https://img.shields.io/github/stars/sbegueria/agroclim.svg)](https://github.com/sbegueria/agroclim/stargazers)
+
 SPEI is an R package incorporating a set of functions for computing potential or reference evapotranspiration and several widely used drought indices,  including the **Standardized Precipitation-Evapotranspiration Index (SPEI)** and the **Standardized Precipitation Index (SPI)**.
 
 The package is centered on the SPEI. For more information on this drought index, please visit 
