@@ -1,6 +1,6 @@
 # ![SPEI sticker](./SPEI.png) [![](https://cranlogs.r-pkg.org/badges/SPEI)](https://cran.r-project.org/package=SPEI)
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![GitHub issues](https://img.shields.io/github/issues/sbegueria/agroclim.svg)](https://github.com/sbegueria/agroclim/issues)
 [![GitHub stars](https://img.shields.io/github/stars/sbegueria/agroclim.svg)](https://github.com/sbegueria/agroclim/stargazers)
 
