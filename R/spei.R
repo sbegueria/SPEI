@@ -989,7 +989,7 @@ plot.spei <- function(x, ...) {
   kk$na <- as.numeric(ifelse(is.na(kk$value), 0, NA))
 
   # Add SPI / SPEI categories
-  kk$cat <- ifelse(kk$value > 0, "neg", "pos")
+  kk$cat <- ifelse(kk$value >= 0, "pos", "neg")
 
   # To do: cut the plot horizontally by drought classes; can be done with
   # stacked bars, using geom_bar(stat='identity')
@@ -1022,8 +1022,8 @@ plot.spei <- function(x, ...) {
     geom_bar(stat = "identity") + # color='white' helps separate between values
       #scale_fill_manual(values=c('blue','red')) +  # classic SPEI look
       #scale_color_manual(values=c('blue','red'))   # classic SPEI look
-      scale_fill_manual(values = c("cyan3", "tomato")) + # new look
-      scale_color_manual(values = c("cyan3", "tomato")) # new look
+      scale_fill_manual(values = c(pos = "cyan3", neg = "tomato")) +
+      scale_color_manual(values = c(pos = "cyan3", neg = "tomato"))
   # add NAs
   g <- g +
     geom_point(aes(.data[["time"]], .data[["na"]]),

@@ -25,7 +25,10 @@
 #'   \item{TMIN}{ monthly mean daily minimum temperature, in ºC.}
 #'   \item{TMED}{ monthly mean temperature, in ºC.}
 #'   \item{AWND}{ monthly mean wind speed, in km h-1}
-#'   \item{ACSH}{ monthly mean sun hours, in h.}
+#'   \item{TSUN}{ monthly mean daily sunshine duration, in h. Note: five
+#'   values between October 2000 and May 2001 (15.0 to 21.1 h) exceed the
+#'   maximum possible day length at this latitude and should be treated with
+#'   caution.}
 #'   \item{ACSH}{ monthly mean cloud cover, in \%.}
 #' }
 #' \code{balance} dataset: a data frame with monthly climatic water balance

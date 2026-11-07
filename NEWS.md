@@ -33,6 +33,15 @@
 * `<penman>` and `<hargreaves>`: extraterrestrial radiation in polar summer
   (sun above the horizon all day) used the largest sunset hour angle found in
   the data instead of pi, underestimating it above about 66.5 degrees.
+* `<plot.spei>`: colours were assigned by factor order with inverted labels,
+  so a series with only negative (or only positive) values was drawn
+  entirely in the wet colour (#72).
+
+## Documentation
+
+* `wichita` dataset: `TSUN` was missing from the documentation (`ACSH` was
+  listed twice), and five `TSUN` values between October 2000 and May 2001
+  exceed the possible day length; this is now noted.
 
 * `<spei>` and `<spi>`: the adjustment for the probability of zero
   precipitation (`pze`) was overwritten for the `Gamma` and `PearsonIII`

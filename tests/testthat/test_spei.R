@@ -338,3 +338,18 @@ test_that("params carry pze and reproduce the reference-period fit (H4)", {
     )
   }
 })
+
+test_that("plot colours follow the sign of the values (O1, #72)", {
+  s <- spei(bal_ts, 1, verbose = FALSE)
+  fills <- function(obj) {
+    g <- ggplot2::ggplot_build(plot(obj))
+    f <- unique(unlist(lapply(g$data, function(d) d$fill)))
+    sort(f[!is.na(f) & f != "white"])
+  }
+  neg <- s
+  neg$fitted[] <- -abs(s$fitted) - 0.1
+  pos <- s
+  pos$fitted[] <- abs(s$fitted) + 0.1
+  expect_equal(fills(neg), "tomato")
+  expect_equal(fills(pos), "cyan3")
+})
