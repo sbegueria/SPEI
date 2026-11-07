@@ -58,10 +58,10 @@ test_that("No Tmin provided", {
   )
 })
 
-test_that("No P nor z provided", {
+test_that("No z provided", {
   expect_error(
     penman(TMIN, TMAX, AWND, tsun = TSUN, lat = 37.6475, na.rm = TRUE),
-    "One of `P`, the pair `P0` and `z`, or `z` must be provided."
+    "Argument `z` \\(elevation, m a.s.l.\\) must be provided."
   )
 })
 
@@ -71,7 +71,7 @@ test_that("P0 without z provided", {
       tsun = TSUN, lat = 37.6475, P0 = TSUN,
       na.rm = TRUE
     ),
-    "One of `P`, the pair `P0` and `z`, or `z` must be provided."
+    "Argument `z` \\(elevation, m a.s.l.\\) must be provided."
   )
 })
 

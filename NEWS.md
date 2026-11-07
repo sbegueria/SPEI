@@ -8,6 +8,9 @@
   `params`. Before, `pze` was re-estimated from the new data, so applying
   calibrated parameters to other data gave inconsistent values. Arrays without
   the `pze` row (from earlier versions) are still accepted, with a warning.
+* `<penman>` now requires the elevation `z`. It was optional when `P` or `P0`
+  was given, and a fixed elevation of 840 m was then silently used for the
+  clear-sky solar radiation.
 
 ## Bug fixes
 
@@ -20,6 +23,16 @@
 * `<spei>` and `<spi>`: when a month had no data or constant values in one
   series, values of the same month in the first series (or of another month,
   when `ref.start` was set) were set to `NA` (#64).
+* `<penman>`, `<hargreaves>` and `<thornthwaite>`: with matrix or array input
+  that is not a time series, and a length that is not a multiple of 12, the
+  sites after the first got shifted calendar months (day length and days per
+  month).
+* `<penman>`: with several sites and `P0`, the elevations `z` were recycled
+  along time instead of across sites. `z` is now also used for the clear-sky
+  radiation when `P` or `P0` is given.
+* `<penman>` and `<hargreaves>`: extraterrestrial radiation in polar summer
+  (sun above the horizon all day) used the largest sunset hour angle found in
+  the data instead of pi, underestimating it above about 66.5 degrees.
 
 * `<spei>` and `<spi>`: the adjustment for the probability of zero
   precipitation (`pze`) was overwritten for the `Gamma` and `PearsonIII`

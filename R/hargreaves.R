@@ -58,8 +58,10 @@
 #' estimating P), kPa.
 #' @param CO2   optional, a single numeric value, a numeric vector,
 #' or a tsvector of monthly mean CO2 atmospheric concentration, ppm.
-#' @param z   optional, a numeric vector or matrix of the elevation of the
-#' site or sites, m above sea level.
+#' @param z   a numeric vector or matrix of the elevation of the
+#' site or sites, m above sea level. Required by \code{penman}, where it is
+#' used for the clear-sky solar radiation and, unless \code{P} is given, for
+#' the atmospheric surface pressure.
 #' @param crop   optional, character string, type of reference crop. Either
 #' one of 'short' (default) or 'tall'.
 #' @param method   optional, character string, Penman-Monteith calculation
@@ -109,7 +111,9 @@
 #' uncertain method). Similarly, the atmospheric surface pressure \code{P}
 #' required for computing the psychrometric constant can be calculated from the
 #' atmospheric pressure at sea level \code{P0} and the elevation \code{z},
-#' or else it will be assumed to be constant (101.3 kPa). If no wind speed
+#' or else from the elevation \code{z} assuming a sea level pressure of
+#' 101.3 kPa. The elevation \code{z} is always required, since it is also
+#' used to compute the clear-sky solar radiation. If no wind speed
 #' data \code{U2} are available, a constant value of 2 m per second is used.
 #' Custom CO2 atmospheric concentration \code{CO2} can also be provided,
 #' following Yang et al. (2019).
@@ -406,8 +410,8 @@ hargreaves <- function(Tmin, Tmax, Ra = NULL, lat = NULL, Pre = NULL,
   } else {
     mlen <- c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
     msum <- cumsum(mlen) - mlen + 15
-    mlen_array <- array(mlen, dim = int_dims)
-    msum_array <- array(msum, dim = int_dims)
+    mlen_array <- array(rep_len(mlen, n_times), dim = int_dims)
+    msum_array <- array(rep_len(msum, n_times), dim = int_dims)
     warn$push("Assuming the data are monthly time series starting in January, all regular (non-leap) years.")
   }
 
@@ -477,7 +481,7 @@ hargreaves <- function(Tmin, Tmax, Ra = NULL, lat = NULL, Pre = NULL,
     omegas <- sset * 0
     omegas[abs(sset) <= 1] <- acos(sset[abs(sset) <= 1])
     # correction for high latitudes
-    omegas[sset < (-1)] <- max(omegas)
+    omegas[sset < (-1)] <- pi
     # Ra, MJ m-2 d-1
     Ra <- 37.6 * dr *
       (omegas * sin(latr) * sin(delta) + cos(latr) * cos(delta) * sin(omegas))

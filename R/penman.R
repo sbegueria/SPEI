@@ -81,26 +81,28 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
     check$push("One of `ed`, `Tdew`, `RH` or `Tmin` must be provided.")
   }
 
+  if (is.null(z)) {
+    check$push(paste(
+      "Argument `z` (elevation, m a.s.l.) must be provided. It is used for",
+      "the clear-sky solar radiation and, unless `P` is given, for the",
+      "atmospheric surface pressure."
+    ))
+  } else {
+    using$z <- TRUE
+  }
   if (!is.null(P)) {
     using$P <- TRUE
     warn$push("Using user-provided atmospheric surface pressure (`P`) data.")
-  } else if (!is.null(P0) && !is.null(z)) {
+  } else if (!is.null(P0)) {
     using$P0 <- TRUE
     warn$push("Using atmospheric pressure at sea level (`P0`) and elevation `z` to estimate atmospheric surface pressure.")
-  } else if (!is.null(z)) {
-    using$z <- TRUE
-    warn$push("Assuming constant atmospheric surface pressure corresponding to elevation `z`.")
   } else {
-    check$push("One of `P`, the pair `P0` and `z`, or `z` must be provided.")
+    warn$push("Assuming constant atmospheric surface pressure corresponding to elevation `z`.")
   }
 
   if (!is.null(CO2)) {
     using$CO2 <- TRUE
     warn$push("Using custom CO2 concentration.")
-  }
-
-  if (is.null(z)) {
-    warn$push("Specifying the elevation above sea level (z) is highly recommended in order to compute the clear-sky solar radiation.")
   }
 
   if (crop == "short") {
@@ -192,8 +194,8 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
   } else {
     mlen <- c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
     msum <- cumsum(mlen) - mlen + 15
-    mlen_array <- array(mlen, dim = int_dims)
-    msum_array <- array(msum, dim = int_dims)
+    mlen_array <- array(rep_len(mlen, n_times), dim = int_dims)
+    msum_array <- array(rep_len(msum, n_times), dim = int_dims)
     warn$push("Assuming the data are monthly time series starting in January, all regular (non-leap) years.")
   }
 
@@ -322,15 +324,10 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
   } else if (using$P0) {
     # estimate from sea level pressure (eq. 1.6)
     P <- P0 * (((293 - 0.0065 * z) / 293)^5.26)
-  } else if (using$z) {
-    # assume a constant pressure
+  } else {
+    # assume a constant sea level pressure
     P0 <- array(101.3, int_dims)
     P <- P0 * (((293 - 0.0065 * z) / 293)^5.26)
-  } else {
-    stop(paste(
-      "An error occurred while computing the surface atmospheric",
-      "pressure. Please report this error."
-    ))
   }
 
   # 3. Psychrometric constant, gamma (eq. 1.4)
@@ -406,8 +403,8 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
     sset <- -tan(latr) * tan(delta)
     omegas <- sset * 0
     omegas[abs(sset) <= 1] <- acos(sset[abs(sset) <= 1])
-    # correction for high latitudes
-    omegas[sset < (-1)] <- max(omegas)
+    # correction for high latitudes: polar day (sun never sets)
+    omegas[sset < (-1)] <- pi
   }
 
   # 9. Extraterrestrial radiation, Ra (MJ m-2 d-1)
@@ -442,11 +439,7 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
   }
   # Rso: clear-sky solar radiation (eq. 1.40)
   # Note: mostly valid for z<6000 m and low air turbidity
-  if (using$z) {
-    Rso <- (0.75 + 2e-5 * z) * Ra
-  } else {
-    Rso <- (0.75 + 2e-5 * 840) * Ra
-  }
+  Rso <- (0.75 + 2e-5 * z) * Ra
   # Empirical constants
   ac <- 1.35
   bc <- -0.35

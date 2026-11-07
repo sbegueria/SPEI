@@ -95,8 +95,10 @@ estimating P), kPa.}
 \item{CO2}{optional, a single numeric value, a numeric vector,
 or a tsvector of monthly mean CO2 atmospheric concentration, ppm.}
 
-\item{z}{optional, a numeric vector or matrix of the elevation of the
-site or sites, m above sea level.}
+\item{z}{a numeric vector or matrix of the elevation of the
+site or sites, m above sea level. Required by \code{penman}, where it is
+used for the clear-sky solar radiation and, unless \code{P} is given, for
+the atmospheric surface pressure.}
 
 \item{crop}{optional, character string, type of reference crop. Either
 one of 'short' (default) or 'tall'.}
@@ -176,7 +178,9 @@ or even from the minimum temperature \code{Tmin} (sorted from least to most
 uncertain method). Similarly, the atmospheric surface pressure \code{P}
 required for computing the psychrometric constant can be calculated from the
 atmospheric pressure at sea level \code{P0} and the elevation \code{z},
-or else it will be assumed to be constant (101.3 kPa). If no wind speed
+or else from the elevation \code{z} assuming a sea level pressure of
+101.3 kPa. The elevation \code{z} is always required, since it is also
+used to compute the clear-sky solar radiation. If no wind speed
 data \code{U2} are available, a constant value of 2 m per second is used.
 Custom CO2 atmospheric concentration \code{CO2} can also be provided,
 following Yang et al. (2019).
