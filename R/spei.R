@@ -718,13 +718,13 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
         "Gamma" = lmom::cdfgam(x[ff], f_params),
         "PearsonIII" = lmom::cdfpe3(x[ff], f_params)
       )
+      # Store the standardized values
+      spei[ff, s] <- qnorm(cdf_res)
+
       # Adjust for `pze` if distribution is Gamma or PearsonIII
       if (distribution == "Gamma" | distribution == "PearsonIII") {
         spei[ff, s] <- qnorm(pze + (1 - pze) * pnorm(spei[ff, s]))
       }
-
-      # Store the standardized values
-      spei[ff, s] <- qnorm(cdf_res)
     } # next c (month)
   } # next s (series)
 

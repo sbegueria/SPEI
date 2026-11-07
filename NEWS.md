@@ -1,3 +1,14 @@
+# SPEI (development version)
+
+## Bug fixes
+
+* `<spei>` and `<spi>`: the adjustment for the probability of zero
+  precipitation (`pze`) was overwritten for the `Gamma` and `PearsonIII`
+  distributions, so zero-precipitation periods were returned as `-Inf` and
+  non-zero periods were biased toward drier values. This regression was
+  introduced in 1.8.0; `log-Logistic` was not affected. Thanks to Mark L.
+  Morrissey for reporting it (#87; also #79, #85).
+
 # SPEI 1.8.0, November 2022
 
 This is a major release that adds a range of substantial new features and

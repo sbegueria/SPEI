@@ -231,3 +231,29 @@ test_that("example with user-provided parameters", {
     spi(x_vec, 1, params = pars)$fitted
   )
 })
+
+# Regression test for issue #87: the probability-of-zero (pze) adjustment
+# must be applied for Gamma and PearsonIII, so zero-precipitation months are
+# finite and results match qnorm(pze + (1 - pze) * F(x)) computed directly
+# from the fitted parameters.
+test_that("pze adjustment is applied for Gamma and PearsonIII (#87)", {
+  set.seed(1)
+  x <- ts(ifelse(runif(360) < 0.2, 0, rgamma(360, 1.5, scale = 40)),
+    frequency = 12, start = 1990
+  )
+  m <- as.numeric(cycle(x))
+  xv <- as.numeric(x)
+  cdfs <- list(Gamma = lmom::cdfgam, PearsonIII = lmom::cdfpe3)
+  for (d in names(cdfs)) {
+    r <- spi(x, 1, distribution = d, verbose = FALSE)
+    s <- as.numeric(r$fitted)
+    expect_false(any(is.infinite(s[xv == 0])))
+    ref <- numeric(length(xv))
+    for (k in 1:12) {
+      xi <- xv[m == k]
+      pze <- mean(xi == 0)
+      ref[m == k] <- qnorm(pze + (1 - pze) * cdfs[[d]](xi, r$coefficients[, 1, k]))
+    }
+    expect_equal(s, ref, tolerance = 1e-10)
+  }
+})
