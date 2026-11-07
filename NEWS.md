@@ -1,6 +1,25 @@
 # SPEI (development version)
 
+## Breaking changes
+
+* For the `Gamma` and `PearsonIII` distributions, `$coefficients` now has an
+  extra row `pze` with the probability of zero precipitation in the reference
+  period, and this value is used when the coefficients are passed back through
+  `params`. Before, `pze` was re-estimated from the new data, so applying
+  calibrated parameters to other data gave inconsistent values. Arrays without
+  the `pze` row (from earlier versions) are still accepted, with a warning.
+
 ## Bug fixes
+
+* `<spei>` and `<spi>`: `fit = "max-lik"` and `fit = "pp-pwm"` returned only
+  `NA`. `max-lik` now uses the `ub-pwm` estimates as starting values, and
+  `pp-pwm` passes the plotting-position constants correctly to
+  `lmomco::pwm.pp()` (#67).
+* `<spei>` and `<spi>`: `fit = "max-lik"` with `Gamma` or `PearsonIII` now
+  warns and uses `ub-pwm`, as documented.
+* `<spei>` and `<spi>`: when a month had no data or constant values in one
+  series, values of the same month in the first series (or of another month,
+  when `ref.start` was set) were set to `NA` (#64).
 
 * `<spei>` and `<spi>`: the adjustment for the probability of zero
   precipitation (`pze`) was overwritten for the `Gamma` and `PearsonIII`

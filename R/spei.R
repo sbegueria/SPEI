@@ -123,18 +123,25 @@ spei <- function(x, y, ...) UseMethod("spei")
 #' Weighted Moments ('ub-pwm'), but other methods can be used through parameter
 #' \code{fit}. A valid alternative is the plotting-position PWM ('pp-pwm')
 #' method. For the log-Logistic distribution, also the maximum likelihood
-#' method ('max-lik') is available.
+#' method ('max-lik') is available, using the 'ub-pwm' estimates as starting
+#' values. For the Gamma and PearsonIII distributions 'max-lik' is not
+#' available, and 'ub-pwm' is used instead (with a warning).
 #'
 #'
 #' @section User-provided parameters:
 #' An option exists to override parameter fitting and provide user default
 #' parameters. This is activated with the parameter \code{params}. The exact
 #' values provided to this parameter depend on the distribution function being
-#' used. For log-Logistic and PearsonIII it should be a three-dimensional array
+#' used. For log-Logistic it should be a three-dimensional array
 #' with dimensions (3,number of series in data,12), containing twelve parameter
 #' triads (xi, alpha, kappa) for each data series, one for each month. For
-#' Gamma, a three-dimensional array with dimensions (2,number of series
-#' in data,12),  containing twelve parameter pairs (alpha, beta). It is a good
+#' PearsonIII it should have dimensions (4,number of series in data,12),
+#' containing the parameters (mu, sigma, gamma) and the probability of zero
+#' (pze) estimated in the reference period. For Gamma, it should have
+#' dimensions (3,number of series in data,12), containing the parameters
+#' (alpha, beta) and pze. Arrays without the pze row (as produced by SPEI
+#' versions before 1.9) are still accepted, but then pze is estimated from
+#' \code{data} within the reference period, with a warning. It is a good
 #' idea to look at the coefficients slot of a previously fit \code{spei} spei
 #' object in order to understand the structure of the parameter array. The
 #' parameter \code{distribution} is still used under this option in order to
@@ -182,13 +189,12 @@ spei <- function(x, y, ...) UseMethod("spei")
 #'   will be used as column names in fitted.
 #'   \item coefficients: an array with the values of the coefficients of the
 #'   distribution function fitted to the data. The first dimension of the
-#'   array contains the three (or two) coefficients, the second dimension will
-#'   typically consist of twelve values corresponding to each month, and the
-#'   third dimension will be equal to the number of columns (series) in
-#'   \code{data}. If a time scale greater than one has been used then the
-#'   first elements will have NA value since the kernel can not be applied.
-#'   The first element with valid data will be the one corresponding to the
-#'   time scale chosen.
+#'   array contains the coefficients (xi, alpha, kappa for log-Logistic;
+#'   alpha, beta, pze for Gamma; mu, sigma, gamma, pze for PearsonIII, where
+#'   pze is the probability of zero in the reference period), the second
+#'   dimension will be equal to the number of series in \code{data}, and the
+#'   third dimension will typically consist of twelve values corresponding to
+#'   each month (or the frequency of \code{data}).
 #'   \item scale: the \code{scale} parameter used to generate the object.
 #'   \item kernel: the parameters and values of the kernel used to generate
 #'   the object.
@@ -400,6 +406,14 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
         "Argument `fit` must be one of `ub-pwm`, `pp-pwm` ",
         "or `max-lik`."
       ))
+    } else if (fit == "max-lik" && distribution != "log-Logistic") {
+      warning(
+        "Fitting method `max-lik` is only available for the log-Logistic ",
+        "distribution; using `ub-pwm` instead.",
+        call. = FALSE
+      )
+      fit <- "ub-pwm"
+      warn$push(paste0("Using the ", fit, " parameter fitting method."))
     } else {
       warn$push(paste0("Using the ", fit, " parameter fitting method."))
     }
@@ -524,14 +538,29 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
   }
 
   # Verify the dimensions of the parameters array
+  # (Gamma and PearsonIII carry an extra row with the probability of zero,
+  # pze; arrays without it, from SPEI < 1.9, are still accepted)
   dim_params <- ifelse(distribution == "Gamma", 2, 3)
+  has_pze <- distribution %in% c("Gamma", "PearsonIII")
+  dim_coef <- dim_params + has_pze
+  params_pze <- FALSE
   if (using$params) {
-    if (dim(params)[1] != dim_params | dim(params)[2] != n_sites |
-      dim(params)[3] != ts_freq) {
+    if (!(dim(params)[1] %in% c(dim_params, dim_coef)) |
+      dim(params)[2] != n_sites | dim(params)[3] != ts_freq) {
       check$push(paste0(
         "Parameters array should have dimensions (",
-        dim_params, ", ", n_sites, ", ", ts_freq, ")"
+        dim_coef, ", ", n_sites, ", ", ts_freq, ")"
       ))
+    } else if (has_pze) {
+      params_pze <- dim(params)[1] == dim_coef
+      if (!params_pze) {
+        warning(
+          "Argument `params` has no row for the probability of zero (pze), ",
+          "as produced by SPEI < 1.9. pze will be estimated from `data` ",
+          "within the reference period.",
+          call. = FALSE
+        )
+      }
     }
   }
 
@@ -549,19 +578,19 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
   ### Computation of SPEI - - - - - - - - - - - - - - - - - - - - - - - - -
 
   # Instantiate an object to store the distribution coefficients
-  # ADD PZE TO GAMMA AND PEARSONIII
+  # (Gamma and PearsonIII include the probability of zero, pze)
   coef <- switch(distribution,
     "Gamma" = array(
-      NA, c(2, n_sites, ts_freq),
+      NA, c(3, n_sites, ts_freq),
       list(
-        par = c("alpha", "beta"), colnames(data),
+        par = c("alpha", "beta", "pze"), colnames(data),
         NULL
       )
     ),
-    "PearsonIII" = coef <- array(
-      NA, c(3, n_sites, ts_freq),
+    "PearsonIII" = array(
+      NA, c(4, n_sites, ts_freq),
       list(
-        par = c("mu", "sigma", "gamma"),
+        par = c("mu", "sigma", "gamma", "pze"),
         colnames(data), NULL
       )
     ),
@@ -632,7 +661,8 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
 
       # Escape if there are no data
       if (length(x.mon) == 0) {
-        spei[f] <- NA
+        spei[ff, s] <- NA
+        coef[, s, c] <- NA
         next()
       }
 
@@ -651,7 +681,8 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
 
         # Early stopping
         if (is.na(x.mon_sd) || (x.mon_sd == 0)) {
-          spei[f] <- NA
+          spei[ff, s] <- NA
+          coef[, s, c] <- NA
           next()
         }
         if (length(x.mon) < 4) {
@@ -663,8 +694,9 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
         # Calculate probability weighted moments based on `lmomco` or
         # `TLMoments`
         pwm <- switch(fit,
-          "pp-pwm" = pwm.pp(x.mon, -0.35, 0, nmom = 3, sort = TRUE),
-          "ub-pwm" = PWM(x.mon, order = 0:2)
+          "pp-pwm" = pwm.pp(x.mon, A = -0.35, B = 0, nmom = 3, sort = TRUE),
+          "ub-pwm" = ,
+          "max-lik" = PWM(x.mon, order = 0:2)
         )
 
         # Check L-moments validity
@@ -704,11 +736,18 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
       } else {
         # User-provided distribution parameters
 
-        f_params <- as.vector(params[, s, c])
+        f_params <- as.vector(params[1:dim_params, s, c])
+        if (params_pze) {
+          pze <- params[dim_coef, s, c]
+        }
       }
 
       # Store the coefficients
-      coef[, s, c] <- f_params
+      if (has_pze) {
+        coef[, s, c] <- c(f_params, pze)
+      } else {
+        coef[, s, c] <- f_params
+      }
 
       ## Standardize - - - - - - - - - - - - - -
 

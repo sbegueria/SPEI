@@ -2,6 +2,7 @@
 % Please edit documentation in R/SPEI-package.r
 \docType{package}
 \name{SPEI}
+\alias{SPEI-package}
 \alias{SPEI}
 \title{SPEI.}
 \description{
@@ -34,6 +35,15 @@ Evapotranspiration Index – SPEI. \emph{Journal of Climate} \bold{23}: 1696,
 DOI: 10.1175/2009JCLI2909.1.
 
 \url{https://spei.csic.es}
+}
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://spei.csic.es}
+  \item \url{https://github.com/sbegueria/SPEI}
+  \item Report bugs at \url{https://github.com/sbegueria/SPEI/issues}
+}
+
 }
 \author{
 Santiago Beguería and Sergio M. Vicente-Serrano

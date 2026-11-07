@@ -266,3 +266,75 @@ test_that("plot works without errors/warnings", {
   spei1 <- spei(x_vec, 1)
   expect_error(plot(spei1), NA)
 })
+
+# Regression tests for the 2026 audit (H1-H4) - - - - - - - - - - - - - - -
+
+bal_ts <- ts(wichita$BAL, start = c(1980, 1), frequency = 12)
+prcp_ts <- ts(wichita$PRCP, start = c(1980, 1), frequency = 12)
+
+test_that("fit = 'max-lik' and 'pp-pwm' return values (H1, H2)", {
+  ub <- spei(bal_ts, 3, verbose = FALSE)$fitted
+  ml <- spei(bal_ts, 3, fit = "max-lik", verbose = FALSE)$fitted
+  pp <- spei(bal_ts, 3, fit = "pp-pwm", verbose = FALSE)$fitted
+  expect_equal(sum(is.na(ml)), 2)
+  expect_equal(sum(is.na(pp)), 2)
+  expect_gt(cor(ml, ub, use = "complete.obs"), 0.99)
+  expect_gt(cor(pp, ub, use = "complete.obs"), 0.99)
+  # max-lik maximises the likelihood: its log-likelihood is not lower than
+  # that of the PWM estimates for every month
+  x <- spei(bal_ts, 3, verbose = FALSE)
+  y <- spei(bal_ts, 3, fit = "max-lik", verbose = FALSE)
+  acu <- stats::filter(bal_ts, rep(1, 3), sides = 1)
+  for (m in 1:12) {
+    v <- acu[cycle(bal_ts) == m]
+    v <- v[!is.na(v)]
+    ll <- function(p) sum(log(lmomco::pdfglo(v, lmomco::vec2par(p, "glo"))))
+    expect_gte(ll(y$coefficients[, 1, m]), ll(x$coefficients[, 1, m]) - 1e-6)
+  }
+})
+
+test_that("fit = 'max-lik' with Gamma falls back to ub-pwm with a warning", {
+  expect_warning(
+    s <- spi(prcp_ts, 3, fit = "max-lik", verbose = FALSE),
+    "only available for the log-Logistic"
+  )
+  expect_equal(s$fitted, spi(prcp_ts, 3, verbose = FALSE)$fitted)
+})
+
+test_that("early exits do not affect other series or months (H3, #64)", {
+  set.seed(2)
+  a <- rnorm(120, 50, 20)
+  b <- rnorm(120, 50, 20)
+  b[seq(1, 120, 12)] <- 10 # constant January in series 2
+  one <- spei(ts(a, frequency = 12), 1, verbose = FALSE)$fitted
+  two <- spei(ts(cbind(a, b), frequency = 12), 1, verbose = FALSE)$fitted
+  expect_equal(as.numeric(two[, 1]), as.numeric(one))
+  expect_true(all(is.na(two[seq(1, 120, 12), 2])))
+  # single series with a reference period not starting at the series start
+  v <- prcp_ts
+  v[cycle(v) == 4] <- 0 # all Aprils zero: early exit for April
+  full <- spi(v, 1, verbose = FALSE)$fitted
+  ref <- spi(v, 1, ref.start = c(1981, 3), verbose = FALSE)$fitted
+  expect_equal(sum(is.na(ref[cycle(v) == 2])), 0)
+})
+
+test_that("params carry pze and reproduce the reference-period fit (H4)", {
+  pz <- prcp_ts
+  pz[cycle(pz) == 7 & time(pz) < 1990] <- 0
+  for (d in c("Gamma", "PearsonIII")) {
+    cal <- spi(window(pz, end = c(1995, 12)), 1,
+      distribution = d, verbose = FALSE
+    )
+    expect_equal(dimnames(cal$coefficients)[[1]][dim(cal$coefficients)[1]], "pze")
+    expect_equal(unname(cal$coefficients["pze", 1, 7]), 10 / 16)
+    a <- spi(pz, 1, distribution = d, ref.end = c(1995, 12), verbose = FALSE)
+    b <- spi(pz, 1, distribution = d, params = cal$coefficients, verbose = FALSE)
+    expect_equal(as.numeric(b$fitted), as.numeric(a$fitted))
+    # legacy arrays without the pze row are accepted with a warning
+    legacy <- cal$coefficients[-dim(cal$coefficients)[1], , , drop = FALSE]
+    expect_warning(
+      spi(pz, 1, distribution = d, params = legacy, verbose = FALSE),
+      "no row for the probability of zero"
+    )
+  }
+})
