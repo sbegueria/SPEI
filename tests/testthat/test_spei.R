@@ -238,7 +238,10 @@ test_that("example with only ref.end", {
 test_that("example with Gamma distribution", {
   expect_equal(
     readRDS("data/spei_gamma.rds"),
-    spei(x_vec, 1, distribution = "Gamma")$fitted
+    expect_warning(
+      spei(x_vec, 1, distribution = "Gamma"),
+      "negative values"
+    )$fitted
   )
 })
 
@@ -247,7 +250,10 @@ test_that("example with Gamma distribution", {
 test_that("example with PearsonIII distribution", {
   expect_equal(
     readRDS("data/spei_pe3.rds"),
-    spei(x_vec, 1, distribution = "PearsonIII")$fitted # , tol = 1e-7
+    expect_warning(
+      spei(x_vec, 1, distribution = "PearsonIII"),
+      "negative values"
+    )$fitted
   )
 })
 
@@ -352,4 +358,41 @@ test_that("plot colours follow the sign of the values (O1, #72)", {
   pos$fitted[] <- abs(s$fitted) + 0.1
   expect_equal(fills(neg), "tomato")
   expect_equal(fills(pos), "cyan3")
+})
+
+# Audit batch 2 regression tests
+
+test_that("3-d array with dimnames works (M2)", {
+  p <- as.numeric(wichita$PRCP)
+  a <- array(p, c(length(p), 2, 2), dimnames = list(NULL, c("a", "b"), c("c", "d")))
+  r <- spi(a, 3, verbose = FALSE)
+  expect_equal(dim(r$fitted), dim(a))
+  expect_equal(dimnames(r$fitted), dimnames(a))
+  expect_equal(r$fitted[, 2, 2], as.numeric(spi(p, 3, verbose = FALSE)$fitted))
+})
+
+test_that("Non-integer frequency gives an error (M3)", {
+  p <- ts(rep(as.numeric(wichita$PRCP), 10)[1:3000], frequency = 365.25)
+  expect_error(
+    spi(p, 1, verbose = FALSE),
+    "The frequency of `data` must be an integer number of periods per year"
+  )
+})
+
+test_that("Negative data with Gamma or PearsonIII give a warning (M5)", {
+  for (d in c("Gamma", "PearsonIII")) {
+    expect_warning(
+      spei(x_vec, 1, distribution = d, verbose = FALSE),
+      "`data` contains negative values"
+    )
+  }
+  expect_no_warning(spi(as.numeric(wichita$PRCP), 1,
+    distribution = "Gamma", verbose = FALSE
+  ))
+})
+
+test_that("parglo.maxlik reports failure when no valid fit is found (O5)", {
+  expect_equal(parglo.maxlik(c(1, 1, 1, 1.0001, 50), c(0, 1e-9, 0.9))$conv, 1)
+  ok <- parglo.maxlik(x_vec, lmom::pelglo(lmom::samlmu(x_vec)))
+  expect_equal(ok$conv, 0)
 })

@@ -184,6 +184,11 @@ parameters are then passed to the function \code{\link{kern}}.
 Following the original definitions \code{spei} uses a log-Logistic
 distribution by default, and \code{spi} uses a Gamma distribution. This
 behavior can be modified, however, through parameter \code{distribution}.
+The Gamma and PearsonIII distributions are fitted to positive values
+only, and zeros are accounted for through the probability of zero (pze).
+They are meant for non-negative data such as precipitation; negative
+values (e.g. in a climatic water balance) produce a warning and get the
+lowest possible index value.
 }
 
 \section{Fitting methods}{

@@ -49,12 +49,13 @@ parglo.maxlik <- function(x, ini) {
   }
   # optimize
   o <- suppressWarnings(optim(par = ini, fn = glo.loglik, x = x))
+  # Report failure (conv = 1) if no valid parameter set was found
   # o <- optim(par=ini, fn=glo.loglik, x=x,
   # 	lower=c(-Inf,0.00001,-0.5), upper=c(Inf,Inf,0.5))
   return(list(
     type = "glo",
     para = o$par,
     source = "parglo.loglik", value = o$value, count = o$count,
-    conv = o$convergence, msg = o$message
+    conv = ifelse(o$value >= 1000000, 1, o$convergence), msg = o$message
   ))
 }

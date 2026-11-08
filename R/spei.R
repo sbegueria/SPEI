@@ -116,6 +116,11 @@ spei <- function(x, y, ...) UseMethod("spei")
 #' Following the original definitions \code{spei} uses a log-Logistic
 #' distribution by default, and \code{spi} uses a Gamma distribution. This
 #' behavior can be modified, however, through parameter \code{distribution}.
+#' The Gamma and PearsonIII distributions are fitted to positive values
+#' only, and zeros are accounted for through the probability of zero (pze).
+#' They are meant for non-negative data such as precipitation; negative
+#' values (e.g. in a climatic water balance) produce a warning and get the
+#' lowest possible index value.
 #'
 #'
 #' @section Fitting methods:
@@ -482,6 +487,18 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
     check$push("`data` must not contain NA values if argument `na.rm` is set to FALSE.")
   }
 
+  # Gamma and PearsonIII are fitted to positive values only
+  if (distribution %in% c("Gamma", "PearsonIII") && is.numeric(data) &&
+    any(data < 0, na.rm = TRUE)) {
+    warning(
+      "`data` contains negative values, but the ", distribution,
+      " distribution is fitted to positive values only (zeros are handled ",
+      "through the probability of zero). Negative values get the lowest ",
+      "possible index value. For data that can be negative, such as the ",
+      "climatic water balance, use the log-Logistic distribution."
+    )
+  }
+
   # Determine input dimensions and compute internal dimensions (int_dims)
   data_dims <- dim(data)
   if (is.null(data_dims) || length(data_dims) == 1) {
@@ -525,6 +542,12 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
     ts_freq <- frequency(data)
     ts_start <- start(data)
     ts_end <- end(data)
+    if (ts_freq %% 1 != 0) {
+      check$push(paste0(
+        "The frequency of `data` must be an integer number of periods ",
+        "per year (", ts_freq, " was given)."
+      ))
+    }
     ym <- as.yearmon(time(data))
     warn$push(paste0(
       "Time series spanning ", ym[1], " to ", ym[n_times],
@@ -577,13 +600,21 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
 
   ### Computation of SPEI - - - - - - - - - - - - - - - - - - - - - - - - -
 
+  # Series names: column names only make sense for matrix input; for 3-d
+  # arrays the series are all the cells of the grid
+  site_names <- if (length(int_dims) == 3 && int_dims[[3]] == 1) {
+    colnames(data)
+  } else {
+    NULL
+  }
+
   # Instantiate an object to store the distribution coefficients
   # (Gamma and PearsonIII include the probability of zero, pze)
   coef <- switch(distribution,
     "Gamma" = array(
       NA, c(3, n_sites, ts_freq),
       list(
-        par = c("alpha", "beta", "pze"), colnames(data),
+        par = c("alpha", "beta", "pze"), site_names,
         NULL
       )
     ),
@@ -591,21 +622,21 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
       NA, c(4, n_sites, ts_freq),
       list(
         par = c("mu", "sigma", "gamma", "pze"),
-        colnames(data), NULL
+        site_names, NULL
       )
     ),
     "log-Logistic" = array(
       NA, c(3, n_sites, ts_freq),
       list(
         par = c("xi", "alpha", "kappa"),
-        colnames(data), NULL
+        site_names, NULL
       )
     ),
     "GEV" = array(
       NA, c(3, n_sites, ts_freq),
       list(
         par = c("xi", "alpha", "kappa"),
-        colnames(data), NULL
+        site_names, NULL
       )
     )
   )
@@ -644,6 +675,9 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
 
   # Instantiate an object to store the standardized data
   spei <- acu * NA
+
+  # Count of maximum likelihood fits that did not converge
+  maxlik_failed <- 0
 
   # Loop through series (columns in data)
   for (s in 1:n_sites) {
@@ -731,7 +765,12 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
 
         # Adjust if user chose `log-Logistic` and `max-lik`
         if (distribution == "log-Logistic" && fit == "max-lik") {
-          f_params <- parglo.maxlik(x.mon, f_params)$para
+          ml <- parglo.maxlik(x.mon, f_params)
+          if (ml$conv == 0) {
+            f_params <- ml$para
+          } else {
+            maxlik_failed <- maxlik_failed + 1
+          }
         }
       } else {
         # User-provided distribution parameters
@@ -766,6 +805,13 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
       }
     } # next c (month)
   } # next s (series)
+
+  if (maxlik_failed > 0) {
+    warning(
+      "Maximum likelihood estimation did not converge in ", maxlik_failed,
+      " case(s); the `ub-pwm` estimates were used instead."
+    )
+  }
 
 
   ### Format output and return - - - - - - - - - - - - - - - - - - - - - - -

@@ -39,3 +39,9 @@ test_that("negative shift", {
     'Parameter "shift" cannot have a negative value'
   )
 })
+
+test_that("kern() with scale 1 returns 1 for any type (O9)", {
+  for (k in c("rectangular", "triangular", "circular", "gaussian")) {
+    expect_equal(kern(1, k), 1)
+  }
+})

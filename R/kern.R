@@ -87,7 +87,7 @@ kern <- function(scale, type = "rectangular", shift = 0) {
     stop('Parameter "scale" must be higher than zero')
   }
 
-  if (s == 1) type == "rectangular"
+  if (s == 1) type <- "rectangular"
 
   k <- switch(type,
     rectangular = rep(1, s),
