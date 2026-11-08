@@ -1,5 +1,7 @@
 # ![SPEI sticker](./SPEI.png) [![](https://cranlogs.r-pkg.org/badges/SPEI)](https://cran.r-project.org/package=SPEI)
 
+[![R-CMD-check](https://github.com/sbegueria/SPEI/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/sbegueria/SPEI/actions/workflows/R-CMD-check.yaml)
+[![Codecov test coverage](https://codecov.io/gh/sbegueria/SPEI/graph/badge.svg)](https://app.codecov.io/gh/sbegueria/SPEI)
 [![CRAN version](https://www.r-pkg.org/badges/version/SPEI)](https://cran.r-project.org/package=SPEI)
 [![CRAN checks](https://badges.cranchecks.info/worst/SPEI.svg)](https://cran.r-project.org/web/checks/check_results_SPEI.html)
 [![Total downloads](https://cranlogs.r-pkg.org/badges/grand-total/SPEI)](https://cran.r-project.org/package=SPEI)
