@@ -152,6 +152,8 @@ Other changes in behaviour that can break existing scripts (see below):
 * Dataset documentation corrected: `YEAR` and `MONTH` in `wichita`, wind
   speed units (m s-1) in `wichita` and `cabinda`, the source of `cabinda`,
   and the country of Lahore in `balance`.
+* Licence field changed from `GPL-2` to `GPL (>= 2)`, matching the "version 2
+  or later" terms stated in the README and package documentation.
 * README: licence badge, repository links and a reference fixed; the version
   history now points to NEWS.md.
 * `wichita` dataset: `TSUN` was missing from the documentation (`ACSH` was
