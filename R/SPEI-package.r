@@ -2,7 +2,6 @@
 #'
 #'
 #' @name SPEI
-#' @docType package
 #'
 #'
 #' @description
@@ -11,19 +10,10 @@
 #' Precipitation-Evapotranspiration Index (SPEI).
 #'
 #' @details
-#' \tabular{ll}{
-#'   Package: \tab SPEI\cr
-#'   Type: \tab Package\cr
-#'   Version: \tab 1.8\cr
-#'   Date: \tab 2023-01-20\cr
-#'   License: \tab GPL version 2 or newer\cr
-#'   LazyLoad: \tab yes\cr
-#' }
-#'
 #' Functions \code{\link{spei}} and \code{\link{spi}} are the workhorse of the
-#' SPEI library. Other functions such as \code{\link{kern}},
-#' \code{\link{parglo.maxlik}} is an auxiliary low-level function and
-#' will not be used directly by the typical user. Functions for computing
+#' SPEI library. Other functions, such as \code{\link{kern}} and
+#' \code{\link{parglo.maxlik}}, are auxiliary low-level functions that will
+#' not be used directly by the typical user. Functions for computing
 #' potential evapotranspiration are provided, too, for helping computing
 #' the SPEI. They are: \code{\link{thornthwaite}},
 #' \code{\link{hargreaves}} and \code{\link{penman}}.
@@ -48,8 +38,8 @@
 #' @importFrom zoo as.yearmon as.Date.yearmon rollapply na.trim
 #' @importFrom stats aggregate is.ts pnorm qnorm sd time window
 #' @importFrom TLMoments PWM
-#' @importFrom lmomco are.lmom.valid are.parglo.valid cdfgam cdfpe3 cdfgam
+#' @importFrom lmomco are.lmom.valid are.parglo.valid
 #' @importFrom lmomco pargam parglo parpe3 pwm.pp pwm2lmom
 #' @importFrom lmom pelgam pelglo pelpe3 cdfglo
 
-NULL
+"_PACKAGE"

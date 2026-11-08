@@ -363,7 +363,7 @@ precipitation evapotranspiration index (SPEI) revisited: parameter fitting,
 evapotranspiration models, tools, datasets and drought monitoring.
 \emph{International Journal of Climatology} \bold{34}(10): 3001-3023.
 
-\url{http://spei.csic.es}
+\url{https://spei.csic.es}
 }
 \seealso{
 \code{\link{kern}} for different kernel functions available.

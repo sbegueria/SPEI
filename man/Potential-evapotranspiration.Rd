@@ -5,14 +5,14 @@
 \alias{hargreaves}
 \alias{thornthwaite}
 \alias{penman}
-\title{Computation of potential and reference evapotranspiration.}
+\title{Computation of potential and reference evapotranspiration}
 \usage{
 thornthwaite(Tave, lat, na.rm = FALSE, verbose=TRUE)
 
 hargreaves(Tmin, Tmax, Ra = NULL, lat = NULL, Pre = NULL, na.rm = FALSE,
 verbose=TRUE)
 
-penman(Tmin, Tmax, U2, Ra = NULL, lat = NULL, Rs = NULL, tsun = NULL,
+penman(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL, tsun = NULL,
        CC = NULL, ed = NULL, Tdew = NULL, RH = NULL, P = NULL, P0 = NULL,
        CO2 = NULL, z = NULL, crop='short', na.rm = FALSE, method='ICID',
        verbose=TRUE)
@@ -64,8 +64,11 @@ be stripped from the computations.}
 calculation. Either 'TRUE' (default) or 'FALSE'. The report is issued as
 a message, so it can also be silenced with \code{suppressMessages()}.}
 
-\item{U2}{a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of
-monthly mean daily wind speeds at 2 m height, m s-1.}
+\item{U2}{optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d
+array of monthly mean daily wind speeds at 2 m height, m s-1. No height
+conversion is applied, so wind speeds measured at other heights must be
+converted to 2 m by the user (e.g., FAO-56 eq. 47). If not provided, a
+constant value of 2 m s-1 is used.}
 
 \item{Rs}{optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d
 array of monthly mean daily incoming solar radiation, MJ m-2 d-1.}
@@ -76,8 +79,8 @@ array of monthly mean daily bright sunshine hours, h.}
 \item{CC}{optional, numeric a vector, matrix or time series of monthly
 mean cloud cover, \%.}
 
-\item{ed}{optional, numeric a vector, matrix or time series of monthly
-mean actual vapor pressure at 2 m height, kPa.}
+\item{ed}{optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d
+array of monthly mean actual vapour pressure at 2 m height, kPa.}
 
 \item{Tdew}{optional, a numeric vector, tsvector, matrix, tsmatrix,
 or 3-d array of monthly mean daily dewpoint temperature (used for
@@ -87,14 +90,17 @@ estimating ed), ºC.}
 or 3-d array of monthly mean relative humidity (used for estimating ed), \%.}
 
 \item{P}{optional, a numeric vector, tsvector, matrix, tsmatrix,
-or 3-d array of monthly mean atmospheric pressure at surface, kPa.}
+or 3-d array of monthly mean atmospheric pressure at the surface, kPa.
+If not provided, it is estimated from \code{P0} and \code{z}, or from
+\code{z} alone assuming a sea level pressure of 101.3 kPa (FAO-56 eq. 7).}
 
 \item{P0}{optional, a numeric vector, tsvector, matrix, tsmatrix,
-or 3-d array of monthly mean atmospheric pressure at sea level (used for
-estimating P), kPa.}
+or 3-d array of monthly mean atmospheric pressure at sea level (used
+together with \code{z} for estimating \code{P}), kPa.}
 
 \item{CO2}{optional, a single numeric value, a numeric vector,
-or a tsvector of monthly mean CO2 atmospheric concentration, ppm.}
+or a tsvector of monthly mean CO2 atmospheric concentration, ppm. If not
+provided, no CO2 correction is applied (equivalent to 300 ppm).}
 
 \item{z}{a numeric vector or matrix of the elevation of the
 site or sites, m above sea level. Required by \code{penman}, where it is
@@ -143,16 +149,21 @@ evapotranspiration (PE) according to the Thornthwaite (1948) equation.
 It is the simplest of the three methods, and can be used when only
 mean temperature data are available.
 The annual heat index is computed from the mean temperature of each
-calendar month, so at least 12 months of data are required.
+calendar month, so at least 12 monthly values are required.
+Thornthwaite's original method uses a separate table for monthly mean
+temperatures of 26.5 ºC or higher. This implementation applies the general
+equation at all temperatures, which gives somewhat different values in
+that range (about 2\% at 27.3 ºC).
 
 
 \code{hargreaves} computes the monthly reference evapotranspiration (ETo)
-of a grass crop based on the original Hargreaves equation (1994). However,
-if precipitation data \code{Pre} is provided a modified form due to Droogers
-and Allen (2002) will be used; this equation corrects ETo using
-the amount of rain of each month as a proxy for irradiation The Hargreaves
-method requires data on the mean external radiation, \code{Ra}. If \code{Ra} is not available it
-can be estimated from the latitude \code{lat} and the month of the year.
+of a grass crop based on the original Hargreaves equation (Hargreaves and
+Samani, 1985). However, if precipitation data \code{Pre} is provided a
+modified form due to Droogers and Allen (2002) will be used; this equation
+corrects ETo using the amount of rain of each month as a proxy for
+irradiation. The Hargreaves method requires data on the mean external
+radiation, \code{Ra}. If \code{Ra} is not available it can be estimated
+from the latitude \code{lat} and the month of the year.
 
 
 \code{penman} calculates the monthly reference evapotranspiration (ETo) of
@@ -166,15 +177,15 @@ However, other versions are also implemented and can be used by setting the
 \code{method} parameter to the appropriate value. The FAO-56 method
 (Allen et al., 1998) can be used by setting \code{method} to `FAO`,
 while the variation of the American Society of Civil Engineers (Walter et
-al., 2002 is used when setting it to `ASCE`.
+al., 2002) is used when setting it to `ASCE`.
 By default the original parameterization corresponding to a short reference
 crop of 0.12 m height is used, although the parameterization for a tall
-reference crop of 0.5 m height (Walter et al. (2002) can also be used,
+reference crop of 0.5 m height (Walter et al., 2002) can also be used,
 by setting the \code{crop} parameter to 'tall'.
 The method requires data on the incoming solar radiation, \code{Rs};
 since this is seldom available, the code will estimate it from data on the
 bright sunshine duration \code{tsun}, or alternatively from data on the
-percent cloud cover \code{CC}. Similarly, if data on the saturation water
+percent cloud cover \code{CC}. Similarly, if data on the actual vapour
 pressure \code{ed} are not available, it is possible to estimate it from
 the dew point temperature \code{Tdew}, from the relative humidity \code{RH}
 or even from the minimum temperature \code{Tmin} (sorted from least to most
@@ -182,11 +193,22 @@ uncertain method). Similarly, the atmospheric surface pressure \code{P}
 required for computing the psychrometric constant can be calculated from the
 atmospheric pressure at sea level \code{P0} and the elevation \code{z},
 or else from the elevation \code{z} assuming a sea level pressure of
-101.3 kPa. The elevation \code{z} is always required, since it is also
-used to compute the clear-sky solar radiation. If no wind speed
-data \code{U2} are available, a constant value of 2 m per second is used.
+101.3 kPa (FAO-56 eq. 7). The elevation \code{z} is always required by
+\code{penman} (there is no default value), since it is also used to
+compute the clear-sky solar radiation, Rso = (0.75 + 2e-5 z) Ra. The
+ratio Rs/Rso used in the net longwave radiation term is limited to 1.
+Wind speed \code{U2} must refer to 2 m height, as no height conversion is
+applied. If no wind speed data \code{U2} are available, a constant value
+of 2 m s-1 is used.
 Custom CO2 atmospheric concentration \code{CO2} can also be provided,
-following Yang et al. (2019).
+following Yang et al. (2019): the term 0.00024 (CO2 - 300) is added to the
+wind coefficient of the denominator (0.34 for the short crop, 0.38 for the
+tall crop). This correction was derived for the short reference crop, but
+it is applied to whichever crop is selected, including 'tall'.
+The soil heat flux G is computed from the difference in mean temperature
+between the previous and the following months, using forward or backward
+differences at the first and last time steps. \code{penman} works with
+series of any length; with a single time step G is set to 0.
 
 The function will produce an error message if a valid combination of input
 parameters is not provided.
@@ -215,7 +237,7 @@ See hargreaves
 See hargreaves
 }
 \examples{
-# Load data for Tampa, lat=37.6475N, elevation=402.6 m. a.s.l.
+# Load data for Wichita (Kansas), lat=37.6475N, elevation=402.6 m. a.s.l.
 # Data consists on monthly values since January 1980
 
 data(wichita)
@@ -333,8 +355,8 @@ Thornthwaite, C. W., 1948. An approach toward a rational classification of
 climate.
 \emph{Geographical Review} \bold{38}: 55–94. DOI:10.2307/2107309.
 
-Hargreaves G.H., 1994. Defining and using reference evapotranspiration.
-\emph{Journal of Irrigation and Drainage Engineering} \bold{120}: 1132–1139.
+Hargreaves G.H., Samani Z.A., 1985. Reference crop evapotranspiration from
+temperature. \emph{Applied Engineering in Agriculture} \bold{1}(2): 96–99.
 
 Droogers P., Allen R. G., 2002. Estimating reference evapotranspiration
 under inaccurate data conditions. \emph{Irrigation and Drainage Systems}
@@ -347,7 +369,7 @@ Allen R. G., Smith M., Pereira L. S., Perrier A., 1994. An update for the
 calculation of reference evapotranspiration. \emph{ICID Bulletin of the
 International Commission on Irrigation and Drainage}, 35–92.
 
-Allen R.G., Pereira L.S.,Raes D., Smith, M., 1998. \emph{J. Crop
+Allen R.G., Pereira L.S., Raes D., Smith, M., 1998. \emph{Crop
 evapotranspiration - Guidelines for computing crop water requirements - FAO
 Irrigation and drainage paper 56}. FAO, Rome. ISBN 92-5-104219-5.
 

@@ -223,7 +223,7 @@
 #' evapotranspiration models, tools, datasets and drought monitoring.
 #' \emph{International Journal of Climatology} \bold{34}(10): 3001-3023.
 #'
-#' \url{http://spei.csic.es}
+#' \url{https://spei.csic.es}
 #'
 #'
 #' @author Santiago Beguería and Sergio M. Vicente-Serrano. Maintainer:
@@ -957,7 +957,6 @@ summary.spei <- function(object, ...) {
 #'
 #' @import ggplot2
 #' @importFrom zoo na.trim
-#' @importFrom graphics abline grid lines par plot points polygon
 #'
 #' @export
 #'

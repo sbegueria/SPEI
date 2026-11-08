@@ -1,6 +1,6 @@
 Package: SPEI
 Type: Package
-Version: 1.8.1
+Version: 1.9.0
 Title: Calculation of the Standardized Precipitation-Evapotranspiration Index
 Authors@R: c(
 	person('Santiago', 'Beguería',

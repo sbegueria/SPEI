@@ -6,7 +6,8 @@
 #' @export
 #'
 kern.plot <- function(scale = 12, shift = 0) {
-  par(mfrow = c(2, 2))
+  op <- par(mfrow = c(2, 2))
+  on.exit(par(op))
   plot(c(kern(scale, "rectangular", shift), 0),
     type = "s",
     xlab = "", ylab = "", main = "rectangular"

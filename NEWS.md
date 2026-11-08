@@ -1,4 +1,46 @@
-# SPEI (development version)
+# SPEI 1.9.0
+
+## Changes in results with respect to 1.8.1
+
+Most calls give the same results as in 1.8.1. The ones that change are
+listed below, with the size of the change found by running the same calls
+with both versions (script in `data-raw/compare-1.8.1.R`). Index differences
+are in index units (z-values); PET differences are relative to the 1.8.1
+value.
+
+Calls that give the same results as 1.8.1:
+
+* `<spei>` and `<spi>` with the `log-Logistic` distribution (the default in
+  `<spei>`) and `fit = "ub-pwm"` (the default), at any scale, with any kernel
+  and with or without a reference period.
+* `<spi>` and `<spei>` with `Gamma` or `PearsonIII` in calendar months whose
+  reference period has no zeros. In the `wichita` precipitation series
+  (382 months, 4 of them zero) this covers all values at scales 3 and 12.
+* `<thornthwaite>` and `<hargreaves>` with a vector, a time series, or a
+  matrix whose number of rows is a multiple of 12.
+* `<penman>` with `Rs` or `CC`, methods `ICID` and `FAO`, when the given or
+  estimated solar radiation does not exceed the clear-sky radiation, and
+  when `z` is given without `P` or `P0`.
+
+Calls that give different results:
+
+| Function and options | Cause | Values changed | Size of the change |
+| --- | --- | --- | --- |
+| `<spi>`/`<spei>`, `Gamma` or `PearsonIII`, calendar months with zeros in the reference period | #87 | All values of those calendar months | `wichita`, SPI-1 Gamma: 91 of 382 values, mean +0.09, max +0.72. The 4 zero months were `-Inf` and are now finite. A dry-season series with up to 60% zero months: SPI-1 Gamma 365 of 480 values, mean +0.32, max +3.2 (115 `-Inf` now finite); PearsonIII 432 of 480, mean +0.51; SPI-3 Gamma 186 of 480, mean +0.14. Changes are always upwards: 1.8.1 values were biased toward drought. |
+| `<spi>`/`<spei>`, `fit = "pp-pwm"` or `"max-lik"` | #67 | All | 1.8.1 returned only `NA`. |
+| `<spi>`/`<spei>`, `Gamma` or `PearsonIII` with `params` | pze stored in coefficients | All | Results now equal those of the call that produced `params`. In 1.8.1 the difference was masked by #87. |
+| `<spi>`/`<spei>`, a series or month that cannot be fitted, in multi-series input or with `ref.start` | #64 | Values wrongly set to `NA` | Those values are now computed. |
+| `<thornthwaite>`, `<hargreaves>`, `<penman>`, matrix or array input that is not a time series, with a number of rows that is not a multiple of 12 | Calendar of sites after the first was shifted | All sites except the first | `wichita` (382 months) as two identical columns: `<thornthwaite>` second column mean 15%, max 31%; `<hargreaves>` second column mean 33%, max 74%. |
+| `<penman>` with `P` or `P0` | Clear-sky radiation used a fixed 840 m instead of `z` | Most months | `wichita` (z = 402.6 m) with `P`: mean -0.3%, max -0.7%. The change grows with the difference between `z` and 840 m. |
+| `<penman>`, solar radiation above clear-sky radiation | Rs/Rso limited to 1 (FAO-56 eq. 39) | Only those months | `wichita` with `tsun`: 9 of 382 months (Oct 2000 to Jun 2001, where `TSUN` exceeds the day length), mean +8%, max +29%. |
+| `<penman>`, `method = "ASCE"` with `RH` | Vapour pressure from mean of e0(Tmax) and e0(Tmin) | All | `cabinda`: mean -0.8%, max -1.1%. |
+| `<penman>`, `<hargreaves>`, latitudes above about 66.5 degrees in polar summer | Sunset hour angle set to pi | Polar-day months | 70 degrees N: June +1.8 to 2.0%, July +0.9 to 1.1%. 75 degrees N (`<penman>`): May +2.9%, June +4.9%, July +3.9%. |
+| `<penman>` with `tsun` in polar night; `<thornthwaite>` for an all-cold site among others; `<penman>` with 1 or 2 time steps | Fixes P5, P6, P8 | `NA`, `NaN` or an error before | Values are now returned. |
+
+Other changes in behaviour that can break existing scripts (see below):
+`<penman>` requires `z`, `<thornthwaite>` requires at least 12 months,
+`scale` must be a positive integer, and the coefficients of `Gamma` and
+`PearsonIII` have an extra row `pze`.
 
 ## Breaking changes
 
@@ -49,6 +91,13 @@
 * `<thornthwaite>`: with several sites, a site with all monthly means below
   0 C got `NaN` instead of zero.
 * `<kern>`: `kern(1, "gaussian")` returned `NaN`.
+* `<penman>`: the ratio Rs/Rso in the net longwave radiation term is now
+  limited to 1, as in FAO-56 eq. 39.
+* `<penman>`: with `method = "ASCE"` and `RH`, the actual vapour pressure was
+  computed from the saturation pressure at mean temperature instead of the
+  mean of the saturation pressures at maximum and minimum temperature
+  (ASCE-EWRI 2005, eq. 41).
+* `<kern.plot>` restores the graphics parameters it changes.
 * `<plot.spei>`: colours were assigned by factor order with inverted labels,
   so a series with only negative (or only positive) values was drawn
   entirely in the wet colour (#72).
@@ -89,9 +138,22 @@
   documentation explains that the methods are called as `plot(x)`,
   `summary(x)` and `print(x)` (#78).
 * The dependency on the retired `reshape` package has been removed.
+* Unused imports and the unused internal function `pglo()` were removed.
 
 ## Documentation
 
+* Documentation of the PET functions revised: `P` is not a constant but is
+  computed from `z` when missing; `z` is required by `<penman>`; `U2` must be
+  wind speed at 2 m (no height conversion is done); the CO2 correction is
+  applied to both reference crops; minimum input lengths; and the
+  Thornthwaite method does not use the original table for temperatures of
+  26.5 ºC or more. The Hargreaves equation is now cited as Hargreaves and
+  Samani (1985) (#86).
+* Dataset documentation corrected: `YEAR` and `MONTH` in `wichita`, wind
+  speed units (m s-1) in `wichita` and `cabinda`, the source of `cabinda`,
+  and the country of Lahore in `balance`.
+* README: licence badge, repository links and a reference fixed; the version
+  history now points to NEWS.md.
 * `wichita` dataset: `TSUN` was missing from the documentation (`ACSH` was
   listed twice), and five `TSUN` values between October 2000 and May 2001
   exceed the possible day length; this is now noted.
@@ -102,6 +164,11 @@
   non-zero periods were biased toward drier values. This regression was
   introduced in 1.8.0; `log-Logistic` was not affected. Thanks to Mark L.
   Morrissey for reporting it (#87; also #79, #85).
+
+# SPEI 1.8.1, July 2023
+
+* Maintenance release with fixes for changes in R-devel, required by CRAN.
+
 
 # SPEI 1.8.0, November 2022
 

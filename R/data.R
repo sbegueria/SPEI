@@ -1,14 +1,19 @@
 #' @name Datasets
 #' @aliases wichita balance cabinda cruts4
-#' @title Data sets for illustrating the functions in the SPEI package.
+#' @title Data sets for illustrating the functions in the SPEI package
 #' @keywords datasets
+#' @usage
+#' data(wichita)
+#' data(balance)
+#' data(cabinda)
+#' data(cruts4)
 #' @description
 #' Data used in the examples of the SPEI package:
 #' \code{wichita} dataset: monthly climate in Wichita (Kansas, lat=37.6475,
-#' elevation=402.6 m. a.s.l.) since January 1980;
+#' elevation=402.6 m a.s.l.) from January 1980 to October 2011;
 #' \code{balance} dataset: monthly climatic water balance (precipitation
 #' minus potential evapotranspiration) at eleven locations around the World,
-#' since January 1900;
+#' since January 1900 (1296 months);
 #' \code{cabinda}: one year of data for computing Penman-Monteith ET0 from
 #' Allen et al. (1998);
 #' \code{cruts4}: 120 years of monthly climatic water balance (precipitation
@@ -18,13 +23,13 @@
 #' @format
 #' \code{wichita} dataset: a data frame with:
 #' \describe{
-#'   \item{YEAR}{ monthly precipitation totals, in mm.}
-#'   \item{MONTH}{ monthly precipitation totals, in mm.}
+#'   \item{YEAR}{ year.}
+#'   \item{MONTH}{ month of the year (1 to 12).}
 #'   \item{PRCP}{ monthly precipitation totals, in mm.}
 #'   \item{TMAX}{ monthly mean daily maximum temperature, in ºC.}
 #'   \item{TMIN}{ monthly mean daily minimum temperature, in ºC.}
 #'   \item{TMED}{ monthly mean temperature, in ºC.}
-#'   \item{AWND}{ monthly mean wind speed, in km h-1}
+#'   \item{AWND}{ monthly mean wind speed, in m s-1.}
 #'   \item{TSUN}{ monthly mean daily sunshine duration, in h. Note: five
 #'   values between October 2000 and May 2001 (15.0 to 21.1 h) exceed the
 #'   maximum possible day length at this latitude and should be treated with
@@ -35,7 +40,7 @@
 #'  (precipitation minus potential evapotranspiration) at Indore (India),
 #'  Kimberley (South Africa), Albuquerque (US), Valencia (Spain),
 #'  Wien (Austria), Abashiri (Japan), Tampa (US), Sao Paulo (Brazil),
-#'  Lahore (India), Punta Arenas (Chile) and Helsinki (Finland), in mm.
+#'  Lahore (Pakistan), Punta Arenas (Chile) and Helsinki (Finland), in mm.
 #' \code{cabinda} dataset: a data frame with one year of monthly climatic data
 #' at Cabinda (Angola, -5.33S 12.11E 20 m), with:
 #'
@@ -44,7 +49,7 @@
 #'   \item{Tmin}{ monthly mean daily minimum temperature, in ºC.}
 #'   \item{Tmax}{ monthly mean daily maximum temperature, in ºC.}
 #'   \item{RH}{ monthly mean relative humidity, in \%.}
-#'   \item{U2}{ monthly mean wind speed, in km h-1}
+#'   \item{U2}{ monthly mean wind speed at 2 m height, in m s-1.}
 #'   \item{tsun}{ monthly mean sunshine hours, in h.}
 #'   \item{Rs}{ monthly mean daily incoming solar radiation, MJ m-2 d-1.}
 #'   \item{ET0}{ monthly ET0 from the original publication, in mm.}
@@ -64,17 +69,17 @@
 #' Evapotranspiration Index – SPEI. \emph{Journal of Climate} \bold{23}: 1696,
 #' DOI: 10.1175/2009JCLI2909.1.
 #'
-#' R.G. Allen, L.S. Pereira, D. Raes, M. Smith. 1998. \emph{JCrop
+#' R.G. Allen, L.S. Pereira, D. Raes, M. Smith. 1998. \emph{Crop
 #' evapotranspiration - Guidelines for computing crop water requirements - FAO
 #' Irrigation and drainage  paper 56}. FAO, Rome. ISBN 92-5-104219-5.
 #'
 #'
 #' @source
 #' The \code{wichita} data were obtained from the Global Historical Climatology
-#' Network (GHCN, \url{http://www.ncei.noaa.gov/}. Data for the \code{balance}
+#' Network (GHCN, \url{https://www.ncei.noaa.gov/}). Data for the \code{balance}
 #' dataset were extracted from CRU TS V3.1 and from the 20th Century Reanalysis
 #' V2 data set.
-#' Data for the \code{balance} dataset were taken from Allen et al. (1998),
+#' Data for the \code{cabinda} dataset were taken from Allen et al. (1998),
 #' page 69, figure 18.
 #' The \code{cruts4} data were obtained from the CRU (Climatic Research Unit,
 #' University of East Anglia \url{https://crudata.uea.ac.uk/}) TS V4.05
@@ -94,14 +99,22 @@
 #'
 NULL
 
-#' @rdname wichita
+#' @rdname Datasets
+#' @format NULL
+#' @usage NULL
 "wichita"
 
-#' @rdname cabinda
+#' @rdname Datasets
+#' @format NULL
+#' @usage NULL
 "cabinda"
 
-#' @rdname balance
+#' @rdname Datasets
+#' @format NULL
+#' @usage NULL
 "balance"
 
-#' @rdname cruts4
+#' @rdname Datasets
+#' @format NULL
+#' @usage NULL
 "cruts4"
