@@ -52,6 +52,15 @@
 * `<plot.spei>`: colours were assigned by factor order with inverted labels,
   so a series with only negative (or only positive) values was drawn
   entirely in the wet colour (#72).
+* `<plot.spei>`: the y-axis label was taken from the deparsed call, so it
+  failed when `spi`/`spei` were called under another name and could give the
+  wrong label with `do.call()`. The index name is now stored in the object
+  (`$index`).
+* `<plot.spei>`: the shading of the reference period started one month late
+  and assumed monthly data.
+* `<plot.spei>`: every plot gave a "Removed n rows containing missing values"
+  warning.
+* `<summary.spei>`: the fitted values were printed once per series.
 
 ## Other changes
 
@@ -75,6 +84,11 @@
   `method` in `<penman>`. A `kernel` shift given as an integer (`0L`) is now
   accepted.
 * Tests no longer depend on R's English error messages.
+* `<plot.spei>` has a `main` argument for a title, and the y-axis breaks
+  cover the full range of values instead of stopping at -2 and 2 (#38). The
+  documentation explains that the methods are called as `plot(x)`,
+  `summary(x)` and `print(x)` (#78).
+* The dependency on the retired `reshape` package has been removed.
 
 ## Documentation
 

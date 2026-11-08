@@ -237,7 +237,7 @@
 #' potential evapotranspiration.
 #' \code{\link{summary.spei}} and \code{\link{print.spei}} for summaries of
 #' \code{spei} objects.
-#' \code{\link{plot.spei}} for plotting \code{spei} objects.
+#' \code{\link[=plot.spei]{plot}} for plotting \code{spei} objects.
 #'
 #'
 #' @examples
@@ -279,8 +279,8 @@
 #' spi_12 <- spi(wichita[, "PRCP"], 12)
 #'
 #' par(mfrow = c(2, 1))
-#' plot(spi_1, "Wichita, SPI-1")
-#' plot(spi_12, "Wichita, SPI-12")
+#' plot(spi_1, main = "Wichita, SPI-1")
+#' plot(spi_12, main = "Wichita, SPI-12")
 #'
 #' # Time series not starting in January
 #' plot(spei(ts(wichita[, "BAL"], freq = 12, start = c(1980, 6)), 12))
@@ -860,7 +860,8 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
     ),
     distribution = distribution,
     fit = fit,
-    na.action = na.rm
+    na.action = na.rm,
+    index = "SPEI"
   )
   if (using$ref.start | using$ref.end) {
     z$ref.period <-
@@ -885,10 +886,11 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
 #' @usage
 #' \method{print}{spei}(x, ...)
 #' \method{summary}{spei}(object, ...)
-#' \method{plot}{spei}(x, ...)
+#' \method{plot}{spei}(x, main = NULL, ...)
 #'
 #' @param x an object of class \code{spei}.
 #' @param object an object of class \code{spei}.
+#' @param main optional, a character string with the plot title.
 #' @param ... additional parameters, not used at present.
 #'
 #'
@@ -900,7 +902,12 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
 #' blue and red colors for positive and negative values, respectively. If a
 #' reference period was used in the function call it is shown by a shaded area.
 #' In the event that NA or Inf values were produced, these are shown by
-#' circles.
+#' circles. The plot is a \code{ggplot2} object, so it can be further
+#' modified by adding \code{ggplot2} layers or themes.
+#'
+#' These are S3 methods: call them as \code{print(x)}, \code{summary(x)}
+#' and \code{plot(x)}. The method functions themselves (e.g.
+#' \code{plot.spei}) are not exported.
 #'
 #' @references
 #' S.M. Vicente-Serrano, S. Beguería, J.I. López-Moreno. 2010. A Multi-scalar
@@ -937,9 +944,9 @@ summary.spei <- function(object, ...) {
     tab <- cbind(t(x$coeff[, i, ]))
     rownames(tab) <- 1:dim(x$coeff)[3]
     print(tab)
-    cat("\nFitted:\n")
-    print(x$fitted)
   }
+  cat("\nFitted:\n")
+  print(x$fitted)
 }
 
 #'
@@ -950,12 +957,11 @@ summary.spei <- function(object, ...) {
 #'
 #' @import ggplot2
 #' @importFrom zoo na.trim
-#' @importFrom reshape melt
 #' @importFrom graphics abline grid lines par plot points polygon
 #'
 #' @export
 #'
-plot.spei <- function(x, ...) {
+plot.spei <- function(x, main = NULL, ...) {
   ### Argument check - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
   if (!inherits(x, "spei")) {
@@ -969,14 +975,13 @@ plot.spei <- function(x, ...) {
   # global variables
   # utils::globalVariables(na, value)
 
-  # Label
-  if (grepl("spei", x$call[1])) {
-    label <- "SPEI (z-values)"
-  } else if (grepl("spi", x$call[1])) {
-    label <- "SPI (z-values)"
-  } else {
-    stop("Label could not be determined. Please, report the error.")
+  # Label (objects from SPEI < 1.9 have no `index` element)
+  index <- x$index
+  if (is.null(index)) {
+    fun <- deparse(x$call[[1]])
+    index <- if (identical(fun, "spi")) "SPI" else "SPEI"
   }
+  label <- paste0(index, " (z-values)")
 
   # Extract the data
   data <- x$fitted
@@ -1026,18 +1031,15 @@ plot.spei <- function(x, ...) {
   }
 
   # Determine reference period
+  # A period (year, cycle) is drawn as a bar centred at
+  # year + (cycle - 1) / frequency, so the shading goes from half a period
+  # before the first bar to half a period after the last one.
   if (!is.null(x$ref.period)) {
-    if (grepl("ref.start", paste(row.names(x$ref.period), collapse = " "))) {
-      ref1 <- x$ref.period["ref.start", 1] + (x$ref.period["ref.start", 2] - 0.5) /
-        12
-    } else {
-      ref1 <- start(data)[1] + (start(data)[2] - 0.5) / 12
-    }
-    if (grepl("ref.end", paste(row.names(x$ref.period), collapse = " "))) {
-      ref2 <- x$ref.period["ref.end", 1] + (x$ref.period["ref.end", 2] - 0.5) / 12
-    } else {
-      ref2 <- end(data)[1] + (end(data)[2] - 0.5) / 12
-    }
+    rp <- x$ref.period
+    first <- if ("ref.start" %in% rownames(rp)) rp["ref.start", ] else start(data)
+    last <- if ("ref.end" %in% rownames(rp)) rp["ref.end", ] else end(data)
+    ref1 <- first[1] + (first[2] - 1.5) / ts_freq
+    ref2 <- last[1] + (last[2] - 0.5) / ts_freq
   } else {
     ref1 <- ref2 <- NULL
   }
@@ -1045,11 +1047,15 @@ plot.spei <- function(x, ...) {
   # Remove leading / ending NAs
   data <- na.trim(data)
 
-  # Melt
-  kk <- as.data.frame(data)
-  kk$time <- as.character(time(data))
-  kk <- melt(kk, id.vars = "time")
-  kk$time <- as.numeric(kk$time)
+  # Reshape to long format: one row per time and series
+  wide <- as.data.frame(data)
+  kk <- data.frame(
+    time = rep(as.numeric(time(data)), ncol(wide)),
+    variable = factor(rep(names(wide), each = nrow(wide)),
+      levels = names(wide)
+    ),
+    value = unlist(wide, use.names = FALSE)
+  )
 
   # Add NAs
   kk$na <- as.numeric(ifelse(is.na(kk$value), 0, NA))
@@ -1085,14 +1091,16 @@ plot.spei <- function(x, ...) {
   }
   # add the bars with the SPEI values
   g <- g +
-    geom_bar(stat = "identity") + # color='white' helps separate between values
+    geom_col(data = kk[!is.na(kk$value), ]) +
       #scale_fill_manual(values=c('blue','red')) +  # classic SPEI look
       #scale_color_manual(values=c('blue','red'))   # classic SPEI look
       scale_fill_manual(values = c(pos = "cyan3", neg = "tomato")) +
       scale_color_manual(values = c(pos = "cyan3", neg = "tomato"))
   # add NAs
   g <- g +
-    geom_point(aes(.data[["time"]], .data[["na"]]),
+    geom_point(
+      data = kk[is.na(kk$value), ],
+      aes(.data[["time"]], .data[["na"]]),
       shape = 21, fill = "white",
       color = "black"
     )
@@ -1100,7 +1108,9 @@ plot.spei <- function(x, ...) {
   g <- g +
     geom_hline(yintercept = 0, color = "grey") +
     facet_wrap(~variable, ncol = 1) +
-    scale_y_continuous(breaks = seq(-2, 2, 0.5)) +
+    scale_y_continuous(breaks = function(lim) {
+      seq(ceiling(lim[1] * 2) / 2, floor(lim[2] * 2) / 2, 0.5)
+    }) +
     ylab(label) +
     xlab("Time") +
     theme_bw() +
@@ -1109,6 +1119,10 @@ plot.spei <- function(x, ...) {
       strip.background = element_blank(),
       strip.text = element_text(hjust = 0)
     )
+
+  if (!is.null(main)) {
+    g <- g + ggtitle(main)
+  }
 
   return(g)
 }

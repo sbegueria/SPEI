@@ -461,3 +461,52 @@ test_that("Options are reported with message() and name the right index (L6, O8)
     TRUE
   )
 })
+
+# Audit batch 4 regression tests
+
+test_that("summary() prints the fitted values once (L4)", {
+  r <- spei(x_mat, 6, verbose = FALSE)
+  o <- capture.output(summary(r))
+  expect_equal(sum(grepl("^Fitted:", o)), 1)
+})
+
+test_that("plot() takes the index name from the object (O2)", {
+  p <- ts(as.numeric(wichita$PRCP), start = c(1980, 1), frequency = 12)
+  f <- spi
+  expect_equal(plot(f(p, 12, verbose = FALSE))$labels$y, "SPI (z-values)")
+  expect_equal(
+    plot(do.call(spi, list(p, 12, verbose = FALSE)))$labels$y,
+    "SPI (z-values)"
+  )
+  expect_equal(plot(spei(x_tsvec, 12, verbose = FALSE))$labels$y, "SPEI (z-values)")
+  expect_equal(spi(p, 1, verbose = FALSE)$index, "SPI")
+})
+
+test_that("Reference period shading covers the reference bars (O3, L5)", {
+  p <- ts(as.numeric(wichita$PRCP), start = c(1980, 1), frequency = 12)
+  r <- spi(p, 12, ref.start = c(1990, 1), ref.end = c(1999, 12), verbose = FALSE)
+  rect <- ggplot2::ggplot_build(plot(r))$data[[1]]
+  expect_equal(rect$xmin, 1990 - 0.5 / 12)
+  expect_equal(rect$xmax, 1999 + 11.5 / 12)
+  # quarterly data
+  q <- ts(as.numeric(wichita$PRCP)[1:360], start = c(1980, 1), frequency = 4)
+  rq <- spi(q, 1, ref.start = c(1990, 2), verbose = FALSE)
+  rect <- ggplot2::ggplot_build(plot(rq))$data[[1]]
+  expect_equal(rect$xmin, 1990 + 0.5 / 4)
+  expect_equal(rect$xmax, end(q)[1] + (end(q)[2] - 0.5) / 4)
+})
+
+test_that("plot() draws without warnings (O4)", {
+  g <- plot(spei(x_tsvec, 12, verbose = FALSE))
+  grDevices::pdf(NULL)
+  on.exit(grDevices::dev.off())
+  expect_no_warning(print(g))
+})
+
+test_that("plot() accepts a title and extends the y breaks (O16)", {
+  r <- spei(x_tsvec, 1, verbose = FALSE)
+  expect_equal(plot(r, main = "Wichita")$labels$title, "Wichita")
+  r$fitted[100] <- 3.2
+  b <- ggplot2::ggplot_build(plot(r))$layout$panel_params[[1]]$y$breaks
+  expect_equal(max(b, na.rm = TRUE), 3)
+})

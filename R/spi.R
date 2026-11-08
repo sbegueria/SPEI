@@ -28,6 +28,7 @@ spi <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
     }
   )
   sol$info <- to_spi(sol$info)
+  sol$index <- "SPI"
   sol$call <- match.call(expand.dots = FALSE)
 
   return(sol)

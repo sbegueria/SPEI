@@ -287,8 +287,8 @@ spi_1 <- spi(wichita[, "PRCP"], 1)
 spi_12 <- spi(wichita[, "PRCP"], 12)
 
 par(mfrow = c(2, 1))
-plot(spi_1, "Wichita, SPI-1")
-plot(spi_12, "Wichita, SPI-12")
+plot(spi_1, main = "Wichita, SPI-1")
+plot(spi_12, main = "Wichita, SPI-12")
 
 # Time series not starting in January
 plot(spei(ts(wichita[, "BAL"], freq = 12, start = c(1980, 6)), 12))
@@ -372,7 +372,7 @@ evapotranspiration models, tools, datasets and drought monitoring.
 potential evapotranspiration.
 \code{\link{summary.spei}} and \code{\link{print.spei}} for summaries of
 \code{spei} objects.
-\code{\link{plot.spei}} for plotting \code{spei} objects.
+\code{\link[=plot.spei]{plot}} for plotting \code{spei} objects.
 }
 \author{
 Santiago Beguería and Sergio M. Vicente-Serrano. Maintainer:
