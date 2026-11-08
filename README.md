@@ -44,16 +44,20 @@ install_github('sbegueria/SPEI@devel')
 
 To cite package ‘SPEI’ in publications use:
 
-* Beguería S, Vicente-Serrano SM (2023). _SPEI: Calculation of the Standardized Precipitation-Evapotranspiration Index_. https://spei.csic.es, https://github.com/sbegueria/SPEI.
+* Beguería S, Vicente-Serrano SM (2026). _SPEI: Calculation of the Standardized Precipitation-Evapotranspiration Index_. R package version 1.9.0, https://spei.csic.es, https://github.com/sbegueria/SPEI.
 
 A BibTeX entry for LaTeX users is:
-@Manual{,
+
+```bibtex
+@Manual{SPEI,
     title = {SPEI: Calculation of the Standardized Precipitation-Evapotranspiration Index},
     author = {Santiago Beguería and Sergio M. Vicente-Serrano},
-    year = {2023},
-    note = {https://spei.csic.es, https://github.com/sbegueria/SPEI},
+    year = {2026},
+    note = {R package version 1.9.0},
+    url = {https://spei.csic.es, https://github.com/sbegueria/SPEI},
 }
-  
+```
+
 If you use the SPEI index, consider citing these references:
 
 * S.M. Vicente-Serrano, S. Beguería, J.I. López-Moreno. 2010. A Multi-scalar drought index sensitive to global warming: The Standardized Precipitation Evapotranspiration Index – SPEI. *Journal of Climate* **23**: 1696, DOI: 10.1175/2009JCLI2909.1.
@@ -91,5 +95,7 @@ Feel free to [send an issue](https://github.com/sbegueria/SPEI/issues) if you ha
 
 
 ## Copyright and license
+
+Copyright (C) 2013–2026 Santiago Beguería and Sergio M. Vicente-Serrano.
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 2 of the License, or (at your option) any later version.
