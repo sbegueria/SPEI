@@ -7,7 +7,7 @@
 [![Total downloads](https://cranlogs.r-pkg.org/badges/grand-total/SPEI)](https://cran.r-project.org/package=SPEI)
 [![Last commit](https://img.shields.io/github/last-commit/sbegueria/SPEI.svg)](https://github.com/sbegueria/SPEI/commits/master)
 [![License: GPL (>= 2)](https://img.shields.io/badge/License-GPL%20%28%3E%3D%202%29-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.html)
-[![GitHub issues](https://img.shields.io/badge/issues-report%20or%20ask-blue?logo=github)](https://github.com/sbegueria/SPEI/issues)
+[![GitHub issues](https://img.shields.io/github/issues/sbegueria/SPEI?logo=github)](https://github.com/sbegueria/SPEI/issues)
 [![GitHub stars](https://img.shields.io/github/stars/sbegueria/SPEI.svg)](https://github.com/sbegueria/SPEI/stargazers)
 
 SPEI is an R package incorporating a set of functions for computing potential or reference evapotranspiration and several widely used drought indices,  including the **Standardized Precipitation-Evapotranspiration Index (SPEI)** and the **Standardized Precipitation Index (SPI)**.
