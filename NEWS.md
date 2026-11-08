@@ -56,6 +56,12 @@ Other changes in behaviour that can break existing scripts (see below):
 
 ## Bug fixes
 
+* `<spei>` and `<spi>`: the adjustment for the probability of zero
+  precipitation (`pze`) was overwritten for the `Gamma` and `PearsonIII`
+  distributions, so zero-precipitation periods were returned as `-Inf` and
+  non-zero periods were biased toward drier values. This regression was
+  introduced in 1.8.0; `log-Logistic` was not affected. Thanks to Mark L.
+  Morrissey for reporting it (#87; also #79, #85).
 * `<spei>` and `<spi>`: `fit = "max-lik"` and `fit = "pp-pwm"` returned only
   `NA`. `max-lik` now uses the `ub-pwm` estimates as starting values, and
   `pp-pwm` passes the plotting-position constants correctly to
@@ -159,13 +165,6 @@ Other changes in behaviour that can break existing scripts (see below):
 * `wichita` dataset: `TSUN` was missing from the documentation (`ACSH` was
   listed twice), and five `TSUN` values between October 2000 and May 2001
   exceed the possible day length; this is now noted.
-
-* `<spei>` and `<spi>`: the adjustment for the probability of zero
-  precipitation (`pze`) was overwritten for the `Gamma` and `PearsonIII`
-  distributions, so zero-precipitation periods were returned as `-Inf` and
-  non-zero periods were biased toward drier values. This regression was
-  introduced in 1.8.0; `log-Logistic` was not affected. Thanks to Mark L.
-  Morrissey for reporting it (#87; also #79, #85).
 
 # SPEI 1.8.1, July 2023
 
