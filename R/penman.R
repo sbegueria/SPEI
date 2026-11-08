@@ -383,7 +383,9 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
       # (ICID, eq. 1.16, p. 68)
       ed <- RH / ((50 / etmn) + (50 / etmx))
     } else if (method == "ASCE") {
-      ed <- et * (RH / 100)
+      # (ASCE-EWRI 2005, eq. 41): mean of saturation pressures at Tmax and
+      # Tmin, as in FAO-56
+      ed <- ea * (RH / 100)
     }
   } else if (using$Tmin) {
     # (ICID, eq. 1.19, p. 69)
@@ -457,7 +459,9 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
   # Reference crop albedo
   alb <- 0.23
   # Rn, MJ m-2 d-1 (eq. 1.53)
-  Rn <- (1 - alb) * Rs - (ac * Rs / Rso + bc) * (a1 + b1 * sqrt(ed)) * 4.9e-9 *
+  # Relative shortwave radiation Rs/Rso is limited to 1 (FAO-56, eq. 39)
+  RsRso <- pmin(Rs / Rso, 1)
+  Rn <- (1 - alb) * Rs - (ac * RsRso + bc) * (a1 + b1 * sqrt(ed)) * 4.9e-9 *
     ((273.15 + Tmax)^4 + (273.15 + Tmin)^4) / 2
   Rn[Rs == 0] <- 0
 

@@ -188,3 +188,51 @@ test_that("na.rm and verbose must be TRUE or FALSE in PET functions (L1)", {
     "Argument `verbose` must be set to either TRUE or FALSE."
   )
 })
+
+# Audit batch 5 regression tests
+
+# Independent FAO-56 monthly ET0 (mm/month) for constant monthly values, so
+# that G = 0; z = 0 gives P = 101.3 kPa
+et0_fao <- function(Tmin, Tmax, U2, Ra, Rs, ea, mlen = 31) {
+  e0 <- function(t) 0.611 * exp(17.27 * t / (t + 237.3))
+  Tm <- (Tmin + Tmax) / 2
+  es <- (e0(Tmax) + e0(Tmin)) / 2
+  Delta <- 4099 * e0(Tm) / (Tm + 237.3)^2
+  gamma <- 0.665e-3 * 101.3
+  Rso <- 0.75 * Ra
+  Rnl <- 4.9e-9 * ((Tmax + 273.15)^4 + (Tmin + 273.15)^4) / 2 *
+    (0.34 - 0.14 * sqrt(ea)) * (1.35 * pmin(Rs / Rso, 1) - 0.35)
+  Rn <- 0.77 * Rs - Rnl
+  (0.408 * Delta * Rn + gamma * 900 / (Tm + 273) * U2 * (es - ea)) /
+    (Delta + gamma * (1 + 0.34 * U2)) * mlen
+}
+
+test_that("penman() limits Rs/Rso to 1 (P10)", {
+  n <- 12
+  args <- list(
+    Tmin = rep(15, n), Tmax = rep(30, n), U2 = rep(2, n),
+    Ra = rep(30, n), ed = rep(1.5, n), z = 0, method = "FAO",
+    verbose = FALSE
+  )
+  for (rs in c(18, 25)) { # below and above Rso = 22.5
+    r <- do.call(penman, c(args, list(Rs = rep(rs, n))))
+    expect_equal(as.numeric(r[1]), et0_fao(15, 30, 2, 30, rs, 1.5),
+      tolerance = 1e-6
+    )
+  }
+})
+
+test_that("penman() ASCE with RH uses the mean of e0(Tmax) and e0(Tmin) (P11)", {
+  n <- 12
+  e0 <- function(t) 0.611 * exp(17.27 * t / (t + 237.3))
+  args <- list(
+    Tmin = rep(15, n), Tmax = rep(30, n), U2 = rep(2, n),
+    Ra = rep(30, n), Rs = rep(20, n), z = 0, method = "ASCE",
+    verbose = FALSE
+  )
+  with_rh <- do.call(penman, c(args, list(RH = rep(50, n))))
+  with_ed <- do.call(penman, c(args, list(
+    ed = rep((e0(30) + e0(15)) / 2 * 0.5, n)
+  )))
+  expect_equal(as.numeric(with_rh), as.numeric(with_ed))
+})
