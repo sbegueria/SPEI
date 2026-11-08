@@ -59,6 +59,22 @@
   when the data contain negative values, which they cannot fit.
 * `<thornthwaite>` now requires at least 12 months of data. With fewer, the
   annual heat index was computed from a partial year without notice (#68).
+* `<spei>`, `<spi>`, `<penman>`, `<hargreaves>` and `<thornthwaite>` report
+  the computation options with `message()` instead of `print()`, so they can
+  be silenced with `suppressMessages()` as well as with `verbose = FALSE`
+  (#61). `<spi>` now names the SPI, not the SPEI, in this report and in
+  `$info`.
+* `<spei>` and `<spi>` warn when periods of the year could not be fitted
+  (fewer than 4 non-zero values, or constant values, in the reference
+  period) and were set to `NA` (#76, #77).
+* `<spei>` and `<spi>`: `scale` must be a positive integer no larger than the
+  length of the series. Before, non-integer values were accepted, 0 gave a
+  misleading error, and a scale longer than the series returned only `NA`.
+* Clearer errors for malformed arguments: an unnamed `kernel` list, `na.rm`
+  or `verbose` set to `NA`, `params` that is not a 3-d array, and an unknown
+  `method` in `<penman>`. A `kernel` shift given as an integer (`0L`) is now
+  accepted.
+* Tests no longer depend on R's English error messages.
 
 ## Documentation
 

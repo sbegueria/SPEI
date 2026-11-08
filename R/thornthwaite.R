@@ -23,7 +23,7 @@ thornthwaite <- function(Tave, lat, na.rm = FALSE, verbose = TRUE) {
   using <- list(na.rm = FALSE)
 
   # Check optional inputs
-  if (na.rm != TRUE && na.rm != FALSE) {
+  if (!is_flag(na.rm)) {
     check$push("Argument `na.rm` must be set to either TRUE or FALSE.")
   } else if (na.rm) {
     warn$push("Missing values (`NA`) will not be considered in the calculation.")
@@ -31,12 +31,16 @@ thornthwaite <- function(Tave, lat, na.rm = FALSE, verbose = TRUE) {
     warn$push("Checking for missing values (`NA`): all the data must be complete.")
   }
 
+  if (!is_flag(verbose)) {
+    check$push("Argument `verbose` must be set to either TRUE or FALSE.")
+  }
+
   # Check for missing values in inputs
-  if (!na.rm && (anyNA(Tave))) {
+  if (isFALSE(na.rm) && (anyNA(Tave))) {
     check$push("`Tave` must not contain NA values if argument `na.rm` is set to FALSE.")
   }
 
-  if (!na.rm && anyNA(lat)) {
+  if (isFALSE(na.rm) && anyNA(lat)) {
     check$push("`lat` must not contain NA values if argument `na.rm` is set to FALSE.")
   }
 
@@ -119,9 +123,9 @@ thornthwaite <- function(Tave, lat, na.rm = FALSE, verbose = TRUE) {
     stop(paste(check$getMessages(), collapse = " "))
   }
 
-  # Show a warning with computation options
+  # Report the computation options
   if (verbose) {
-    print(paste(warn$getMessages(), collapse = " "))
+    message(paste(warn$getMessages(), collapse = " "))
   }
 
 

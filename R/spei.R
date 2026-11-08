@@ -1,4 +1,3 @@
-spei <- function(x, y, ...) UseMethod("spei")
 
 #' @name Drought-indices
 #' @title Calculation of the Standardized Precipitation-Evapotranspiration
@@ -39,8 +38,9 @@ spei <- function(x, y, ...) UseMethod("spei")
 #' @param data a vector, matrix or data frame with time ordered values
 #' of precipitation (for the SPI) or of the climatic balance
 #' precipitation minus potential evapotranspiration (for the SPEI).
-#' @param scale an integer, representing the time scale at which
-#' the SPEI / SPI will be computed.
+#' @param scale a positive integer, representing the time scale at which
+#' the SPEI / SPI will be computed. It can not be larger than the length of
+#' the series.
 #' @param kernel optional, a list defining the type of kernel used
 #' for computing the SPEI / SPI at scales higher than one. Defaults
 #' to unshifted rectangular kernel.
@@ -65,8 +65,9 @@ spei <- function(x, y, ...) UseMethod("spei")
 #' @param params optional, an array of parameters for computing the
 #' spei. This option overrides computation of fitting parameters.
 #' @param verbose optional, logical, report the computation options during
-#' calculation. Either 'TRUE' (default) or 'FALSE'.
-#' @param ... other possible parameters.
+#' calculation. Either 'TRUE' (default) or 'FALSE'. The report is issued as
+#' a message, so it can also be silenced with \code{suppressMessages()}.
+#' @param ... not used.
 #'
 #'
 #' @details
@@ -367,7 +368,9 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
   if (!is.numeric(scale)) {
     check$push("Argument `scale` must be numeric.")
   } else if (length(scale) != 1) {
-    check$push("Argument `scale` must be a single value")
+    check$push("Argument `scale` must be a single value.")
+  } else if (is.na(scale) || scale < 1 || scale %% 1 != 0) {
+    check$push("Argument `scale` must be a positive integer.")
   } else {
     warn$push(paste0(
       "Calculating the Standardized Precipitation ",
@@ -380,12 +383,12 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
 
   if (!is.list(kernel)) {
     check$push("Argument `kernel` must be a list.")
-  } else if (length(kernel) != 2 | names(kernel)[1] != "type" |
-    names(kernel)[2] != "shift") {
+  } else if (length(kernel) != 2 || is.null(names(kernel)) ||
+    !setequal(names(kernel), c("type", "shift"))) {
     check$push("Argument `kernel` must be a list with components `type` and `shift`.")
-  } else if (!inherits(kernel$type, "character") | length(kernel$type) != 1) {
-    check$push("Element `type` of `kernel` must be a single valued character vector")
-  } else if (!inherits(kernel$shift, "numeric") | length(kernel$shift) != 1) {
+  } else if (!is.character(kernel$type) || length(kernel$type) != 1) {
+    check$push("Element `type` of `kernel` must be a single valued character vector.")
+  } else if (!is.numeric(kernel$shift) || length(kernel$shift) != 1) {
     check$push("Element `shift` of `kernel` must be a single valued numeric.")
   } else {
     warn$push(paste0(
@@ -440,7 +443,7 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
     }
   }
 
-  if (!is.logical(na.rm)) {
+  if (!is_flag(na.rm)) {
     check$push("Argument `na.rm` must be set to either TRUE or FALSE.")
   } else if (na.rm) {
     warn$push("Missing values (`NA`) will not be considered in the calculation.")
@@ -471,19 +474,19 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
     warn$push("Using the whole time series as reference period.")
   }
 
-  if (!is.logical(keep.x)) {
+  if (!is_flag(keep.x)) {
     check$push("Argument `keep.x` must be set to either TRUE or FALSE.")
   } else if (keep.x) {
     using$keep.x <- TRUE
     warn$push("Storing the input data in the returned spei object.")
   }
 
-  if (!is.logical(verbose)) {
+  if (!is_flag(verbose)) {
     check$push("Argument `verbose` must be set to either TRUE or FALSE.")
   }
 
   # Check for missing values in inputs
-  if (!na.rm && anyNA(data)) {
+  if (isFALSE(na.rm) && anyNA(data)) {
     check$push("`data` must not contain NA values if argument `na.rm` is set to FALSE.")
   }
 
@@ -517,6 +520,10 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
   n_sites <- prod(int_dims[[2]], int_dims[[3]])
   n_times <- int_dims[[1]]
   input_len <- prod(int_dims)
+  if (is.numeric(scale) && length(scale) == 1 && !is.na(scale) &&
+    scale > n_times) {
+    check$push("Argument `scale` can not be larger than the length of the series.")
+  }
 
   # Determine input data shape
   if (is.ts(data)) {
@@ -568,7 +575,13 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
   dim_coef <- dim_params + has_pze
   params_pze <- FALSE
   if (using$params) {
-    if (!(dim(params)[1] %in% c(dim_params, dim_coef)) |
+    if (!is.array(params) || length(dim(params)) != 3) {
+      check$push(paste0(
+        "Argument `params` must be a 3-d array with dimensions (",
+        dim_coef, ", ", n_sites, ", ", ts_freq, "), as returned in the ",
+        "`coefficients` element of a previous call."
+      ))
+    } else if (!(dim(params)[1] %in% c(dim_params, dim_coef)) |
       dim(params)[2] != n_sites | dim(params)[3] != ts_freq) {
       check$push(paste0(
         "Parameters array should have dimensions (",
@@ -592,9 +605,9 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
     stop(paste(check$getMessages(), collapse = " "))
   }
 
-  # Show a warning with computation options
+  # Report the computation options
   if (verbose) {
-    print(paste(warn$getMessages(), collapse = " "))
+    message(paste(warn$getMessages(), collapse = " "))
   }
 
 
@@ -676,8 +689,10 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
   # Instantiate an object to store the standardized data
   spei <- acu * NA
 
-  # Count of maximum likelihood fits that did not converge
+  # Count of maximum likelihood fits that did not converge, and of periods
+  # that could not be fitted
   maxlik_failed <- 0
+  n_skipped <- 0
 
   # Loop through series (columns in data)
   for (s in 1:n_sites) {
@@ -713,15 +728,11 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
         # Fit distribution parameters
         x.mon_sd <- sd(x.mon, na.rm = TRUE)
 
-        # Early stopping
-        if (is.na(x.mon_sd) || (x.mon_sd == 0)) {
+        # Early stopping: too few (non-zero) values, or constant values
+        if (length(x.mon) < 4 || is.na(x.mon_sd) || x.mon_sd == 0) {
           spei[ff, s] <- NA
           coef[, s, c] <- NA
-          next()
-        }
-        if (length(x.mon) < 4) {
-          spei[ff, s] <- NA
-          coef[, s, c] <- NA
+          n_skipped <- n_skipped + 1
           next()
         }
 
@@ -806,6 +817,15 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
     } # next c (month)
   } # next s (series)
 
+  if (n_skipped > 0) {
+    warning(
+      "In ", n_skipped, " case(s) (series and period of the year), fewer ",
+      "than 4 ", ifelse(has_pze, "non-zero ", ""), "values or only constant ",
+      "values were available in the reference period, so the distribution ",
+      "could not be fitted and the index was set to NA.",
+      call. = FALSE
+    )
+  }
   if (maxlik_failed > 0) {
     warning(
       "Maximum likelihood estimation did not converge in ", maxlik_failed,

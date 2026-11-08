@@ -61,7 +61,8 @@ array  of monthly total precipitation, mm.}
 be stripped from the computations.}
 
 \item{verbose}{optional, logical, report the computation options during
-calculation. Either 'TRUE' (default) or 'FALSE'.}
+calculation. Either 'TRUE' (default) or 'FALSE'. The report is issued as
+a message, so it can also be silenced with \code{suppressMessages()}.}
 
 \item{U2}{a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of
 monthly mean daily wind speeds at 2 m height, m s-1.}

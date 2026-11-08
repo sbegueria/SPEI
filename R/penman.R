@@ -113,7 +113,7 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
     check$push("Argument `crop` must be one of `short` or `tall`.")
   }
 
-  if (na.rm != TRUE && na.rm != FALSE) {
+  if (!is_flag(na.rm)) {
     check$push("Argument `na.rm` must be set to TRUE or FALSE.")
   } else if (na.rm) {
     warn$push("Missing values (`NA`) will not be considered in the calculation.")
@@ -121,12 +121,16 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
     warn$push("Checking for missing values (`NA`): all the data must be complete.")
   }
 
+  if (!is_flag(verbose)) {
+    check$push("Argument `verbose` must be set to either TRUE or FALSE.")
+  }
+
   # Check for missing values in inputs
-  if (!na.rm && (anyNA(Tmin) || anyNA(Tmax) || (using$U2 && anyNA(U2)))) {
+  if (isFALSE(na.rm) && (anyNA(Tmin) || anyNA(Tmax) || (using$U2 && anyNA(U2)))) {
     check$push("`Tmin`, `Tmax` and `U2` must not contain NA values if argument `na.rm` is set to FALSE.")
   }
 
-  if (!na.rm &&
+  if (isFALSE(na.rm) &&
     ((using$Ra && anyNA(Ra)) ||
       (using$lat && anyNA(lat)) ||
       (using$Rs && anyNA(Rs)) ||
@@ -294,16 +298,21 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
   }
 
   # Method used
-  warn$push(paste0("Calculation method is ", method, "."))
+  if (!is.character(method) || length(method) != 1 ||
+    !method %in% c("ICID", "ASCE", "FAO")) {
+    check$push("Argument `method` must be one of `ICID`, `ASCE` or `FAO`.")
+  } else {
+    warn$push(paste0("Calculation method is ", method, "."))
+  }
 
   # Return errors and halt execution (if any)
   if (!check$isEmpty()) {
     stop(paste(check$getMessages(), collapse = " "))
   }
 
-  # Show a warning with computation options
+  # Report the computation options
   if (verbose) {
-    print(paste(warn$getMessages(), collapse = " "))
+    message(paste(warn$getMessages(), collapse = " "))
   }
 
 

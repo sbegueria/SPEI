@@ -67,7 +67,8 @@
 #' @param method   optional, character string, Penman-Monteith calculation
 #' method. Either one of 'ICID' (default), 'FAO', or 'ASCE'.
 #' @param verbose   optional, logical, report the computation options during
-#' calculation. Either 'TRUE' (default) or 'FALSE'.
+#' calculation. Either 'TRUE' (default) or 'FALSE'. The report is issued as
+#' a message, so it can also be silenced with \code{suppressMessages()}.
 #'
 #'
 #' @details \code{thornthwaite} computes the monthly potential
@@ -331,7 +332,7 @@ hargreaves <- function(Tmin, Tmax, Ra = NULL, lat = NULL, Pre = NULL,
     warn$push("Using precipitation data, following Droogers and Allen (2002).")
   }
 
-  if (na.rm != TRUE && na.rm != FALSE) {
+  if (!is_flag(na.rm)) {
     check$push("Argument `na.rm` must be set to either TRUE or FALSE.")
   } else if (na.rm) {
     warn$push("Missing values (`NA`) will not be considered in the calculation.")
@@ -339,20 +340,20 @@ hargreaves <- function(Tmin, Tmax, Ra = NULL, lat = NULL, Pre = NULL,
     warn$push("Checking for missing values (`NA`): all the data must be complete.")
   }
 
-  if (!is.logical(verbose)) {
+  if (!is_flag(verbose)) {
     check$push("Argument `verbose` must be set to either TRUE or FALSE.")
   }
 
   # Check for missing values in inputs
-  if (!na.rm && (anyNA(Tmin) || anyNA(Tmax))) {
+  if (isFALSE(na.rm) && (anyNA(Tmin) || anyNA(Tmax))) {
     check$push("`Tmin` and `Tmax` must not contain NA values if argument `na.rm` is set to FALSE.")
   }
 
-  if (!na.rm && (anyNA(Ra))) {
+  if (isFALSE(na.rm) && (anyNA(Ra))) {
     check$push("`Ra` must not contain NA values if argument `na.rm` is set to FALSE.")
   }
 
-  if (!na.rm && (anyNA(Pre))) {
+  if (isFALSE(na.rm) && (anyNA(Pre))) {
     check$push("`Pre` must not contain NA values if argument `na.rm` is set to FALSE.")
   }
 
@@ -450,9 +451,9 @@ hargreaves <- function(Tmin, Tmax, Ra = NULL, lat = NULL, Pre = NULL,
     stop(paste(check$getMessages(), collapse = " "))
   }
 
-  # Show a warning with computation options
+  # Report the computation options
   if (verbose) {
-    print(paste(warn$getMessages(), collapse = " "))
+    message(paste(warn$getMessages(), collapse = " "))
   }
 
 

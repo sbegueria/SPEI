@@ -313,14 +313,20 @@ test_that("early exits do not affect other series or months (H3, #64)", {
   b <- rnorm(120, 50, 20)
   b[seq(1, 120, 12)] <- 10 # constant January in series 2
   one <- spei(ts(a, frequency = 12), 1, verbose = FALSE)$fitted
-  two <- spei(ts(cbind(a, b), frequency = 12), 1, verbose = FALSE)$fitted
+  expect_warning(
+    two <- spei(ts(cbind(a, b), frequency = 12), 1, verbose = FALSE)$fitted,
+    "In 1 case"
+  )
   expect_equal(as.numeric(two[, 1]), as.numeric(one))
   expect_true(all(is.na(two[seq(1, 120, 12), 2])))
   # single series with a reference period not starting at the series start
   v <- prcp_ts
   v[cycle(v) == 4] <- 0 # all Aprils zero: early exit for April
-  full <- spi(v, 1, verbose = FALSE)$fitted
-  ref <- spi(v, 1, ref.start = c(1981, 3), verbose = FALSE)$fitted
+  expect_warning(full <- spi(v, 1, verbose = FALSE)$fitted, "In 1 case")
+  expect_warning(
+    ref <- spi(v, 1, ref.start = c(1981, 3), verbose = FALSE)$fitted,
+    "In 1 case"
+  )
   expect_equal(sum(is.na(ref[cycle(v) == 2])), 0)
 })
 
@@ -395,4 +401,63 @@ test_that("parglo.maxlik reports failure when no valid fit is found (O5)", {
   expect_equal(parglo.maxlik(c(1, 1, 1, 1.0001, 50), c(0, 1e-9, 0.9))$conv, 1)
   ok <- parglo.maxlik(x_vec, lmom::pelglo(lmom::samlmu(x_vec)))
   expect_equal(ok$conv, 0)
+})
+
+# Audit batch 3 regression tests
+
+test_that("Argument checks give clear errors (L1)", {
+  p <- as.numeric(wichita$PRCP)
+  expect_error(
+    spi(p, 3, kernel = list("rectangular", 0), verbose = FALSE),
+    "Argument `kernel` must be a list with components `type` and `shift`."
+  )
+  expect_equal(
+    spi(p, 3, kernel = list(type = "rectangular", shift = 0L), verbose = FALSE)$fitted,
+    spi(p, 3, verbose = FALSE)$fitted
+  )
+  expect_error(
+    spi(p, 3, na.rm = NA, verbose = FALSE),
+    "Argument `na.rm` must be set to either TRUE or FALSE."
+  )
+  expect_error(
+    spi(p, 1, params = matrix(1, 3, 12), verbose = FALSE),
+    "Argument `params` must be a 3-d array"
+  )
+})
+
+test_that("`scale` must be a positive integer not longer than the series (L2)", {
+  p <- as.numeric(wichita$PRCP)
+  for (sc in list(2.5, 0, -1)) {
+    expect_error(
+      spi(p, sc, verbose = FALSE),
+      "Argument `scale` must be a positive integer."
+    )
+  }
+  expect_error(
+    spi(p[1:24], 30, verbose = FALSE),
+    "Argument `scale` can not be larger than the length of the series."
+  )
+})
+
+test_that("Periods that cannot be fitted give a warning (L3)", {
+  q <- as.numeric(wichita$PRCP)
+  q[seq(1, length(q), 12)] <- 0
+  q[c(1, 13, 25)] <- 5
+  expect_warning(
+    r <- spi(q, 1, verbose = FALSE),
+    "In 1 case\\(s\\).*fewer than 4 non-zero values"
+  )
+  expect_true(all(is.na(r$fitted[seq(1, length(q), 12)])))
+  expect_false(anyNA(r$fitted[-seq(1, length(q), 12)]))
+})
+
+test_that("Options are reported with message() and name the right index (L6, O8)", {
+  p <- as.numeric(wichita$PRCP)
+  expect_message(spi(p, 1), "Standardized Precipitation Index (SPI)", fixed = TRUE)
+  expect_message(spei(x_vec, 1), "(SPEI)", fixed = TRUE)
+  expect_silent(suppressMessages(spi(p, 1)))
+  expect_equal(
+    grepl("(SPI)", spi(p, 1, verbose = FALSE)$info, fixed = TRUE),
+    TRUE
+  )
 })

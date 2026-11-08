@@ -1,4 +1,3 @@
-spi <- function(x, y, ...) UseMethod("spi")
 
 
 
@@ -10,10 +9,25 @@ spi <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
                 ref.start = NULL, ref.end = NULL, keep.x = FALSE, params = NULL, verbose = TRUE, ...) {
   # input checks
 
-  sol <- spei(
-    data, scale, kernel, distribution, fit, na.rm,
-    ref.start, ref.end, keep.x, params, verbose
+  # spei() reports the options for the SPEI; reword them for the SPI
+  to_spi <- function(x) {
+    sub(
+      "Standardized Precipitation Evapotranspiration Index (SPEI)",
+      "Standardized Precipitation Index (SPI)", x,
+      fixed = TRUE
+    )
+  }
+  sol <- withCallingHandlers(
+    spei(
+      data, scale, kernel, distribution, fit, na.rm,
+      ref.start, ref.end, keep.x, params, verbose
+    ),
+    message = function(m) {
+      message(to_spi(conditionMessage(m)), appendLF = FALSE)
+      invokeRestart("muffleMessage")
+    }
   )
+  sol$info <- to_spi(sol$info)
   sol$call <- match.call(expand.dots = FALSE)
 
   return(sol)

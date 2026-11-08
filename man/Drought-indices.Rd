@@ -56,8 +56,9 @@ spi(
 of precipitation (for the SPI) or of the climatic balance
 precipitation minus potential evapotranspiration (for the SPEI).}
 
-\item{scale}{an integer, representing the time scale at which
-the SPEI / SPI will be computed.}
+\item{scale}{a positive integer, representing the time scale at which
+the SPEI / SPI will be computed. It can not be larger than the length of
+the series.}
 
 \item{kernel}{optional, a list defining the type of kernel used
 for computing the SPEI / SPI at scales higher than one. Defaults
@@ -91,9 +92,10 @@ for fitting the model should be kept. Defaults to FALSE.}
 spei. This option overrides computation of fitting parameters.}
 
 \item{verbose}{optional, logical, report the computation options during
-calculation. Either 'TRUE' (default) or 'FALSE'.}
+calculation. Either 'TRUE' (default) or 'FALSE'. The report is issued as
+a message, so it can also be silenced with \code{suppressMessages()}.}
 
-\item{...}{other possible parameters.}
+\item{...}{not used.}
 }
 \value{
 Functions \code{spei} and \code{spi} return an object of class \code{spei}.

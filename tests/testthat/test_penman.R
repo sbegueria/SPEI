@@ -13,7 +13,7 @@ test_that("No Tmin provided", {
       Tmax = TMAX, U2 = AWND, tsun = TSUN, lat = 37.6475, z = 402.6,
       na.rm = TRUE
     ),
-    'argument "Tmin" is missing, with no default'
+    '"Tmin"'
   )
 })
 
@@ -23,7 +23,7 @@ test_that("No Tmax provided", {
       U2 = AWND, tsun = TSUN, lat = 37.6475, z = 402.6,
       na.rm = TRUE
     ),
-    'argument "Tmax" is missing, with no default'
+    '"Tmax"'
   )
 })
 
@@ -54,7 +54,7 @@ test_that("No Tmin provided", {
       Tmax = TMAX, U2 = AWND, tsun = TSUN, lat = 37.6475, z = 402.6,
       na.rm = TRUE
     ),
-    'argument \"Tmin\" is missing, with no default'
+    '"Tmin"'
   )
 })
 

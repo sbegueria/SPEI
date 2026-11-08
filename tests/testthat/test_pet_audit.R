@@ -153,3 +153,38 @@ test_that("thornthwaite() requires at least 12 months (P9)", {
     "Input data must cover at least one full year"
   )
 })
+
+# Audit batch 3 regression tests
+
+test_that("PET functions report options with message() (O8)", {
+  t <- as.numeric(wichita$TMED[1:24])
+  expect_message(thornthwaite(t, 37), "Input type is vector")
+  expect_silent(suppressMessages(thornthwaite(t, 37)))
+  expect_silent(suppressMessages(hargreaves(
+    as.numeric(wichita$TMIN[1:24]), as.numeric(wichita$TMAX[1:24]),
+    lat = 37
+  )))
+})
+
+test_that("penman() rejects an unknown `method` (P12)", {
+  expect_error(
+    penman(
+      Tmin = rep(10, 12), Tmax = rep(20, 12), U2 = rep(2, 12),
+      Rs = rep(15, 12), RH = rep(60, 12), lat = 40, z = 100,
+      method = "fao", verbose = FALSE
+    ),
+    "Argument `method` must be one of `ICID`, `ASCE` or `FAO`."
+  )
+})
+
+test_that("na.rm and verbose must be TRUE or FALSE in PET functions (L1)", {
+  t <- as.numeric(wichita$TMED[1:24])
+  expect_error(
+    thornthwaite(t, 37, na.rm = NA, verbose = FALSE),
+    "Argument `na.rm` must be set to either TRUE or FALSE."
+  )
+  expect_error(
+    thornthwaite(t, 37, verbose = "yes"),
+    "Argument `verbose` must be set to either TRUE or FALSE."
+  )
+})
