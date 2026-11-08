@@ -33,9 +33,32 @@
 * `<penman>` and `<hargreaves>`: extraterrestrial radiation in polar summer
   (sun above the horizon all day) used the largest sunset hour angle found in
   the data instead of pi, underestimating it above about 66.5 degrees.
+* `<spei>` and `<spi>`: 3-d arrays with `dimnames` gave an error.
+* `<spei>` and `<spi>`: time series with a non-integer frequency (e.g.
+  365.25) returned only `NA`; they now give an error.
+* `<spei>` and `<spi>`: with `fit = "max-lik"`, fits where the optimisation
+  found no valid parameters were used anyway; the `ub-pwm` estimates are now
+  kept, with a warning. `<parglo.maxlik>` now reports `conv = 1` in that
+  case.
+* `<hargreaves>`: `Pre` given as a matrix or array failed with
+  "non-conformable arrays" (#59, thanks to Kai Lochbihler).
+* `<penman>`: with `tsun`, months of polar night (day length 0) returned
+  `NA`.
+* `<penman>`: input with one or two time steps failed with "subscript out of
+  bounds" (#75).
+* `<thornthwaite>`: with several sites, a site with all monthly means below
+  0 C got `NaN` instead of zero.
+* `<kern>`: `kern(1, "gaussian")` returned `NaN`.
 * `<plot.spei>`: colours were assigned by factor order with inverted labels,
   so a series with only negative (or only positive) values was drawn
   entirely in the wet colour (#72).
+
+## Other changes
+
+* `<spei>` and `<spi>`: the `Gamma` and `PearsonIII` distributions now warn
+  when the data contain negative values, which they cannot fit.
+* `<thornthwaite>` now requires at least 12 months of data. With fewer, the
+  annual heat index was computed from a partial year without notice (#68).
 
 ## Documentation
 

@@ -99,6 +99,11 @@ thornthwaite <- function(Tave, lat, na.rm = FALSE, verbose = TRUE) {
     warn$push("Assuming the data are monthly time series starting in January, all regular (non-leap) years.")
   }
 
+  # The annual heat index needs a full annual cycle
+  if (n_times < 12) {
+    check$push("Input data must cover at least one full year (12 months), as the annual heat index is computed from the monthly mean temperatures.")
+  }
+
   # Verify the length of each input variable
   input_len <- prod(int_dims)
   if (sum(lengths(lat)) != n_sites) {
@@ -157,11 +162,8 @@ thornthwaite <- function(Tave, lat, na.rm = FALSE, verbose = TRUE) {
 
   # Potential evapotranspiration series (PE)
   Tave[Tave < 0] <- 0
-  if (sum(J) != 0) {
-    PET <- K * 16 * (10 * Tave / J)^q
-  } else {
-    PET <- K * 0
-  }
+  # Sites with J = 0 (all months below 0 C) have zero PET
+  PET <- ifelse(J > 0, K * 16 * (10 * Tave / J)^q, 0)
 
   ### Format output and return - - - - - - - - - - - - - - - - - - - - - - -
 

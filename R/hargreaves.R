@@ -74,6 +74,8 @@
 #' evapotranspiration (PE) according to the Thornthwaite (1948) equation.
 #' It is the simplest of the three methods, and can be used when only
 #' mean temperature data are available.
+#' The annual heat index is computed from the mean temperature of each
+#' calendar month, so at least 12 months of data are required.
 #'
 #'
 #' \code{hargreaves} computes the monthly reference evapotranspiration (ETo)

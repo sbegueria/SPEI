@@ -98,3 +98,58 @@ test_that("extraterrestrial radiation uses a 24 h day in polar summer (P4)", {
     tolerance = 1e-6
   )
 })
+
+# Audit batch 2 regression tests
+
+test_that("penman() with tsun in polar night returns values (P5)", {
+  r <- penman(
+    Tmin = rep(-20, 12), Tmax = rep(-10, 12), U2 = rep(2, 12),
+    tsun = rep(0, 12), RH = rep(80, 12), lat = 80, z = 10, verbose = FALSE
+  )
+  expect_false(anyNA(r))
+})
+
+test_that("thornthwaite() gives zero PET for an all-cold site among others (P6)", {
+  t2 <- as.numeric(wichita$TMED[1:24])
+  r <- thornthwaite(cbind(rep(-5, 24), t2), lat = c(70, 37), verbose = FALSE)
+  expect_false(anyNA(r))
+  expect_true(all(r[, 1] == 0))
+  expect_equal(unname(r[, 2]), as.numeric(thornthwaite(t2, 37, verbose = FALSE)))
+})
+
+test_that("hargreaves() accepts Pre as a matrix (P7, PR #59)", {
+  n <- nrow(wichita)
+  m <- function(v) matrix(rep(as.numeric(v), 2), ncol = 2)
+  r <- hargreaves(m(wichita$TMIN), m(wichita$TMAX),
+    lat = c(37.6, 37.6),
+    Pre = m(wichita$PRCP), verbose = FALSE
+  )
+  single <- hargreaves(as.numeric(wichita$TMIN), as.numeric(wichita$TMAX),
+    lat = 37.6, Pre = as.numeric(wichita$PRCP), verbose = FALSE
+  )
+  expect_equal(unname(r[, 1]), as.numeric(single))
+  expect_equal(unname(r[, 2]), as.numeric(single))
+})
+
+test_that("penman() works with one or two time steps (P8)", {
+  args <- list(
+    Tmin = c(10, 12, 14), Tmax = c(20, 24, 26), U2 = c(2, 2, 2),
+    Rs = c(15, 18, 20), RH = c(60, 60, 60), lat = 40, z = 100,
+    verbose = FALSE
+  )
+  sub <- function(k) lapply(args, function(a) if (length(a) == 3) a[1:k] else a)
+  expect_length(do.call(penman, sub(1)), 1)
+  expect_length(do.call(penman, sub(2)), 2)
+  expect_false(anyNA(do.call(penman, sub(2))))
+})
+
+test_that("thornthwaite() requires at least 12 months (P9)", {
+  expect_error(
+    thornthwaite(as.numeric(wichita$TMED[6:8]), 37, verbose = FALSE),
+    "Input data must cover at least one full year"
+  )
+  expect_error(
+    thornthwaite(5, 37, verbose = FALSE),
+    "Input data must cover at least one full year"
+  )
+})

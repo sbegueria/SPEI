@@ -427,7 +427,7 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
       # Based on sunshine hours
       # 10. Potential daylight hours (day length, h), N (eq. 1.34)
       N <- 7.64 * omegas
-      nN <- tsun / N
+      nN <- ifelse(N > 0, tsun / N, 0)
     } else if (using$CC) {
       # Based on cloud cover
       nN <- (100 - CC) / 100
@@ -456,10 +456,16 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
   # Using forward / backward differences for the first and last observations,
   # and central differences for the remaining ones.
   # TODO: if na.rm is FALSE, act similarly if exactly one neighbour is NA.
-  G <- array(NA, int_dims)
-  G[1, , ] <- 0.14 * (Tmean[2, , ] - Tmean[1, , ])
-  G[2:(n_times - 1), , ] <- 0.07 * (Tmean[3:n_times, , ] - Tmean[1:(n_times - 2), , ])
-  G[n_times, , ] <- 0.14 * (Tmean[n_times, , ] - Tmean[(n_times - 1), , ])
+  # With a single time step G cannot be estimated and is set to zero.
+  G <- array(0, int_dims)
+  if (n_times >= 2) {
+    G[1, , ] <- 0.14 * (Tmean[2, , ] - Tmean[1, , ])
+    G[n_times, , ] <- 0.14 * (Tmean[n_times, , ] - Tmean[(n_times - 1), , ])
+  }
+  if (n_times >= 3) {
+    G[2:(n_times - 1), , ] <- 0.07 * (Tmean[3:n_times, , ] -
+      Tmean[1:(n_times - 2), , ])
+  }
 
   # Wind speed at 2m, U2 (eq. 1.62)
   # U2 <- U2 * 4.85203/log((zz-0.08)/0.015)
