@@ -56,8 +56,9 @@ spi(
 of precipitation (for the SPI) or of the climatic balance
 precipitation minus potential evapotranspiration (for the SPEI).}
 
-\item{scale}{an integer, representing the time scale at which
-the SPEI / SPI will be computed.}
+\item{scale}{a positive integer, representing the time scale at which
+the SPEI / SPI will be computed. It can not be larger than the length of
+the series.}
 
 \item{kernel}{optional, a list defining the type of kernel used
 for computing the SPEI / SPI at scales higher than one. Defaults
@@ -91,9 +92,10 @@ for fitting the model should be kept. Defaults to FALSE.}
 spei. This option overrides computation of fitting parameters.}
 
 \item{verbose}{optional, logical, report the computation options during
-calculation. Either 'TRUE' (default) or 'FALSE'.}
+calculation. Either 'TRUE' (default) or 'FALSE'. The report is issued as
+a message, so it can also be silenced with \code{suppressMessages()}.}
 
-\item{...}{other possible parameters.}
+\item{...}{not used.}
 }
 \value{
 Functions \code{spei} and \code{spi} return an object of class \code{spei}.
@@ -115,13 +117,12 @@ following components:
   will be used as column names in fitted.
   \item coefficients: an array with the values of the coefficients of the
   distribution function fitted to the data. The first dimension of the
-  array contains the three (or two) coefficients, the second dimension will
-  typically consist of twelve values corresponding to each month, and the
-  third dimension will be equal to the number of columns (series) in
-  \code{data}. If a time scale greater than one has been used then the
-  first elements will have NA value since the kernel can not be applied.
-  The first element with valid data will be the one corresponding to the
-  time scale chosen.
+  array contains the coefficients (xi, alpha, kappa for log-Logistic;
+  alpha, beta, pze for Gamma; mu, sigma, gamma, pze for PearsonIII, where
+  pze is the probability of zero in the reference period), the second
+  dimension will be equal to the number of series in \code{data}, and the
+  third dimension will typically consist of twelve values corresponding to
+  each month (or the frequency of \code{data}).
   \item scale: the \code{scale} parameter used to generate the object.
   \item kernel: the parameters and values of the kernel used to generate
   the object.
@@ -185,6 +186,11 @@ parameters are then passed to the function \code{\link{kern}}.
 Following the original definitions \code{spei} uses a log-Logistic
 distribution by default, and \code{spi} uses a Gamma distribution. This
 behavior can be modified, however, through parameter \code{distribution}.
+The Gamma and PearsonIII distributions are fitted to positive values
+only, and zeros are accounted for through the probability of zero (pze).
+They are meant for non-negative data such as precipitation; negative
+values (e.g. in a climatic water balance) produce a warning and get the
+lowest possible index value.
 }
 
 \section{Fitting methods}{
@@ -193,7 +199,9 @@ The default method for parameter fitting is based on unbiased Probability
 Weighted Moments ('ub-pwm'), but other methods can be used through parameter
 \code{fit}. A valid alternative is the plotting-position PWM ('pp-pwm')
 method. For the log-Logistic distribution, also the maximum likelihood
-method ('max-lik') is available.
+method ('max-lik') is available, using the 'ub-pwm' estimates as starting
+values. For the Gamma and PearsonIII distributions 'max-lik' is not
+available, and 'ub-pwm' is used instead (with a warning).
 }
 
 \section{User-provided parameters}{
@@ -201,11 +209,16 @@ method ('max-lik') is available.
 An option exists to override parameter fitting and provide user default
 parameters. This is activated with the parameter \code{params}. The exact
 values provided to this parameter depend on the distribution function being
-used. For log-Logistic and PearsonIII it should be a three-dimensional array
+used. For log-Logistic it should be a three-dimensional array
 with dimensions (3,number of series in data,12), containing twelve parameter
 triads (xi, alpha, kappa) for each data series, one for each month. For
-Gamma, a three-dimensional array with dimensions (2,number of series
-in data,12),  containing twelve parameter pairs (alpha, beta). It is a good
+PearsonIII it should have dimensions (4,number of series in data,12),
+containing the parameters (mu, sigma, gamma) and the probability of zero
+(pze) estimated in the reference period. For Gamma, it should have
+dimensions (3,number of series in data,12), containing the parameters
+(alpha, beta) and pze. Arrays without the pze row (as produced by SPEI
+versions before 1.9) are still accepted, but then pze is estimated from
+\code{data} within the reference period, with a warning. It is a good
 idea to look at the coefficients slot of a previously fit \code{spei} spei
 object in order to understand the structure of the parameter array. The
 parameter \code{distribution} is still used under this option in order to
@@ -274,8 +287,8 @@ spi_1 <- spi(wichita[, "PRCP"], 1)
 spi_12 <- spi(wichita[, "PRCP"], 12)
 
 par(mfrow = c(2, 1))
-plot(spi_1, "Wichita, SPI-1")
-plot(spi_12, "Wichita, SPI-12")
+plot(spi_1, main = "Wichita, SPI-1")
+plot(spi_12, main = "Wichita, SPI-12")
 
 # Time series not starting in January
 plot(spei(ts(wichita[, "BAL"], freq = 12, start = c(1980, 6)), 12))
@@ -350,7 +363,7 @@ precipitation evapotranspiration index (SPEI) revisited: parameter fitting,
 evapotranspiration models, tools, datasets and drought monitoring.
 \emph{International Journal of Climatology} \bold{34}(10): 3001-3023.
 
-\url{http://spei.csic.es}
+\url{https://spei.csic.es}
 }
 \seealso{
 \code{\link{kern}} for different kernel functions available.
@@ -359,7 +372,7 @@ evapotranspiration models, tools, datasets and drought monitoring.
 potential evapotranspiration.
 \code{\link{summary.spei}} and \code{\link{print.spei}} for summaries of
 \code{spei} objects.
-\code{\link{plot.spei}} for plotting \code{spei} objects.
+\code{\link[=plot.spei]{plot}} for plotting \code{spei} objects.
 }
 \author{
 Santiago Beguería and Sergio M. Vicente-Serrano. Maintainer:

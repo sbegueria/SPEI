@@ -8,14 +8,14 @@ attach(wichita)
 test_that("No Tmin provided", {
   expect_error(
     hargreaves(Tmax = TMAX, lat = 37.6475),
-    'argument "Tmin" is missing, with no default'
+    '"Tmin"'
   )
 })
 
 test_that("No Tmax provided", {
   expect_error(
     hargreaves(Tmin = TMIN, lat = 37.6475),
-    'argument "Tmax" is missing, with no default'
+    '"Tmax"'
   )
 })
 

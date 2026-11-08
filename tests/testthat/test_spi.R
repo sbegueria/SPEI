@@ -252,7 +252,10 @@ test_that("pze adjustment is applied for Gamma and PearsonIII (#87)", {
     for (k in 1:12) {
       xi <- xv[m == k]
       pze <- mean(xi == 0)
-      ref[m == k] <- qnorm(pze + (1 - pze) * cdfs[[d]](xi, r$coefficients[, 1, k]))
+      cf <- r$coefficients[, 1, k]
+      expect_equal(unname(cf["pze"]), pze)
+      cf <- cf[names(cf) != "pze"]
+      ref[m == k] <- qnorm(pze + (1 - pze) * cdfs[[d]](xi, cf))
     }
     expect_equal(s, ref, tolerance = 1e-10)
   }

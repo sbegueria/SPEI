@@ -1,4 +1,3 @@
-spei <- function(x, y, ...) UseMethod("spei")
 
 #' @name Drought-indices
 #' @title Calculation of the Standardized Precipitation-Evapotranspiration
@@ -39,8 +38,9 @@ spei <- function(x, y, ...) UseMethod("spei")
 #' @param data a vector, matrix or data frame with time ordered values
 #' of precipitation (for the SPI) or of the climatic balance
 #' precipitation minus potential evapotranspiration (for the SPEI).
-#' @param scale an integer, representing the time scale at which
-#' the SPEI / SPI will be computed.
+#' @param scale a positive integer, representing the time scale at which
+#' the SPEI / SPI will be computed. It can not be larger than the length of
+#' the series.
 #' @param kernel optional, a list defining the type of kernel used
 #' for computing the SPEI / SPI at scales higher than one. Defaults
 #' to unshifted rectangular kernel.
@@ -65,8 +65,9 @@ spei <- function(x, y, ...) UseMethod("spei")
 #' @param params optional, an array of parameters for computing the
 #' spei. This option overrides computation of fitting parameters.
 #' @param verbose optional, logical, report the computation options during
-#' calculation. Either 'TRUE' (default) or 'FALSE'.
-#' @param ... other possible parameters.
+#' calculation. Either 'TRUE' (default) or 'FALSE'. The report is issued as
+#' a message, so it can also be silenced with \code{suppressMessages()}.
+#' @param ... not used.
 #'
 #'
 #' @details
@@ -116,6 +117,11 @@ spei <- function(x, y, ...) UseMethod("spei")
 #' Following the original definitions \code{spei} uses a log-Logistic
 #' distribution by default, and \code{spi} uses a Gamma distribution. This
 #' behavior can be modified, however, through parameter \code{distribution}.
+#' The Gamma and PearsonIII distributions are fitted to positive values
+#' only, and zeros are accounted for through the probability of zero (pze).
+#' They are meant for non-negative data such as precipitation; negative
+#' values (e.g. in a climatic water balance) produce a warning and get the
+#' lowest possible index value.
 #'
 #'
 #' @section Fitting methods:
@@ -123,18 +129,25 @@ spei <- function(x, y, ...) UseMethod("spei")
 #' Weighted Moments ('ub-pwm'), but other methods can be used through parameter
 #' \code{fit}. A valid alternative is the plotting-position PWM ('pp-pwm')
 #' method. For the log-Logistic distribution, also the maximum likelihood
-#' method ('max-lik') is available.
+#' method ('max-lik') is available, using the 'ub-pwm' estimates as starting
+#' values. For the Gamma and PearsonIII distributions 'max-lik' is not
+#' available, and 'ub-pwm' is used instead (with a warning).
 #'
 #'
 #' @section User-provided parameters:
 #' An option exists to override parameter fitting and provide user default
 #' parameters. This is activated with the parameter \code{params}. The exact
 #' values provided to this parameter depend on the distribution function being
-#' used. For log-Logistic and PearsonIII it should be a three-dimensional array
+#' used. For log-Logistic it should be a three-dimensional array
 #' with dimensions (3,number of series in data,12), containing twelve parameter
 #' triads (xi, alpha, kappa) for each data series, one for each month. For
-#' Gamma, a three-dimensional array with dimensions (2,number of series
-#' in data,12),  containing twelve parameter pairs (alpha, beta). It is a good
+#' PearsonIII it should have dimensions (4,number of series in data,12),
+#' containing the parameters (mu, sigma, gamma) and the probability of zero
+#' (pze) estimated in the reference period. For Gamma, it should have
+#' dimensions (3,number of series in data,12), containing the parameters
+#' (alpha, beta) and pze. Arrays without the pze row (as produced by SPEI
+#' versions before 1.9) are still accepted, but then pze is estimated from
+#' \code{data} within the reference period, with a warning. It is a good
 #' idea to look at the coefficients slot of a previously fit \code{spei} spei
 #' object in order to understand the structure of the parameter array. The
 #' parameter \code{distribution} is still used under this option in order to
@@ -182,13 +195,12 @@ spei <- function(x, y, ...) UseMethod("spei")
 #'   will be used as column names in fitted.
 #'   \item coefficients: an array with the values of the coefficients of the
 #'   distribution function fitted to the data. The first dimension of the
-#'   array contains the three (or two) coefficients, the second dimension will
-#'   typically consist of twelve values corresponding to each month, and the
-#'   third dimension will be equal to the number of columns (series) in
-#'   \code{data}. If a time scale greater than one has been used then the
-#'   first elements will have NA value since the kernel can not be applied.
-#'   The first element with valid data will be the one corresponding to the
-#'   time scale chosen.
+#'   array contains the coefficients (xi, alpha, kappa for log-Logistic;
+#'   alpha, beta, pze for Gamma; mu, sigma, gamma, pze for PearsonIII, where
+#'   pze is the probability of zero in the reference period), the second
+#'   dimension will be equal to the number of series in \code{data}, and the
+#'   third dimension will typically consist of twelve values corresponding to
+#'   each month (or the frequency of \code{data}).
 #'   \item scale: the \code{scale} parameter used to generate the object.
 #'   \item kernel: the parameters and values of the kernel used to generate
 #'   the object.
@@ -211,7 +223,7 @@ spei <- function(x, y, ...) UseMethod("spei")
 #' evapotranspiration models, tools, datasets and drought monitoring.
 #' \emph{International Journal of Climatology} \bold{34}(10): 3001-3023.
 #'
-#' \url{http://spei.csic.es}
+#' \url{https://spei.csic.es}
 #'
 #'
 #' @author Santiago Beguería and Sergio M. Vicente-Serrano. Maintainer:
@@ -225,7 +237,7 @@ spei <- function(x, y, ...) UseMethod("spei")
 #' potential evapotranspiration.
 #' \code{\link{summary.spei}} and \code{\link{print.spei}} for summaries of
 #' \code{spei} objects.
-#' \code{\link{plot.spei}} for plotting \code{spei} objects.
+#' \code{\link[=plot.spei]{plot}} for plotting \code{spei} objects.
 #'
 #'
 #' @examples
@@ -267,8 +279,8 @@ spei <- function(x, y, ...) UseMethod("spei")
 #' spi_12 <- spi(wichita[, "PRCP"], 12)
 #'
 #' par(mfrow = c(2, 1))
-#' plot(spi_1, "Wichita, SPI-1")
-#' plot(spi_12, "Wichita, SPI-12")
+#' plot(spi_1, main = "Wichita, SPI-1")
+#' plot(spi_12, main = "Wichita, SPI-12")
 #'
 #' # Time series not starting in January
 #' plot(spei(ts(wichita[, "BAL"], freq = 12, start = c(1980, 6)), 12))
@@ -356,7 +368,9 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
   if (!is.numeric(scale)) {
     check$push("Argument `scale` must be numeric.")
   } else if (length(scale) != 1) {
-    check$push("Argument `scale` must be a single value")
+    check$push("Argument `scale` must be a single value.")
+  } else if (is.na(scale) || scale < 1 || scale %% 1 != 0) {
+    check$push("Argument `scale` must be a positive integer.")
   } else {
     warn$push(paste0(
       "Calculating the Standardized Precipitation ",
@@ -369,12 +383,12 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
 
   if (!is.list(kernel)) {
     check$push("Argument `kernel` must be a list.")
-  } else if (length(kernel) != 2 | names(kernel)[1] != "type" |
-    names(kernel)[2] != "shift") {
+  } else if (length(kernel) != 2 || is.null(names(kernel)) ||
+    !setequal(names(kernel), c("type", "shift"))) {
     check$push("Argument `kernel` must be a list with components `type` and `shift`.")
-  } else if (!inherits(kernel$type, "character") | length(kernel$type) != 1) {
-    check$push("Element `type` of `kernel` must be a single valued character vector")
-  } else if (!inherits(kernel$shift, "numeric") | length(kernel$shift) != 1) {
+  } else if (!is.character(kernel$type) || length(kernel$type) != 1) {
+    check$push("Element `type` of `kernel` must be a single valued character vector.")
+  } else if (!is.numeric(kernel$shift) || length(kernel$shift) != 1) {
     check$push("Element `shift` of `kernel` must be a single valued numeric.")
   } else {
     warn$push(paste0(
@@ -400,6 +414,14 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
         "Argument `fit` must be one of `ub-pwm`, `pp-pwm` ",
         "or `max-lik`."
       ))
+    } else if (fit == "max-lik" && distribution != "log-Logistic") {
+      warning(
+        "Fitting method `max-lik` is only available for the log-Logistic ",
+        "distribution; using `ub-pwm` instead.",
+        call. = FALSE
+      )
+      fit <- "ub-pwm"
+      warn$push(paste0("Using the ", fit, " parameter fitting method."))
     } else {
       warn$push(paste0("Using the ", fit, " parameter fitting method."))
     }
@@ -421,7 +443,7 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
     }
   }
 
-  if (!is.logical(na.rm)) {
+  if (!is_flag(na.rm)) {
     check$push("Argument `na.rm` must be set to either TRUE or FALSE.")
   } else if (na.rm) {
     warn$push("Missing values (`NA`) will not be considered in the calculation.")
@@ -452,20 +474,32 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
     warn$push("Using the whole time series as reference period.")
   }
 
-  if (!is.logical(keep.x)) {
+  if (!is_flag(keep.x)) {
     check$push("Argument `keep.x` must be set to either TRUE or FALSE.")
   } else if (keep.x) {
     using$keep.x <- TRUE
     warn$push("Storing the input data in the returned spei object.")
   }
 
-  if (!is.logical(verbose)) {
+  if (!is_flag(verbose)) {
     check$push("Argument `verbose` must be set to either TRUE or FALSE.")
   }
 
   # Check for missing values in inputs
-  if (!na.rm && anyNA(data)) {
+  if (isFALSE(na.rm) && anyNA(data)) {
     check$push("`data` must not contain NA values if argument `na.rm` is set to FALSE.")
+  }
+
+  # Gamma and PearsonIII are fitted to positive values only
+  if (distribution %in% c("Gamma", "PearsonIII") && is.numeric(data) &&
+    any(data < 0, na.rm = TRUE)) {
+    warning(
+      "`data` contains negative values, but the ", distribution,
+      " distribution is fitted to positive values only (zeros are handled ",
+      "through the probability of zero). Negative values get the lowest ",
+      "possible index value. For data that can be negative, such as the ",
+      "climatic water balance, use the log-Logistic distribution."
+    )
   }
 
   # Determine input dimensions and compute internal dimensions (int_dims)
@@ -486,6 +520,10 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
   n_sites <- prod(int_dims[[2]], int_dims[[3]])
   n_times <- int_dims[[1]]
   input_len <- prod(int_dims)
+  if (is.numeric(scale) && length(scale) == 1 && !is.na(scale) &&
+    scale > n_times) {
+    check$push("Argument `scale` can not be larger than the length of the series.")
+  }
 
   # Determine input data shape
   if (is.ts(data)) {
@@ -511,6 +549,12 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
     ts_freq <- frequency(data)
     ts_start <- start(data)
     ts_end <- end(data)
+    if (ts_freq %% 1 != 0) {
+      check$push(paste0(
+        "The frequency of `data` must be an integer number of periods ",
+        "per year (", ts_freq, " was given)."
+      ))
+    }
     ym <- as.yearmon(time(data))
     warn$push(paste0(
       "Time series spanning ", ym[1], " to ", ym[n_times],
@@ -524,14 +568,35 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
   }
 
   # Verify the dimensions of the parameters array
+  # (Gamma and PearsonIII carry an extra row with the probability of zero,
+  # pze; arrays without it, from SPEI < 1.9, are still accepted)
   dim_params <- ifelse(distribution == "Gamma", 2, 3)
+  has_pze <- distribution %in% c("Gamma", "PearsonIII")
+  dim_coef <- dim_params + has_pze
+  params_pze <- FALSE
   if (using$params) {
-    if (dim(params)[1] != dim_params | dim(params)[2] != n_sites |
-      dim(params)[3] != ts_freq) {
+    if (!is.array(params) || length(dim(params)) != 3) {
+      check$push(paste0(
+        "Argument `params` must be a 3-d array with dimensions (",
+        dim_coef, ", ", n_sites, ", ", ts_freq, "), as returned in the ",
+        "`coefficients` element of a previous call."
+      ))
+    } else if (!(dim(params)[1] %in% c(dim_params, dim_coef)) |
+      dim(params)[2] != n_sites | dim(params)[3] != ts_freq) {
       check$push(paste0(
         "Parameters array should have dimensions (",
-        dim_params, ", ", n_sites, ", ", ts_freq, ")"
+        dim_coef, ", ", n_sites, ", ", ts_freq, ")"
       ))
+    } else if (has_pze) {
+      params_pze <- dim(params)[1] == dim_coef
+      if (!params_pze) {
+        warning(
+          "Argument `params` has no row for the probability of zero (pze), ",
+          "as produced by SPEI < 1.9. pze will be estimated from `data` ",
+          "within the reference period.",
+          call. = FALSE
+        )
+      }
     }
   }
 
@@ -540,43 +605,51 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
     stop(paste(check$getMessages(), collapse = " "))
   }
 
-  # Show a warning with computation options
+  # Report the computation options
   if (verbose) {
-    print(paste(warn$getMessages(), collapse = " "))
+    message(paste(warn$getMessages(), collapse = " "))
   }
 
 
   ### Computation of SPEI - - - - - - - - - - - - - - - - - - - - - - - - -
 
+  # Series names: column names only make sense for matrix input; for 3-d
+  # arrays the series are all the cells of the grid
+  site_names <- if (length(int_dims) == 3 && int_dims[[3]] == 1) {
+    colnames(data)
+  } else {
+    NULL
+  }
+
   # Instantiate an object to store the distribution coefficients
-  # ADD PZE TO GAMMA AND PEARSONIII
+  # (Gamma and PearsonIII include the probability of zero, pze)
   coef <- switch(distribution,
     "Gamma" = array(
-      NA, c(2, n_sites, ts_freq),
+      NA, c(3, n_sites, ts_freq),
       list(
-        par = c("alpha", "beta"), colnames(data),
+        par = c("alpha", "beta", "pze"), site_names,
         NULL
       )
     ),
-    "PearsonIII" = coef <- array(
-      NA, c(3, n_sites, ts_freq),
+    "PearsonIII" = array(
+      NA, c(4, n_sites, ts_freq),
       list(
-        par = c("mu", "sigma", "gamma"),
-        colnames(data), NULL
+        par = c("mu", "sigma", "gamma", "pze"),
+        site_names, NULL
       )
     ),
     "log-Logistic" = array(
       NA, c(3, n_sites, ts_freq),
       list(
         par = c("xi", "alpha", "kappa"),
-        colnames(data), NULL
+        site_names, NULL
       )
     ),
     "GEV" = array(
       NA, c(3, n_sites, ts_freq),
       list(
         par = c("xi", "alpha", "kappa"),
-        colnames(data), NULL
+        site_names, NULL
       )
     )
   )
@@ -616,6 +689,11 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
   # Instantiate an object to store the standardized data
   spei <- acu * NA
 
+  # Count of maximum likelihood fits that did not converge, and of periods
+  # that could not be fitted
+  maxlik_failed <- 0
+  n_skipped <- 0
+
   # Loop through series (columns in data)
   for (s in 1:n_sites) {
     x <- acu[, s]
@@ -632,7 +710,8 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
 
       # Escape if there are no data
       if (length(x.mon) == 0) {
-        spei[f] <- NA
+        spei[ff, s] <- NA
+        coef[, s, c] <- NA
         next()
       }
 
@@ -649,22 +728,20 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
         # Fit distribution parameters
         x.mon_sd <- sd(x.mon, na.rm = TRUE)
 
-        # Early stopping
-        if (is.na(x.mon_sd) || (x.mon_sd == 0)) {
-          spei[f] <- NA
-          next()
-        }
-        if (length(x.mon) < 4) {
+        # Early stopping: too few (non-zero) values, or constant values
+        if (length(x.mon) < 4 || is.na(x.mon_sd) || x.mon_sd == 0) {
           spei[ff, s] <- NA
           coef[, s, c] <- NA
+          n_skipped <- n_skipped + 1
           next()
         }
 
         # Calculate probability weighted moments based on `lmomco` or
         # `TLMoments`
         pwm <- switch(fit,
-          "pp-pwm" = pwm.pp(x.mon, -0.35, 0, nmom = 3, sort = TRUE),
-          "ub-pwm" = PWM(x.mon, order = 0:2)
+          "pp-pwm" = pwm.pp(x.mon, A = -0.35, B = 0, nmom = 3, sort = TRUE),
+          "ub-pwm" = ,
+          "max-lik" = PWM(x.mon, order = 0:2)
         )
 
         # Check L-moments validity
@@ -699,16 +776,28 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
 
         # Adjust if user chose `log-Logistic` and `max-lik`
         if (distribution == "log-Logistic" && fit == "max-lik") {
-          f_params <- parglo.maxlik(x.mon, f_params)$para
+          ml <- parglo.maxlik(x.mon, f_params)
+          if (ml$conv == 0) {
+            f_params <- ml$para
+          } else {
+            maxlik_failed <- maxlik_failed + 1
+          }
         }
       } else {
         # User-provided distribution parameters
 
-        f_params <- as.vector(params[, s, c])
+        f_params <- as.vector(params[1:dim_params, s, c])
+        if (params_pze) {
+          pze <- params[dim_coef, s, c]
+        }
       }
 
       # Store the coefficients
-      coef[, s, c] <- f_params
+      if (has_pze) {
+        coef[, s, c] <- c(f_params, pze)
+      } else {
+        coef[, s, c] <- f_params
+      }
 
       ## Standardize - - - - - - - - - - - - - -
 
@@ -727,6 +816,22 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
       }
     } # next c (month)
   } # next s (series)
+
+  if (n_skipped > 0) {
+    warning(
+      "In ", n_skipped, " case(s) (series and period of the year), fewer ",
+      "than 4 ", ifelse(has_pze, "non-zero ", ""), "values or only constant ",
+      "values were available in the reference period, so the distribution ",
+      "could not be fitted and the index was set to NA.",
+      call. = FALSE
+    )
+  }
+  if (maxlik_failed > 0) {
+    warning(
+      "Maximum likelihood estimation did not converge in ", maxlik_failed,
+      " case(s); the `ub-pwm` estimates were used instead."
+    )
+  }
 
 
   ### Format output and return - - - - - - - - - - - - - - - - - - - - - - -
@@ -755,7 +860,8 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
     ),
     distribution = distribution,
     fit = fit,
-    na.action = na.rm
+    na.action = na.rm,
+    index = "SPEI"
   )
   if (using$ref.start | using$ref.end) {
     z$ref.period <-
@@ -780,10 +886,11 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
 #' @usage
 #' \method{print}{spei}(x, ...)
 #' \method{summary}{spei}(object, ...)
-#' \method{plot}{spei}(x, ...)
+#' \method{plot}{spei}(x, main = NULL, ...)
 #'
 #' @param x an object of class \code{spei}.
 #' @param object an object of class \code{spei}.
+#' @param main optional, a character string with the plot title.
 #' @param ... additional parameters, not used at present.
 #'
 #'
@@ -795,7 +902,12 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
 #' blue and red colors for positive and negative values, respectively. If a
 #' reference period was used in the function call it is shown by a shaded area.
 #' In the event that NA or Inf values were produced, these are shown by
-#' circles.
+#' circles. The plot is a \code{ggplot2} object, so it can be further
+#' modified by adding \code{ggplot2} layers or themes.
+#'
+#' These are S3 methods: call them as \code{print(x)}, \code{summary(x)}
+#' and \code{plot(x)}. The method functions themselves (e.g.
+#' \code{plot.spei}) are not exported.
 #'
 #' @references
 #' S.M. Vicente-Serrano, S. Beguería, J.I. López-Moreno. 2010. A Multi-scalar
@@ -832,9 +944,9 @@ summary.spei <- function(object, ...) {
     tab <- cbind(t(x$coeff[, i, ]))
     rownames(tab) <- 1:dim(x$coeff)[3]
     print(tab)
-    cat("\nFitted:\n")
-    print(x$fitted)
   }
+  cat("\nFitted:\n")
+  print(x$fitted)
 }
 
 #'
@@ -845,12 +957,10 @@ summary.spei <- function(object, ...) {
 #'
 #' @import ggplot2
 #' @importFrom zoo na.trim
-#' @importFrom reshape melt
-#' @importFrom graphics abline grid lines par plot points polygon
 #'
 #' @export
 #'
-plot.spei <- function(x, ...) {
+plot.spei <- function(x, main = NULL, ...) {
   ### Argument check - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
   if (!inherits(x, "spei")) {
@@ -864,14 +974,13 @@ plot.spei <- function(x, ...) {
   # global variables
   # utils::globalVariables(na, value)
 
-  # Label
-  if (grepl("spei", x$call[1])) {
-    label <- "SPEI (z-values)"
-  } else if (grepl("spi", x$call[1])) {
-    label <- "SPI (z-values)"
-  } else {
-    stop("Label could not be determined. Please, report the error.")
+  # Label (objects from SPEI < 1.9 have no `index` element)
+  index <- x$index
+  if (is.null(index)) {
+    fun <- deparse(x$call[[1]])
+    index <- if (identical(fun, "spi")) "SPI" else "SPEI"
   }
+  label <- paste0(index, " (z-values)")
 
   # Extract the data
   data <- x$fitted
@@ -921,18 +1030,15 @@ plot.spei <- function(x, ...) {
   }
 
   # Determine reference period
+  # A period (year, cycle) is drawn as a bar centred at
+  # year + (cycle - 1) / frequency, so the shading goes from half a period
+  # before the first bar to half a period after the last one.
   if (!is.null(x$ref.period)) {
-    if (grepl("ref.start", paste(row.names(x$ref.period), collapse = " "))) {
-      ref1 <- x$ref.period["ref.start", 1] + (x$ref.period["ref.start", 2] - 0.5) /
-        12
-    } else {
-      ref1 <- start(data)[1] + (start(data)[2] - 0.5) / 12
-    }
-    if (grepl("ref.end", paste(row.names(x$ref.period), collapse = " "))) {
-      ref2 <- x$ref.period["ref.end", 1] + (x$ref.period["ref.end", 2] - 0.5) / 12
-    } else {
-      ref2 <- end(data)[1] + (end(data)[2] - 0.5) / 12
-    }
+    rp <- x$ref.period
+    first <- if ("ref.start" %in% rownames(rp)) rp["ref.start", ] else start(data)
+    last <- if ("ref.end" %in% rownames(rp)) rp["ref.end", ] else end(data)
+    ref1 <- first[1] + (first[2] - 1.5) / ts_freq
+    ref2 <- last[1] + (last[2] - 0.5) / ts_freq
   } else {
     ref1 <- ref2 <- NULL
   }
@@ -940,17 +1046,21 @@ plot.spei <- function(x, ...) {
   # Remove leading / ending NAs
   data <- na.trim(data)
 
-  # Melt
-  kk <- as.data.frame(data)
-  kk$time <- as.character(time(data))
-  kk <- melt(kk, id.vars = "time")
-  kk$time <- as.numeric(kk$time)
+  # Reshape to long format: one row per time and series
+  wide <- as.data.frame(data)
+  kk <- data.frame(
+    time = rep(as.numeric(time(data)), ncol(wide)),
+    variable = factor(rep(names(wide), each = nrow(wide)),
+      levels = names(wide)
+    ),
+    value = unlist(wide, use.names = FALSE)
+  )
 
   # Add NAs
   kk$na <- as.numeric(ifelse(is.na(kk$value), 0, NA))
 
   # Add SPI / SPEI categories
-  kk$cat <- ifelse(kk$value > 0, "neg", "pos")
+  kk$cat <- ifelse(kk$value >= 0, "pos", "neg")
 
   # To do: cut the plot horizontally by drought classes; can be done with
   # stacked bars, using geom_bar(stat='identity')
@@ -980,14 +1090,16 @@ plot.spei <- function(x, ...) {
   }
   # add the bars with the SPEI values
   g <- g +
-    geom_bar(stat = "identity") + # color='white' helps separate between values
+    geom_col(data = kk[!is.na(kk$value), ]) +
       #scale_fill_manual(values=c('blue','red')) +  # classic SPEI look
       #scale_color_manual(values=c('blue','red'))   # classic SPEI look
-      scale_fill_manual(values = c("cyan3", "tomato")) + # new look
-      scale_color_manual(values = c("cyan3", "tomato")) # new look
+      scale_fill_manual(values = c(pos = "cyan3", neg = "tomato")) +
+      scale_color_manual(values = c(pos = "cyan3", neg = "tomato"))
   # add NAs
   g <- g +
-    geom_point(aes(.data[["time"]], .data[["na"]]),
+    geom_point(
+      data = kk[is.na(kk$value), ],
+      aes(.data[["time"]], .data[["na"]]),
       shape = 21, fill = "white",
       color = "black"
     )
@@ -995,7 +1107,9 @@ plot.spei <- function(x, ...) {
   g <- g +
     geom_hline(yintercept = 0, color = "grey") +
     facet_wrap(~variable, ncol = 1) +
-    scale_y_continuous(breaks = seq(-2, 2, 0.5)) +
+    scale_y_continuous(breaks = function(lim) {
+      seq(ceiling(lim[1] * 2) / 2, floor(lim[2] * 2) / 2, 0.5)
+    }) +
     ylab(label) +
     xlab("Time") +
     theme_bw() +
@@ -1004,6 +1118,10 @@ plot.spei <- function(x, ...) {
       strip.background = element_blank(),
       strip.text = element_text(hjust = 0)
     )
+
+  if (!is.null(main)) {
+    g <- g + ggtitle(main)
+  }
 
   return(g)
 }

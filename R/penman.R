@@ -81,26 +81,28 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
     check$push("One of `ed`, `Tdew`, `RH` or `Tmin` must be provided.")
   }
 
+  if (is.null(z)) {
+    check$push(paste(
+      "Argument `z` (elevation, m a.s.l.) must be provided. It is used for",
+      "the clear-sky solar radiation and, unless `P` is given, for the",
+      "atmospheric surface pressure."
+    ))
+  } else {
+    using$z <- TRUE
+  }
   if (!is.null(P)) {
     using$P <- TRUE
     warn$push("Using user-provided atmospheric surface pressure (`P`) data.")
-  } else if (!is.null(P0) && !is.null(z)) {
+  } else if (!is.null(P0)) {
     using$P0 <- TRUE
     warn$push("Using atmospheric pressure at sea level (`P0`) and elevation `z` to estimate atmospheric surface pressure.")
-  } else if (!is.null(z)) {
-    using$z <- TRUE
-    warn$push("Assuming constant atmospheric surface pressure corresponding to elevation `z`.")
   } else {
-    check$push("One of `P`, the pair `P0` and `z`, or `z` must be provided.")
+    warn$push("Assuming constant atmospheric surface pressure corresponding to elevation `z`.")
   }
 
   if (!is.null(CO2)) {
     using$CO2 <- TRUE
     warn$push("Using custom CO2 concentration.")
-  }
-
-  if (is.null(z)) {
-    warn$push("Specifying the elevation above sea level (z) is highly recommended in order to compute the clear-sky solar radiation.")
   }
 
   if (crop == "short") {
@@ -111,7 +113,7 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
     check$push("Argument `crop` must be one of `short` or `tall`.")
   }
 
-  if (na.rm != TRUE && na.rm != FALSE) {
+  if (!is_flag(na.rm)) {
     check$push("Argument `na.rm` must be set to TRUE or FALSE.")
   } else if (na.rm) {
     warn$push("Missing values (`NA`) will not be considered in the calculation.")
@@ -119,12 +121,16 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
     warn$push("Checking for missing values (`NA`): all the data must be complete.")
   }
 
+  if (!is_flag(verbose)) {
+    check$push("Argument `verbose` must be set to either TRUE or FALSE.")
+  }
+
   # Check for missing values in inputs
-  if (!na.rm && (anyNA(Tmin) || anyNA(Tmax) || (using$U2 && anyNA(U2)))) {
+  if (isFALSE(na.rm) && (anyNA(Tmin) || anyNA(Tmax) || (using$U2 && anyNA(U2)))) {
     check$push("`Tmin`, `Tmax` and `U2` must not contain NA values if argument `na.rm` is set to FALSE.")
   }
 
-  if (!na.rm &&
+  if (isFALSE(na.rm) &&
     ((using$Ra && anyNA(Ra)) ||
       (using$lat && anyNA(lat)) ||
       (using$Rs && anyNA(Rs)) ||
@@ -192,8 +198,8 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
   } else {
     mlen <- c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
     msum <- cumsum(mlen) - mlen + 15
-    mlen_array <- array(mlen, dim = int_dims)
-    msum_array <- array(msum, dim = int_dims)
+    mlen_array <- array(rep_len(mlen, n_times), dim = int_dims)
+    msum_array <- array(rep_len(msum, n_times), dim = int_dims)
     warn$push("Assuming the data are monthly time series starting in January, all regular (non-leap) years.")
   }
 
@@ -292,16 +298,21 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
   }
 
   # Method used
-  warn$push(paste0("Calculation method is ", method, "."))
+  if (!is.character(method) || length(method) != 1 ||
+    !method %in% c("ICID", "ASCE", "FAO")) {
+    check$push("Argument `method` must be one of `ICID`, `ASCE` or `FAO`.")
+  } else {
+    warn$push(paste0("Calculation method is ", method, "."))
+  }
 
   # Return errors and halt execution (if any)
   if (!check$isEmpty()) {
     stop(paste(check$getMessages(), collapse = " "))
   }
 
-  # Show a warning with computation options
+  # Report the computation options
   if (verbose) {
-    print(paste(warn$getMessages(), collapse = " "))
+    message(paste(warn$getMessages(), collapse = " "))
   }
 
 
@@ -322,15 +333,10 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
   } else if (using$P0) {
     # estimate from sea level pressure (eq. 1.6)
     P <- P0 * (((293 - 0.0065 * z) / 293)^5.26)
-  } else if (using$z) {
-    # assume a constant pressure
+  } else {
+    # assume a constant sea level pressure
     P0 <- array(101.3, int_dims)
     P <- P0 * (((293 - 0.0065 * z) / 293)^5.26)
-  } else {
-    stop(paste(
-      "An error occurred while computing the surface atmospheric",
-      "pressure. Please report this error."
-    ))
   }
 
   # 3. Psychrometric constant, gamma (eq. 1.4)
@@ -377,7 +383,9 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
       # (ICID, eq. 1.16, p. 68)
       ed <- RH / ((50 / etmn) + (50 / etmx))
     } else if (method == "ASCE") {
-      ed <- et * (RH / 100)
+      # (ASCE-EWRI 2005, eq. 41): mean of saturation pressures at Tmax and
+      # Tmin, as in FAO-56
+      ed <- ea * (RH / 100)
     }
   } else if (using$Tmin) {
     # (ICID, eq. 1.19, p. 69)
@@ -406,8 +414,8 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
     sset <- -tan(latr) * tan(delta)
     omegas <- sset * 0
     omegas[abs(sset) <= 1] <- acos(sset[abs(sset) <= 1])
-    # correction for high latitudes
-    omegas[sset < (-1)] <- max(omegas)
+    # correction for high latitudes: polar day (sun never sets)
+    omegas[sset < (-1)] <- pi
   }
 
   # 9. Extraterrestrial radiation, Ra (MJ m-2 d-1)
@@ -430,7 +438,7 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
       # Based on sunshine hours
       # 10. Potential daylight hours (day length, h), N (eq. 1.34)
       N <- 7.64 * omegas
-      nN <- tsun / N
+      nN <- ifelse(N > 0, tsun / N, 0)
     } else if (using$CC) {
       # Based on cloud cover
       nN <- (100 - CC) / 100
@@ -442,11 +450,7 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
   }
   # Rso: clear-sky solar radiation (eq. 1.40)
   # Note: mostly valid for z<6000 m and low air turbidity
-  if (using$z) {
-    Rso <- (0.75 + 2e-5 * z) * Ra
-  } else {
-    Rso <- (0.75 + 2e-5 * 840) * Ra
-  }
+  Rso <- (0.75 + 2e-5 * z) * Ra
   # Empirical constants
   ac <- 1.35
   bc <- -0.35
@@ -455,7 +459,9 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
   # Reference crop albedo
   alb <- 0.23
   # Rn, MJ m-2 d-1 (eq. 1.53)
-  Rn <- (1 - alb) * Rs - (ac * Rs / Rso + bc) * (a1 + b1 * sqrt(ed)) * 4.9e-9 *
+  # Relative shortwave radiation Rs/Rso is limited to 1 (FAO-56, eq. 39)
+  RsRso <- pmin(Rs / Rso, 1)
+  Rn <- (1 - alb) * Rs - (ac * RsRso + bc) * (a1 + b1 * sqrt(ed)) * 4.9e-9 *
     ((273.15 + Tmax)^4 + (273.15 + Tmin)^4) / 2
   Rn[Rs == 0] <- 0
 
@@ -463,10 +469,16 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
   # Using forward / backward differences for the first and last observations,
   # and central differences for the remaining ones.
   # TODO: if na.rm is FALSE, act similarly if exactly one neighbour is NA.
-  G <- array(NA, int_dims)
-  G[1, , ] <- 0.14 * (Tmean[2, , ] - Tmean[1, , ])
-  G[2:(n_times - 1), , ] <- 0.07 * (Tmean[3:n_times, , ] - Tmean[1:(n_times - 2), , ])
-  G[n_times, , ] <- 0.14 * (Tmean[n_times, , ] - Tmean[(n_times - 1), , ])
+  # With a single time step G cannot be estimated and is set to zero.
+  G <- array(0, int_dims)
+  if (n_times >= 2) {
+    G[1, , ] <- 0.14 * (Tmean[2, , ] - Tmean[1, , ])
+    G[n_times, , ] <- 0.14 * (Tmean[n_times, , ] - Tmean[(n_times - 1), , ])
+  }
+  if (n_times >= 3) {
+    G[2:(n_times - 1), , ] <- 0.07 * (Tmean[3:n_times, , ] -
+      Tmean[1:(n_times - 2), , ])
+  }
 
   # Wind speed at 2m, U2 (eq. 1.62)
   # U2 <- U2 * 4.85203/log((zz-0.08)/0.015)

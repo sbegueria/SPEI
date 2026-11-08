@@ -23,7 +23,7 @@ thornthwaite <- function(Tave, lat, na.rm = FALSE, verbose = TRUE) {
   using <- list(na.rm = FALSE)
 
   # Check optional inputs
-  if (na.rm != TRUE && na.rm != FALSE) {
+  if (!is_flag(na.rm)) {
     check$push("Argument `na.rm` must be set to either TRUE or FALSE.")
   } else if (na.rm) {
     warn$push("Missing values (`NA`) will not be considered in the calculation.")
@@ -31,12 +31,16 @@ thornthwaite <- function(Tave, lat, na.rm = FALSE, verbose = TRUE) {
     warn$push("Checking for missing values (`NA`): all the data must be complete.")
   }
 
+  if (!is_flag(verbose)) {
+    check$push("Argument `verbose` must be set to either TRUE or FALSE.")
+  }
+
   # Check for missing values in inputs
-  if (!na.rm && (anyNA(Tave))) {
+  if (isFALSE(na.rm) && (anyNA(Tave))) {
     check$push("`Tave` must not contain NA values if argument `na.rm` is set to FALSE.")
   }
 
-  if (!na.rm && anyNA(lat)) {
+  if (isFALSE(na.rm) && anyNA(lat)) {
     check$push("`lat` must not contain NA values if argument `na.rm` is set to FALSE.")
   }
 
@@ -94,9 +98,14 @@ thornthwaite <- function(Tave, lat, na.rm = FALSE, verbose = TRUE) {
     mlen <- c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
     msum <- cumsum(mlen) - mlen + 15
     cyc <- array(c(1:12), dim = int_dims[1])
-    mlen_array <- array(mlen, dim = int_dims)
-    msum_array <- array(msum, dim = int_dims)
+    mlen_array <- array(rep_len(mlen, n_times), dim = int_dims)
+    msum_array <- array(rep_len(msum, n_times), dim = int_dims)
     warn$push("Assuming the data are monthly time series starting in January, all regular (non-leap) years.")
+  }
+
+  # The annual heat index needs a full annual cycle
+  if (n_times < 12) {
+    check$push("Input data must cover at least one full year (12 months), as the annual heat index is computed from the monthly mean temperatures.")
   }
 
   # Verify the length of each input variable
@@ -114,9 +123,9 @@ thornthwaite <- function(Tave, lat, na.rm = FALSE, verbose = TRUE) {
     stop(paste(check$getMessages(), collapse = " "))
   }
 
-  # Show a warning with computation options
+  # Report the computation options
   if (verbose) {
-    print(paste(warn$getMessages(), collapse = " "))
+    message(paste(warn$getMessages(), collapse = " "))
   }
 
 
@@ -157,11 +166,8 @@ thornthwaite <- function(Tave, lat, na.rm = FALSE, verbose = TRUE) {
 
   # Potential evapotranspiration series (PE)
   Tave[Tave < 0] <- 0
-  if (sum(J) != 0) {
-    PET <- K * 16 * (10 * Tave / J)^q
-  } else {
-    PET <- K * 0
-  }
+  # Sites with J = 0 (all months below 0 C) have zero PET
+  PET <- ifelse(J > 0, K * 16 * (10 * Tave / J)^q, 0)
 
   ### Format output and return - - - - - - - - - - - - - - - - - - - - - - -
 

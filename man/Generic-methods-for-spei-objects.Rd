@@ -9,11 +9,11 @@
 \usage{
 \method{print}{spei}(x, ...)
 \method{summary}{spei}(object, ...)
-\method{plot}{spei}(x, ...)
+\method{plot}{spei}(x, main = NULL, ...)
 
 \method{summary}{spei}(object, ...)
 
-\method{plot}{spei}(x, ...)
+\method{plot}{spei}(x, main = NULL, ...)
 }
 \arguments{
 \item{x}{an object of class \code{spei}.}
@@ -21,6 +21,8 @@
 \item{...}{additional parameters, not used at present.}
 
 \item{object}{an object of class \code{spei}.}
+
+\item{main}{optional, a character string with the plot title.}
 }
 \description{
 Generic methods for extracting information and plotting \code{spei} objects.
@@ -38,7 +40,12 @@ the parameters of the PDF used, and the time series of SPEI or SPI values.
 blue and red colors for positive and negative values, respectively. If a
 reference period was used in the function call it is shown by a shaded area.
 In the event that NA or Inf values were produced, these are shown by
-circles.
+circles. The plot is a \code{ggplot2} object, so it can be further
+modified by adding \code{ggplot2} layers or themes.
+
+These are S3 methods: call them as \code{print(x)}, \code{summary(x)}
+and \code{plot(x)}. The method functions themselves (e.g.
+\code{plot.spei}) are not exported.
 
 See print.spei
 
