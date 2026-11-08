@@ -1,5 +1,9 @@
 # ![SPEI sticker](./SPEI.png) [![](https://cranlogs.r-pkg.org/badges/SPEI)](https://cran.r-project.org/package=SPEI)
 
+[![CRAN version](https://www.r-pkg.org/badges/version/SPEI)](https://cran.r-project.org/package=SPEI)
+[![CRAN checks](https://badges.cranchecks.info/worst/SPEI.svg)](https://cran.r-project.org/web/checks/check_results_SPEI.html)
+[![Total downloads](https://cranlogs.r-pkg.org/badges/grand-total/SPEI)](https://cran.r-project.org/package=SPEI)
+[![Last commit](https://img.shields.io/github/last-commit/sbegueria/SPEI.svg)](https://github.com/sbegueria/SPEI/commits/master)
 [![License: GPL (>= 2)](https://img.shields.io/badge/License-GPL%20%28%3E%3D%202%29-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.html)
 [![GitHub issues](https://img.shields.io/github/issues/sbegueria/SPEI.svg)](https://github.com/sbegueria/SPEI/issues)
 [![GitHub stars](https://img.shields.io/github/stars/sbegueria/SPEI.svg)](https://github.com/sbegueria/SPEI/stargazers)
