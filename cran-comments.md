@@ -7,7 +7,9 @@ section listing each change in results and its size.
 
 ## R CMD check results
 
-0 errors | 0 warnings | 0 notes
+0 errors | 0 warnings | 1 note
+
+* The only NOTE is "unable to verify current time", from the local network.
 
 * Local: macOS (aarch64), R 4.4, `R CMD check --as-cran`.
 * GitHub Actions: macOS, Windows and Ubuntu (R release), Ubuntu (R devel and
@@ -15,5 +17,5 @@ section listing each change in results and its size.
 
 ## Reverse dependencies
 
-We checked the 5 reverse dependencies (ClimInd, CSIndicators, lmomPi, NPRED,
-WASP) with R CMD check against SPEI 1.9.0. All gave Status: OK.
+We checked the 6 reverse dependencies (ClimInd, CSIndicators, dendroTools,
+lmomPi, NPRED, WASP) with R CMD check against SPEI 1.9.0. All gave Status: OK.
