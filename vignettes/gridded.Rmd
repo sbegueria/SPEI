@@ -1,0 +1,209 @@
+---
+title: "Many sites and gridded data"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Many sites and gridded data}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 4
+)
+```
+
+`spei()`, `spi()` and the PET functions process many series at once. The
+data can be:
+
+- a **matrix**, with one series per column, for several stations;
+- a **3-d array** with dimensions time × longitude × latitude, for gridded
+  data.
+
+Each series is fitted separately, with the same options, so the result is
+the same as computing each series in a loop, but simpler.
+
+```{r setup, message = FALSE}
+library(SPEI)
+```
+
+## Several stations: matrices
+
+The `balance` dataset holds the monthly climatic water balance at 11
+stations around the world, from January 1900. It is a data frame; we
+convert it to a monthly time series matrix:
+
+```{r}
+data(balance)
+bal <- ts(as.matrix(balance), start = c(1900, 1), frequency = 12)
+dim(bal)
+colnames(bal)
+```
+
+A single call computes the SPEI for all the stations:
+
+```{r}
+spei12 <- spei(bal, 12, verbose = FALSE)
+class(spei12$fitted)
+```
+
+The result is a time series matrix with the same columns. The plot method
+shows one panel per station, for up to ten stations; here, the first four:
+
+```{r, fig.height = 6, fig.alt = "SPEI-12 at Indore, Kimberley, Albuquerque and Valencia, one panel per station"}
+plot(spei(bal[, 1:4], 12, verbose = FALSE))
+```
+
+The coefficients array has one set of parameters per station and calendar
+month (parameter × station × month):
+
+```{r}
+dim(spei12$coefficients)
+```
+
+The reference period and the other options of `vignette("options")` work in
+the same way. With `na.rm = TRUE`, each station can have its own gaps.
+
+### PET for several stations
+
+The PET functions also take matrices, with one latitude per column:
+
+```{r}
+data(wichita)
+tmed <- ts(cbind(site1 = wichita$TMED, site2 = wichita$TMED + 2),
+  start = c(1980, 1), frequency = 12
+)
+pet <- thornthwaite(tmed, lat = c(37.6, 40.1), verbose = FALSE)
+head(pet)
+```
+
+## Gridded data: 3-d arrays
+
+The `cruts4` dataset is a small grid of 2 × 3 cells in the central Pyrenees (Spain and France),
+with the monthly water balance from CRU TS 4.05 for 1900–2019. Its
+dimensions are time × longitude × latitude:
+
+```{r}
+data(cruts4)
+dim(cruts4)
+```
+
+Arrays are processed in the same way, and the result has the same
+dimensions:
+
+```{r}
+spei12_grid <- spei(cruts4, 12, verbose = FALSE)
+dim(spei12_grid$fitted)
+```
+
+For example, the SPEI-12 of the last month (December 2019) in each cell:
+
+```{r}
+round(spei12_grid$fitted[1440, , ], 2)
+```
+
+An array can't be a time series, so it is taken to start in January. Its
+reference period would have to be given as years counted from the first
+one. To use calendar dates, reshape the array into a matrix with one column
+per cell, compute the index, and reshape the result back:
+
+```{r}
+m <- ts(matrix(cruts4, nrow = dim(cruts4)[1]),
+  start = c(1900, 1), frequency = 12
+)
+s <- spei(m, 12, ref.start = c(1961, 1), ref.end = c(1990, 12),
+  verbose = FALSE
+)
+spei12_ref <- array(s$fitted, dim = dim(cruts4))
+round(spei12_ref[1440, , ], 2)
+```
+
+The PET functions take arrays too, with latitude given as a longitude ×
+latitude matrix:
+
+```{r}
+tmed <- array(rep(wichita$TMED, 6), dim = c(382, 2, 3))
+lat <- matrix(c(42.25, 42.75, 43.25), nrow = 2, ncol = 3, byrow = TRUE)
+pet <- thornthwaite(tmed, lat, verbose = FALSE)
+dim(pet)
+```
+
+### Cells with no data
+
+Grids often include cells with no data, such as the ocean in land datasets.
+Those cells need `na.rm = TRUE`, and their index is `NA`:
+
+```{r}
+x <- cruts4
+x[, 1, 1] <- NA
+s <- spei(x, 12, na.rm = TRUE, verbose = FALSE)
+round(s$fitted[1440, , ], 2)
+```
+
+## Reading and writing NetCDF files
+
+Gridded climate data are usually distributed as NetCDF files. The code below
+sketches how to compute the SPEI from the CRU TS precipitation and PET files
+with the `ncdf4` package. It is not run here, because it needs the files,
+which are large.
+
+```{r, eval = FALSE}
+library(ncdf4)
+
+pre_nc <- nc_open("cru_ts4.10.1901.2025.pre.dat.nc")
+pet_nc <- nc_open("cru_ts4.10.1901.2025.pet.dat.nc")
+
+# Variables are stored as longitude x latitude x time
+pre <- ncvar_get(pre_nc, "pre") # mm per month
+pet <- ncvar_get(pet_nc, "pet") # mm per day
+
+# Convert PET to mm per month: multiply each time step by its number of
+# days. `sweep()` applies the vector along the third (time) dimension;
+# `pet * ndays` would recycle it along longitude instead.
+dates <- as.Date(ncvar_get(pre_nc, "time"), origin = "1900-01-01")
+ndays <- lubridate::days_in_month(dates)
+pet <- sweep(pet, 3, ndays, "*")
+
+# Put time first, as spei() expects
+bal <- aperm(pre - pet, c(3, 1, 2))
+
+spei12 <- spei(bal, 12, na.rm = TRUE, verbose = FALSE)
+
+# Back to longitude x latitude x time for writing
+out <- aperm(spei12$fitted, c(2, 3, 1))
+```
+
+The result can then be written with `ncdf4::ncvar_def()`,
+`ncdf4::nc_create()` and `ncdf4::ncvar_put()`, using the dimensions of the
+input file.
+
+Note the conversion of PET to monthly values. When a vector is multiplied
+by an array, R recycles the vector along the first dimension of the array,
+not along time. The SPEIbase dataset was affected by this error until
+version 2.13.0.
+
+### Large grids
+
+A global grid at 0.5° has about 67,000 land cells, and more than 1,500
+months of data. Such arrays can exceed the memory of a desktop computer.
+Two common ways to handle them:
+
+- **Process the grid in blocks**, for example by bands of latitude, reading
+  each block from the file with the `start` and `count` arguments of
+  `ncvar_get()`, and writing each result before reading the next block.
+- **Process the blocks in parallel**, for example with the `parallel` or
+  `future.apply` packages. Each cell is fitted independently, so the result
+  doesn't depend on how the grid is split.
+
+### A complete example: SPEIbase
+
+[SPEIbase](https://github.com/sbegueria/SPEIbase) is the code that produces
+the global SPEI dataset distributed at <https://spei.csic.es>. It does
+everything described in this section for the whole globe: it reads the CRU
+TS precipitation and PET NetCDF files in bands of latitude, converts PET to
+monthly values, computes the SPEI at time scales from 1 to 48 months in
+parallel, and writes the results to NetCDF files. Its code is a good
+starting point for processing other large gridded datasets.

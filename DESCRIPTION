@@ -21,5 +21,6 @@ Language: en-US
 BugReports: https://github.com/sbegueria/SPEI/issues
 LazyLoad: true
 Encoding: UTF-8
-Suggests: covr, testthat
+Suggests: covr, knitr, rmarkdown, testthat
+VignetteBuilder: knitr
 RoxygenNote: 7.3.2
