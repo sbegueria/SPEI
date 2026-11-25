@@ -9,6 +9,7 @@ reference:
   - Drought-indices
   - Generic-methods-for-spei-objects
   - Kernel-functions
+  - Scale-scan
 - title: Potential evapotranspiration
   contents:
   - Potential-evapotranspiration
