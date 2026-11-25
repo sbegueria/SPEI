@@ -103,7 +103,11 @@ negative, and the three-parameter log-Logistic fits it well across climates.
 The Gamma and PearsonIII distributions are fitted to positive values only;
 negative values get a warning and the lowest possible index value.
 
-**For the SPI, the Gamma distribution is the standard.** Months with zero
+**For the SPI, the Gamma distribution is the standard**, as defined by
+McKee et al. (1993). The PearsonIII distribution has a third parameter, for
+the shape, so it is more flexible and can fit skewed precipitation better;
+it can be preferred, at the cost of departing from the original definition.
+Months with zero
 precipitation are handled through the probability of zero precipitation
 (`pze`) in each calendar month: the fitted distribution covers only the
 positive values, and the zeros get an index value set by `pze`, the share
@@ -117,9 +121,9 @@ spi1 <- sapply(c("Gamma", "PearsonIII", "log-Logistic"),
 round(spi1[prcp == 0, ], 2)
 ```
 
-The distributions can also differ in the tails. The PearsonIII distribution
-is bounded below, and here it returns `-Inf` for three months whose
-precipitation falls below that bound:
+The distributions can also differ in the tails. Being more flexible, the
+PearsonIII distribution can also be bounded below, and here it returns `-Inf`
+for three months whose precipitation falls below that bound:
 
 ```{r}
 colSums(is.infinite(spi1))
@@ -258,3 +262,10 @@ x[x == -Inf] <- -3
 If they are frequent, check the reference period and the distribution:
 a longer reference period, or a different distribution, may fit the data
 better.
+
+## References
+
+McKee, T.B., Doesken, N.J., Kleist, J. (1993). The relationship of drought
+frequency and duration to time scales. In *Proceedings of the 8th Conference
+on Applied Climatology*, 17–22 January 1993, Anaheim, California. American
+Meteorological Society, Boston, 179–184.
