@@ -7,15 +7,15 @@
 \alias{penman}
 \title{Computation of potential and reference evapotranspiration}
 \usage{
-thornthwaite(Tave, lat, na.rm = FALSE, verbose=TRUE)
+thornthwaite(Tave, lat, na.rm = FALSE, verbose=TRUE, start = NULL)
 
 hargreaves(Tmin, Tmax, Ra = NULL, lat = NULL, Pre = NULL, na.rm = FALSE,
-verbose=TRUE, dates = NULL)
+verbose=TRUE, dates = NULL, start = NULL)
 
 penman(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL, tsun = NULL,
        CC = NULL, ed = NULL, Tdew = NULL, RH = NULL, P = NULL, P0 = NULL,
        CO2 = NULL, z = NULL, crop='short', na.rm = FALSE, method='ICID',
-       verbose=TRUE, dates = NULL, kRs = NULL, aT = 0)
+       verbose=TRUE, dates = NULL, kRs = NULL, aT = 0, start = NULL)
 
 penman(
   Tmin,
@@ -39,10 +39,11 @@ penman(
   verbose = TRUE,
   dates = NULL,
   kRs = NULL,
-  aT = 0
+  aT = 0,
+  start = NULL
 )
 
-thornthwaite(Tave, lat, na.rm = FALSE, verbose = TRUE)
+thornthwaite(Tave, lat, na.rm = FALSE, verbose = TRUE, start = NULL)
 }
 \arguments{
 \item{Tmin}{a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of
@@ -76,6 +77,15 @@ monthly means and totals) and the output is ETo in mm per day. The dates
 must not contain missing values and must be in strictly increasing order;
 gaps between dates are allowed. If \code{NULL} (the default), the data
 are monthly. See Details.}
+
+\item{start}{optional, the month of the first observation of monthly
+data that are not a time series (a vector, matrix or 3-d array): a single
+year (i.e. starting in January), or a vector \code{c(year, month)}, as in
+\code{\link{ts}}. It sets the calendar month of each time step (used for
+the month length and the mid-month day of the year). If \code{NULL} (the
+default), the data are taken to start in January, all years being
+regular (non-leap) years. Can not be used if the main input is a time
+series, nor with \code{dates}. See Details.}
 
 \item{U2}{optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d
 array of monthly mean daily wind speeds at 2 m height, m s-1. No height
@@ -151,7 +161,9 @@ monthly mean temperatures, ºC.}
 A vector, matrix or 3-d array with the values of monthly potential
 or reference evapotranspiration, in mm. If the main input is a time series
 (and \code{dates} is not given) the output is a time series with the same
-time attributes.
+time attributes. If \code{start} is given, a vector or matrix input gives
+a monthly time series, and a 3-d array input gives an array whose time
+\code{dimnames} are the months ("YYYY-MM").
 
 If \code{dates} is given, the output has one value of daily reference
 evapotranspiration per date, in mm per day. For vector or matrix input
@@ -316,8 +328,16 @@ If the main input object (\code{Tave}, \code{Tmin}, \code{Tmax}) is a time
 series then the function \code{\link{cycle}} will be used to determine the
 position of each observation within the
 year (month), allowing the data to start in a month different than January.
-If no time information is provided, then the input data will be treated as
-a sequence of monthly values starting in January.
+For a vector, matrix or 3-d array, the first month can be given with the
+argument \code{start}: a vector or a matrix is then converted to a
+monthly time series (\code{ts(x, start = start, frequency = 12)}), and
+the result is a time series; a 3-d array keeps its shape, and the time
+(first) \code{dimnames} of the result are the months, as "YYYY-MM"
+(the format used by \code{\link{spei}}). As with time series, the actual
+length of each month (including leap years) is used. If no time
+information is provided, then the input data will be treated as a
+sequence of monthly values starting in January, all years being regular
+(non-leap) years.
 
 \strong{Daily data.} By default all three functions work with monthly
 data. \code{hargreaves} and \code{penman} can also compute daily ETo by

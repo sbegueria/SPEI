@@ -106,21 +106,34 @@ For example, the SPEI-12 of the last month (December 2019) in each cell:
 round(spei12_grid$fitted[1440, , ], 2)
 ```
 
-An array can't be a time series, so it is taken to start in January. Its
-reference period would have to be given as years counted from the first
-one. To use calendar dates, reshape the array into a matrix with one column
-per cell, compute the index, and reshape the result back:
+An array can't be a time series, so without more information it is taken
+to start in January, and a reference period would have to be given as
+years counted from the first one. The arguments `start` and `frequency`
+give the time information, as in `ts()`. With them the reference period
+is given in calendar dates, here 1961–1990:
 
 ```{r}
-m <- ts(matrix(cruts4, nrow = dim(cruts4)[1]),
-  start = c(1900, 1), frequency = 12
+spei12_ref <- spei(cruts4, 12,
+  start = c(1900, 1),
+  ref.start = c(1961, 1), ref.end = c(1990, 12), verbose = FALSE
 )
-s <- spei(m, 12, ref.start = c(1961, 1), ref.end = c(1990, 12),
-  verbose = FALSE
-)
-spei12_ref <- array(s$fitted, dim = dim(cruts4))
-round(spei12_ref[1440, , ], 2)
 ```
+
+The time dimension of the result is labelled with the months, so it can be
+indexed by date. December 2019 again, now with the 1961–1990 reference
+period:
+
+```{r}
+head(dimnames(spei12_ref$fitted)[[1]])
+round(spei12_ref$fitted["2019-12", , ], 2)
+```
+
+Monthly labels are "YYYY-MM"; with other frequencies the periods are
+numbered, e.g. "1961-P01" to "1961-P48" with `frequency = 48` (weekly
+data, see `vignette("weekly")`). If the time `dimnames` of an array are
+already monthly dates ("YYYY-MM" or "YYYY-MM-DD", as when they are read from
+a NetCDF file), `start` is not needed: the time information is taken from
+them.
 
 The PET functions take arrays too, with latitude given as a longitude ×
 latitude matrix:
@@ -128,9 +141,13 @@ latitude matrix:
 ```{r}
 tmed <- array(rep(wichita$TMED, 6), dim = c(382, 2, 3))
 lat <- matrix(c(42.25, 42.75, 43.25), nrow = 2, ncol = 3, byrow = TRUE)
-pet <- thornthwaite(tmed, lat, verbose = FALSE)
+pet <- thornthwaite(tmed, lat, start = c(1980, 1), verbose = FALSE)
 dim(pet)
 ```
+
+The PET functions also take `start` (the first month; the frequency is
+always 12), which sets the calendar month of each time step and labels the
+time dimension of the result.
 
 ### Cells with no data
 
@@ -171,7 +188,7 @@ pet <- sweep(pet, 3, ndays, "*")
 # Put time first, as spei() expects
 bal <- aperm(pre - pet, c(3, 1, 2))
 
-spei12 <- spei(bal, 12, na.rm = TRUE, verbose = FALSE)
+spei12 <- spei(bal, 12, na.rm = TRUE, start = c(1901, 1), verbose = FALSE)
 
 # Back to longitude x latitude x time for writing
 out <- aperm(spei12$fitted, c(2, 3, 1))

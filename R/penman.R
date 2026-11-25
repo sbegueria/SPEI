@@ -20,7 +20,7 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
                    tsun = NULL, CC = NULL, ed = NULL, Tdew = NULL, RH = NULL,
                    P = NULL, P0 = NULL, CO2 = NULL, z = NULL, crop = "short",
                    na.rm = FALSE, method = "ICID", verbose = TRUE,
-                   dates = NULL, kRs = NULL, aT = 0) {
+                   dates = NULL, kRs = NULL, aT = 0, start = NULL) {
   ### Argument check - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
   # Determine which combinations of inputs were passed and check their
@@ -204,6 +204,11 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
     check$push("Data must not contain NA values if argument `na.rm` is set to FALSE.")
   }
 
+  # Time information for monthly input that is not a time series (`start`)
+  st <- pet_start(Tmin, start, !is.null(dates), check)
+  Tmin <- st$x
+  start <- st$start
+
   # Determine input dimensions and compute internal dimensions (int_dims)
   tmin_dims <- dim(Tmin)
   if (is.null(tmin_dims) || length(tmin_dims) == 1) {
@@ -260,13 +265,18 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
       }
       msum_array <- array(yday(dates), dim = int_dims)
     }
-  } else if (is.ts(Tmin)) {
-    ts_freq <- frequency(Tmin)
-    ts_start <- start(Tmin)
+  } else if (is.ts(Tmin) || !is.null(start)) {
+    tt <- if (is.ts(Tmin)) {
+      Tmin
+    } else {
+      ts(seq_len(n_times), start = start, frequency = 12)
+    }
+    ts_freq <- stats::frequency(tt)
+    ts_start <- stats::start(tt)
     if (ts_freq != 12) {
       check$push("Input data needs to be have a frequency of 12 if provided as a time series (i.e., a monthly time series).")
     }
-    ym <- as.yearmon(time(Tmin))
+    ym <- as.yearmon(time(tt))
     warn$push(paste0("Time series spanning ", ym[1], " to ", ym[n_times], "."))
     date <- as.Date.yearmon(ym)
     mlen_array <- array(as.numeric(days_in_month(date)), dim = int_dims)
@@ -649,6 +659,9 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
   }
 
   dimnames(ET0) <- names
+  if (!is.null(start)) {
+    ET0 <- set_time_dimnames(ET0, names, time_labels(ts_start, 12, n_times))
+  }
 
   return(ET0)
 }

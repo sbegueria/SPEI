@@ -9,7 +9,8 @@
 #' @rdname Potential-evapotranspiration
 #' @export
 #'
-thornthwaite <- function(Tave, lat, na.rm = FALSE, verbose = TRUE) {
+thornthwaite <- function(Tave, lat, na.rm = FALSE, verbose = TRUE,
+                         start = NULL) {
   ### Argument check - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
   # Determine which combinations of inputs were passed and check their
@@ -34,6 +35,11 @@ thornthwaite <- function(Tave, lat, na.rm = FALSE, verbose = TRUE) {
   if (!is_flag(verbose)) {
     check$push("Argument `verbose` must be set to either TRUE or FALSE.")
   }
+
+  # Time information for input that is not a time series (`start`)
+  st <- pet_start(Tave, start, FALSE, check)
+  Tave <- st$x
+  start <- st$start
 
   # Check for missing values in inputs
   if (isFALSE(na.rm) && (anyNA(Tave))) {
@@ -82,14 +88,19 @@ thornthwaite <- function(Tave, lat, na.rm = FALSE, verbose = TRUE) {
   names <- dimnames(Tave)
 
   # Determine dates: month length and mid-month day-within-year
-  if (is.ts(Tave)) {
-    ts_freq <- frequency(Tave)
-    ts_start <- start(Tave)
-    cyc <- cycle(Tave)
+  if (is.ts(Tave) || !is.null(start)) {
+    tt <- if (is.ts(Tave)) {
+      Tave
+    } else {
+      ts(seq_len(n_times), start = start, frequency = 12)
+    }
+    ts_freq <- stats::frequency(tt)
+    ts_start <- stats::start(tt)
+    cyc <- cycle(tt)
     if (ts_freq != 12) {
       check$push("Input data needs to be have a frequency of 12 if provided as a time series (i.e., a monthly time series).")
     }
-    ym <- as.yearmon(time(Tave))
+    ym <- as.yearmon(time(tt))
     warn$push(paste0("Time series spanning ", ym[1], " to ", ym[n_times], "."))
     date <- as.Date.yearmon(ym)
     mlen_array <- array(as.numeric(lubridate::days_in_month(date)), dim = int_dims)
@@ -187,6 +198,9 @@ thornthwaite <- function(Tave, lat, na.rm = FALSE, verbose = TRUE) {
     colnames(PET) <- rep("PET_tho", ncol(PET))
   }
   dimnames(PET) <- names
+  if (!is.null(start)) {
+    PET <- set_time_dimnames(PET, names, time_labels(ts_start, 12, n_times))
+  }
 
   return(PET)
 }
