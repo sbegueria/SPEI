@@ -375,6 +375,30 @@ at the 12-month scale:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">spei12</span><span class="op">$</span><span class="va">fitted</span> <span class="op">&lt;=</span> <span class="op">-</span><span class="fl">1</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 0.1859838</span></span></code></pre></div>
+<p><code><a href="../reference/Index-events.html">index_events()</a></code> lists the drought events: the runs of
+consecutive months with the index at or below -1. For each event it
+gives the first and the last month, the duration in months, the severity
+(the sum of the index values), the intensity (the severity divided by
+the duration) and the peak (the lowest value) with its month:</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/Index-events.html">index_events</a></span><span class="op">(</span><span class="va">spei12</span><span class="op">)</span></span>
+<span><span class="co">#&gt;      start     end duration   severity intensity      peak peak.time</span></span>
+<span><span class="co">#&gt; 1  1980-12 1981-09       10 -15.841594 -1.584159 -1.870803   1981-04</span></span>
+<span><span class="co">#&gt; 2  1984-11 1984-11        1  -1.021509 -1.021509 -1.021509   1984-11</span></span>
+<span><span class="co">#&gt; 3  1985-04 1985-05        2  -2.345170 -1.172585 -1.186044   1985-05</span></span>
+<span><span class="co">#&gt; 4  1988-08 1989-06       11 -18.650139 -1.695467 -1.934305   1989-04</span></span>
+<span><span class="co">#&gt; 5  1990-08 1992-01       18 -27.198684 -1.511038 -1.889157   1991-03</span></span>
+<span><span class="co">#&gt; 6  1994-05 1994-12        8 -10.020066 -1.252508 -1.404095   1994-07</span></span>
+<span><span class="co">#&gt; 7  1996-06 1996-08        3  -3.401906 -1.133969 -1.181117   1996-06</span></span>
+<span><span class="co">#&gt; 8  2001-07 2001-07        1  -1.078936 -1.078936 -1.078936   2001-07</span></span>
+<span><span class="co">#&gt; 9  2001-11 2002-06        8 -10.602097 -1.325262 -1.573290   2002-03</span></span>
+<span><span class="co">#&gt; 10 2006-11 2006-11        1  -1.016132 -1.016132 -1.016132   2006-11</span></span>
+<span><span class="co">#&gt; 11 2011-05 2011-10        6  -9.322761 -1.553793 -1.777688   2011-09</span></span></code></pre></div>
+<p>The 2011 drought started in May and was still going on at the end of
+the series. The argument <code>threshold</code> changes the threshold,
+<code>type = "wet"</code> gives the wet events, and
+<code>min.duration</code> drops the shortest events. See
+<code><a href="../reference/Index-events.html">?index_events</a></code> for the details.</p>
 <p><code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> shows the call, the values and the fitted
 parameters of the distribution for each calendar month, which are also
 in <code>spei12$coefficients</code>.</p>
@@ -384,21 +408,21 @@ in <code>spei12$coefficients</code>.</p>
 </h2>
 <p>The SPI is computed in the same way from precipitation alone. By
 default it uses the Gamma distribution:</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">spi12</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Drought-indices.html">spi</a></span><span class="op">(</span><span class="va">wichita</span><span class="op">[</span>, <span class="st">"PRCP"</span><span class="op">]</span>, <span class="fl">12</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Calculating the Standardized Precipitation Index (SPI) at a time scale of 12. Using kernel type 'rectangular', with 0 shift. Fitting the data to a Gamma distribution. Using the ub-pwm parameter fitting method. Checking for missing values (`NA`): all the data must be complete. Using the whole time series as reference period. Input type is tsvector. Time series spanning Jan 1980 to Oct 2011, with frequency = 12.</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">spi12</span>, main <span class="op">=</span> <span class="st">"Wichita, SPI-12"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="SPEI_files/figure-html/unnamed-chunk-12-1.png" class="r-plt" alt="Bar plot of SPI-12 at Wichita, 1980-2011" width="672"></p>
+<p><img src="SPEI_files/figure-html/unnamed-chunk-13-1.png" class="r-plt" alt="Bar plot of SPI-12 at Wichita, 1980-2011" width="672"></p>
 <p>The SPI and the SPEI often agree, but the SPEI also accounts for the
 effect of temperature on the atmospheric water demand. Where
 temperatures are rising or a dry period is also hot, the SPEI shows more
 severe drought than the SPI:</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">spi12</span><span class="op">$</span><span class="va">fitted</span>, <span class="va">spei12</span><span class="op">$</span><span class="va">fitted</span>,</span>
 <span>  xlab <span class="op">=</span> <span class="st">"SPI-12"</span>, ylab <span class="op">=</span> <span class="st">"SPEI-12"</span>, asp <span class="op">=</span> <span class="fl">1</span></span>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, lty <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
-<p><img src="SPEI_files/figure-html/unnamed-chunk-13-1.png" class="r-plt" alt="Scatter plot of SPEI-12 against SPI-12 at Wichita, with the one-to-one line" width="672"></p>
+<p><img src="SPEI_files/figure-html/unnamed-chunk-14-1.png" class="r-plt" alt="Scatter plot of SPEI-12 against SPI-12 at Wichita, with the one-to-one line" width="672"></p>
 </div>
 <div class="section level2">
 <h2 id="next-steps">Next steps<a class="anchor" aria-label="anchor" href="#next-steps"></a>

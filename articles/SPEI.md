@@ -302,6 +302,36 @@ mean(spei12$fitted <= -1, na.rm = TRUE)
 #> [1] 0.1859838
 ```
 
+[`index_events()`](https://sbegueria.github.io/SPEI/reference/Index-events.md)
+lists the drought events: the runs of consecutive months with the index
+at or below -1. For each event it gives the first and the last month,
+the duration in months, the severity (the sum of the index values), the
+intensity (the severity divided by the duration) and the peak (the
+lowest value) with its month:
+
+``` r
+
+index_events(spei12)
+#>      start     end duration   severity intensity      peak peak.time
+#> 1  1980-12 1981-09       10 -15.841594 -1.584159 -1.870803   1981-04
+#> 2  1984-11 1984-11        1  -1.021509 -1.021509 -1.021509   1984-11
+#> 3  1985-04 1985-05        2  -2.345170 -1.172585 -1.186044   1985-05
+#> 4  1988-08 1989-06       11 -18.650139 -1.695467 -1.934305   1989-04
+#> 5  1990-08 1992-01       18 -27.198684 -1.511038 -1.889157   1991-03
+#> 6  1994-05 1994-12        8 -10.020066 -1.252508 -1.404095   1994-07
+#> 7  1996-06 1996-08        3  -3.401906 -1.133969 -1.181117   1996-06
+#> 8  2001-07 2001-07        1  -1.078936 -1.078936 -1.078936   2001-07
+#> 9  2001-11 2002-06        8 -10.602097 -1.325262 -1.573290   2002-03
+#> 10 2006-11 2006-11        1  -1.016132 -1.016132 -1.016132   2006-11
+#> 11 2011-05 2011-10        6  -9.322761 -1.553793 -1.777688   2011-09
+```
+
+The 2011 drought started in May and was still going on at the end of the
+series. The argument `threshold` changes the threshold, `type = "wet"`
+gives the wet events, and `min.duration` drops the shortest events. See
+[`?index_events`](https://sbegueria.github.io/SPEI/reference/Index-events.md)
+for the details.
+
 [`summary()`](https://rdrr.io/r/base/summary.html) shows the call, the
 values and the fitted parameters of the distribution for each calendar
 month, which are also in `spei12$coefficients`.
@@ -319,7 +349,7 @@ plot(spi12, main = "Wichita, SPI-12")
 ```
 
 ![Bar plot of SPI-12 at Wichita,
-1980-2011](SPEI_files/figure-html/unnamed-chunk-12-1.png)
+1980-2011](SPEI_files/figure-html/unnamed-chunk-13-1.png)
 
 The SPI and the SPEI often agree, but the SPEI also accounts for the
 effect of temperature on the atmospheric water demand. Where
@@ -335,7 +365,7 @@ abline(0, 1, lty = 2)
 ```
 
 ![Scatter plot of SPEI-12 against SPI-12 at Wichita, with the one-to-one
-line](SPEI_files/figure-html/unnamed-chunk-13-1.png)
+line](SPEI_files/figure-html/unnamed-chunk-14-1.png)
 
 ## Next steps
 

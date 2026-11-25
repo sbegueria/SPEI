@@ -14,6 +14,9 @@
 
   Generic methods for `spei` objects.
 
+- [`index_events()`](https://sbegueria.github.io/SPEI/reference/Index-events.md)
+  : Drought and wet events of an index series.
+
 - [`kern()`](https://sbegueria.github.io/SPEI/reference/Kernel-functions.md)
   [`kern.plot()`](https://sbegueria.github.io/SPEI/reference/Kernel-functions.md)
   : Time kernel for computing the SPEI at different time scales.
