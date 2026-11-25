@@ -1,9 +1,10 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^data-raw$
-^_config\.yml$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
 ^cran-comments\.md$
 ^README\.md
 ^CRAN-SUBMISSION$
-^SPEI\.png$
 ^\.github$
