@@ -1,4 +1,4 @@
-# ![SPEI sticker](./SPEI.png) [![](https://cranlogs.r-pkg.org/badges/SPEI)](https://cran.r-project.org/package=SPEI)
+# ![SPEI sticker](man/figures/logo.png) [![CRAN monthly downloads](https://cranlogs.r-pkg.org/badges/SPEI)](https://cran.r-project.org/package=SPEI)
 
 [![R-CMD-check](https://github.com/sbegueria/SPEI/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/sbegueria/SPEI/actions/workflows/R-CMD-check.yaml)
 [![Codecov test coverage](https://codecov.io/gh/sbegueria/SPEI/graph/badge.svg)](https://app.codecov.io/gh/sbegueria/SPEI)
@@ -98,6 +98,11 @@ Version 1.9.0 fixes a number of bugs found in a full audit of the package. Some 
 ## Any problems?
 
 Feel free to [send an issue](https://github.com/sbegueria/SPEI/issues) if you have any questions or problems.
+
+
+## Use of AI tools
+
+Since version 1.9.0, the maintainers have used AI coding assistants for code review, bug fixing, tests and documentation. All changes were reviewed, tested and approved by the maintainers, who are responsible for the package.
 
 
 ## Copyright and license

@@ -1,0 +1,24 @@
+url: https://sbegueria.github.io/SPEI/
+
+template:
+  bootstrap: 5
+
+reference:
+- title: Drought indices
+  contents:
+  - Drought-indices
+  - Generic-methods-for-spei-objects
+  - Kernel-functions
+- title: Potential evapotranspiration
+  contents:
+  - Potential-evapotranspiration
+- title: Distributions
+  contents:
+  - Generalized-Logistic
+- title: Data
+  contents:
+  - Datasets
+- title: Package
+  contents:
+  - SPEI
+  - SPEINews
