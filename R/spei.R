@@ -802,7 +802,7 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
   # Warn if the reference period falls outside the time span of the data
   # (the data limits are then used instead, as before)
   if (using$ref.start | using$ref.end) {
-    span <- tsp(acu)[1:2]
+    span <- stats::tsp(acu)[1:2]
     eps <- 1e-6 / ts_freq
     outside <- function(r) {
       t <- r[1] + (r[2] - 1) / ts_freq
