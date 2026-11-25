@@ -23,3 +23,11 @@ reference:
   contents:
   - SPEI
   - SPEINews
+
+articles:
+- title: Articles
+  navbar: ~
+  contents:
+  - options
+  - gridded
+  - scale_scan
