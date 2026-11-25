@@ -1,5 +1,9 @@
 # SPEI (development version)
 
+Version 1.10.0 (in preparation) adds new functionality and documentation.
+The results of existing calls are unchanged, except where `penman()` is
+given wind speeds below 0.5 m s-1 (see *Changes in results*).
+
 ## New features
 
 * New function `<scale_scan>` finds the time scale and the position in the
@@ -123,6 +127,19 @@
   the reference period is still limited to the data. The example of a
   reference period in `?spei`, which started before the data, now starts
   with them (same result).
+
+## Documentation
+
+* Five vignettes, also available on the new package website
+  (<https://sbegueria.github.io/SPEI/>), built with pkgdown:
+  `vignette("SPEI")` (getting started: PET, water balance, SPEI and SPI,
+  plotting, reading the values and drought events),
+  `vignette("options")` (time scale, kernel, distribution, fitting method,
+  reference period, reusing parameters, missing and infinite values, and
+  the choice of the evapotranspiration method under warming),
+  `vignette("gridded")` (several sites and gridded data, NetCDF files),
+  `vignette("weekly")` (weekly and other non-monthly series) and
+  `vignette("scale_scan")` (relating the index to annual series).
 
 ## Changes in results
 

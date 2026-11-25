@@ -92,6 +92,8 @@ Other (possibly useful) references:
 
 The full list of changes is in [NEWS.md](NEWS.md), and can also be shown from R with `SPEINews()`.
 
+Version 1.10.0 adds a function to find the time scale and the time of the year at which the index best relates to an annual series such as tree rings or crop yields (`scale_scan()`), a function to extract drought and wet events (`index_events()`), daily reference evapotranspiration, the temperature-only Penman-Monteith procedure of the revised FAO-56 and the energy-only potential evapotranspiration of Milly and Dunne (2016) in `penman()`, time information for gridded (3-d array) data, a new example dataset (`tarazona`), and five vignettes, also on the [package website](https://sbegueria.github.io/SPEI/).
+
 Version 1.9.0 fixes a number of bugs found in a full audit of the package. Some of them change the results with respect to version 1.8.1; see the section *Changes in results* in [NEWS.md](NEWS.md) for which options are affected and by how much.
 
 
