@@ -82,7 +82,7 @@ head(pet)
 
 ## Gridded data: 3-d arrays
 
-The `cruts4` dataset is a small grid of 2 × 3 cells in the central Pyrenees,
+The `cruts4` dataset is a small grid of 2 × 3 cells in the central Pyrenees (Spain and France),
 with the monthly water balance from CRU TS 4.05 for 1900–2019. Its
 dimensions are time × longitude × latitude:
 
