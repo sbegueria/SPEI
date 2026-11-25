@@ -15,6 +15,19 @@
   and `<scale_extract>` extracts the annual series of the index for a given
   window. A new vignette, `vignette("scale_scan")`, shows how to use them.
 
+* New dataset `tarazona`: annual basal area increment of 18 cores of Aleppo
+  pine (*Pinus halepensis*) in the unthinned plot of a plantation at
+  Tarazona (Spain), 1959-2017, and the climate of the site (precipitation,
+  reference evapotranspiration, minimum and maximum temperature) with 48
+  periods per year (quarter-months), 1961-2020, from the Spanish drought
+  monitor. It is used in `vignette("scale_scan")`. See `?Datasets`.
+
+* New vignette, `vignette("weekly")`, on computing the indices with weekly
+  and other non-monthly time series: building quarter-month and 52-week
+  series from daily data, evapotranspiration at those resolutions, the
+  reference period, and the comparison with the monthly index, using the
+  `tarazona` dataset.
+
 # SPEI 1.9.0
 
 ## Changes in results with respect to 1.8.1

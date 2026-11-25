@@ -39,102 +39,200 @@ scales at which vegetation responds to drought across the world's biomes
 sensitivity of tree growth to hydric and thermal stress in four widely
 planted pine species (Manrique-Alba et al., 2025).
 
+## The data
+
+The `tarazona` dataset has the growth of Aleppo pines (*Pinus halepensis*)
+in a plantation at Tarazona, in the Ebro valley (Spain, 785 m a.s.l.), and
+the climate of the site. The trees are in the control plot of a thinning
+experiment, which was not thinned (Manrique-Alba et al., 2020). Growth is
+measured as the basal area increment (BAI, in cm² per year) of 18 cores
+from 11 trees, from 1959 to 2017. The climate comes from the gridded
+dataset of the Spanish drought monitor (Vicente-Serrano et al., 2017), and
+has 48 periods per year (four per month) from 1961 to 2020. See
+`?Datasets` for the details.
+
 ```{r setup, message = FALSE}
 library(SPEI)
 
-data(wichita)
-wichita <- ts(wichita[, -c(1, 2)], start = c(1980, 1), frequency = 12)
-bal <- wichita[, "PRCP"] - hargreaves(wichita[, "TMIN"], wichita[, "TMAX"],
-  lat = 37.6475, verbose = FALSE
-)
+data(tarazona)
+names(tarazona)
+bai <- tarazona$bai
+clim <- tarazona$clim
 ```
 
-The package has no annual series to correlate with the `wichita` climate.
-All the annual series in this vignette are **synthetic**. They are built
-from the water balance of Wichita plus random noise, so that we know which
-window they respond to. A small helper adds up the water balance of some
-months for each year, and standardizes it:
+Most of this vignette uses monthly data. The precipitation and the
+reference evapotranspiration (ETo) are totals per period, so the monthly
+values are the sums of each group of four periods. The water balance is the
+precipitation minus the ETo:
 
 ```{r}
-years <- 1980:2011
-
-# Standardized sum of `x` over `months`, for each year in `years`;
-# `back = 1` takes the months of the previous year.
-season <- function(x, months, back = 0) {
-  sel <- cycle(x) %in% months
-  v <- tapply(x[sel], floor(time(x))[sel], sum)
-  v <- v[as.character(years - back)]
-  as.numeric((v - mean(v, na.rm = TRUE)) / sd(v, na.rm = TRUE))
+to_monthly <- function(x) {
+  ts(colSums(matrix(x, nrow = 4)), start = c(1961, 1), frequency = 12)
 }
+bal <- to_monthly(clim[, "PRCP"]) - to_monthly(clim[, "ETO"])
 ```
+
+The original 48-period data are used at the end of this vignette (see
+'Other frequencies') and in `vignette("weekly")`.
 
 ## The annual series
 
 The annual series must contain only the signal that we want to relate to
 drought. Other sources of variation over time should be removed first.
 Crop yields usually grow over the years because of better varieties and
-management. Tree rings get narrower as the tree grows older. These trends
-are not related to drought, but they add variance to the series, and they
-can create spurious correlations with any index that also has a trend.
+management. Tree-ring widths get narrower as the tree grows. The BAI of a
+young tree grows with its size, and then levels off or declines. These
+trends are not related to drought, but they add variance to the series,
+and they can create spurious correlations with any index that also has a
+trend.
 
-Our first synthetic series is a crop yield. It grows by 0.05 t/ha per year,
-and it responds to the water balance of May to July (three months ending
-in July):
+The BAI of the cores shows these trends, and large differences in growth
+rate between cores:
 
-```{r}
-set.seed(2)
-yield <- 3 + 0.05 * (years - 1980) + 0.4 * season(bal, 5:7) +
-  rnorm(length(years), sd = 0.3)
-yield <- ts(yield, start = 1980, frequency = 1)
+```{r, fig.alt = "Basal area increment of the 18 cores of the Tarazona control plot from 1959 to 2017. Growth rises during the first years of each core, and the cores differ in their level of growth."}
+matplot(bai$year, bai[, -1],
+  type = "l", lty = 1, col = "grey40",
+  xlab = "Year", ylab = "BAI (cm2/year)"
+)
 ```
 
-```{r, fig.alt = "Synthetic crop yield from 1980 to 2011, with an increasing trend"}
-plot(yield, ylab = "Yield (t/ha)", xlab = "Year")
+In dendrochronology the trend is removed from each series before the
+series are averaged. The cores start in different years, so removing the
+trend after averaging would mix the trends of cores of different ages. Here
+we log-transform each core and subtract a smoothing spline with four
+degrees of freedom. The log makes the variance of the series more similar
+between cores and over time, and the difference of logs is the log of the
+ratio between the BAI and its trend. Each core becomes a series of
+relative growth around zero:
+
+```{r}
+# log(BAI) minus a smoothing spline fitted to log(BAI), for one core
+detrend_core <- function(x, year, df = 4) {
+  ok <- !is.na(x)
+  fit <- smooth.spline(year[ok], log(x[ok]), df = df)
+  x[ok] <- log(x[ok]) - predict(fit, year[ok])$y
+  x
+}
+rbai <- sapply(bai[, -1], detrend_core, year = bai$year)
+rbai <- ts(rbai, start = bai$year[1], frequency = 1)
+```
+
+A flexible spline also removes part of the slow variation that is due to
+climate, such as a dry decade. Stiffer curves keep more of it. Other
+methods (e.g. negative exponential curves, or the ones in the `dplR`
+package) can be used in the same way. Whatever the method, detrend the
+series before calling `scale_scan()`. The argument `detrend = TRUE` only
+removes a linear trend from the averaged series, which is enough for
+simpler cases such as a crop yield that grows steadily over the years.
+
+The average of the detrended cores in each year is the chronology of the
+site:
+
+```{r, fig.alt = "Mean of the detrended BAI of the 18 cores (the site chronology) from 1959 to 2017, fluctuating around zero with strong drops in some years"}
+chron <- ts(rowMeans(rbai, na.rm = TRUE), start = bai$year[1])
+plot(chron, xlab = "Year", ylab = "Detrended BAI (log ratio)")
+abline(h = 0, lty = 3)
+```
+
+```{r, include = FALSE}
+depth <- rowSums(!is.na(bai[, -1]))
+```
+
+The number of cores per year is low at the start. Until
+`r max(bai$year[depth == 1])` the chronology rests on a single core, and
+its variability in those years is larger than later on. All 18 cores are
+present from `r min(bai$year[depth == max(depth)])`. A mean of very few
+series is not representative of the site, so we restrict the analysis to
+the years with at least 10 cores, from `r min(bai$year[depth >= 10])` on:
+
+```{r}
+first <- min(bai$year[depth >= 10])
+rbai <- window(rbai, start = first)
+chron <- window(chron, start = first)
 ```
 
 The annual series is a time series with frequency 1, or a data frame with
-the years in the first column and the values in the second.
+the years in the first column and the values in the other columns.
 
 ## Running the scan
 
 `scale_scan()` takes the water balance, computes the SPEI at the time
 scales in `scales`, and correlates the annual series with the index in each
-month and at each time scale:
+month and at each time scale. Here the annual series has one column per
+core. All the values of each year are averaged (see 'Several annual
+series'):
 
 ```{r}
-sc <- scale_scan(bal, yield, scales = 1:24)
+sc <- scale_scan(bal, rbai, scales = 1:24)
 sc
 ```
 
-No window is significant. The trend in the yield hides the climate signal.
-With `detrend = TRUE` a linear trend is removed from the annual series
-before computing the correlations:
+The best window is `r month.name[sc$best$cycle[1]]` at a time scale of
+`r sc$best$scale[1]` months, i.e. the water balance from
+`r month.name[(sc$best$cycle[1] - sc$best$scale[1]) %% 12 + 1]` to
+`r month.name[sc$best$cycle[1]]`. Its correlation with the chronology is
+r = `r round(sc$best$r[1], 2)` over `r sc$best$n[1]` years. There is no
+significant negative window. Growth is larger in the years in which this
+part of the year is wetter than usual.
+
+Each window is defined by a month and a time scale. The SPEI of a month at
+a time scale of `s` months summarizes the water balance accumulated over
+the `s` months that end in that month. So the SPEI of
+`r month.name[sc$best$cycle[1]]` at `r sc$best$scale[1]` months measures
+whether the period from
+`r month.name[(sc$best$cycle[1] - sc$best$scale[1]) %% 12 + 1]` to
+`r month.name[sc$best$cycle[1]]` of each year was wetter or drier than
+usual, and its value is known at the end of
+`r month.name[sc$best$cycle[1]]`. For the tree, the result means that the
+width of each ring depends on the water accumulated from the start of the
+year to the end of the summer, which includes the soil water recharged in
+winter and the water available during the growing season. In the same month,
+shorter or longer windows correlate less: r =
+`r round(sc$cor[sc$best$cycle[1], "1"], 2)` for that month alone (time
+scale 1) and r = `r round(sc$cor[sc$best$cycle[1], "12"], 2)` for the
+whole year to `r month.name[sc$best$cycle[1]]` (time scale 12).
+
+For comparison, the average of the raw BAI with a linear trend removed
+(`detrend = TRUE`) gives:
 
 ```{r}
-sc <- scale_scan(bal, yield, scales = 1:24, detrend = TRUE)
-sc
+raw <- window(ts(bai[, -1], start = bai$year[1]), start = first)
+sc_raw <- scale_scan(bal, raw, scales = 1:24, detrend = TRUE)
+sc_raw$best[1, ]
 ```
 
-The linear detrending is enough here, because the synthetic trend is
-linear. Real series often need other methods, such as splines for
-tree-ring widths. In that case detrend the series before calling
-`scale_scan()`, and leave `detrend = FALSE`.
+The window is very similar
+(`r month.name[sc_raw$best$cycle[1]]`, `r sc_raw$best$scale[1]` months),
+with a slightly lower correlation (r = `r round(sc_raw$best$r[1], 2)`). Here the simple approach gives
+almost the same result, because most cores are mature and the year-to-year
+variation is large. This will not hold in general, for example with young
+trees or with cores of very different ages.
 
 ## Reading the heatmap
 
 The `plot` method draws the correlations as a heatmap. The months are on
 the horizontal axis and the time scales on the vertical axis. The dots
 mark the cells that are significant after adjusting for multiple testing,
-and the black outlines show the best windows:
+and the black outline shows the best window:
 
-```{r, fig.height = 5, fig.alt = "Heatmap of the correlation between the detrended yield and the SPEI by month and time scale. The highest correlations are in July at short time scales."}
+```{r, fig.height = 5, fig.alt = "Heatmap of the correlation between the Tarazona BAI chronology and the SPEI by month and time scale. The highest correlations are from June to September at time scales of about 6 to 12 months."}
 plot(sc)
 ```
 
-The strongest correlations are around July at short time scales, as
-expected. They fade at longer time scales, which add months that do not
-affect the yield. With `sig = "mask"` the non-significant cells are left
-blank.
+The correlations are highest from June to September, at time scales of
+about 6 to 12 months. In other words, growth depends on the water balance
+accumulated from the previous autumn or winter to the end of the summer.
+With `sig = "mask"` the non-significant cells are left blank.
+
+By default the colours are proportional to the squared correlation, with
+its sign (`colour = "r2"`). This spreads the colours over the high
+correlations, which are the ones of interest, while the legend still shows
+the correlation. With `colour = "r"` the colours are proportional to the
+correlation itself:
+
+```{r, fig.height = 5, fig.alt = "The same heatmap with colours proportional to the correlation instead of the squared correlation; the differences among the high correlations are less visible."}
+plot(sc, colour = "r")
+```
 
 The results are kept in the object. `sc$cor` holds the correlations, with
 one row per month and one column per time scale. `sc$p` and `sc$p.adj`
@@ -142,7 +240,7 @@ hold the p-values before and after the adjustment, and `sc$n` the number
 of years used in each cell.
 
 ```{r}
-round(sc$cor[5:9, 1:6], 2)
+round(sc$cor[6:9, c(1, 3, 6, 8, 12)], 2)
 ```
 
 ## The best windows and multiple testing
@@ -160,16 +258,27 @@ some cells will have a low p-value by chance. At a 5% level, about 14 of
 this reason the p-values are adjusted for multiple testing, across all the
 cells. The default method, Holm's, keeps the probability of any false
 positive among all the cells below `alpha`. Other methods can be chosen
-with `p.adjust` (see `?p.adjust`). With `p.adjust = "none"` many more cells
-are marked, but most of them are only neighbours of the best one:
+with `p.adjust` (see `?p.adjust`).
+
+To see the effect of the adjustment we scan a **synthetic** annual series
+of pure noise, which has no relation to the climate:
 
 ```{r}
-sc_none <- scale_scan(bal, yield, scales = 1:24, detrend = TRUE,
-  p.adjust = "none"
-)
+set.seed(1)
+noise <- ts(rnorm(57), start = 1961)
+sc_none <- scale_scan(bal, noise, scales = 1:24, p.adjust = "none")
 sum(sc_none$p.adj <= 0.05, na.rm = TRUE)
-sum(sc$p.adj <= 0.05, na.rm = TRUE)
+sc_holm <- scale_scan(bal, noise, scales = 1:24)
+sum(sc_holm$p.adj <= 0.05, na.rm = TRUE)
 ```
+
+Without the adjustment `r sum(sc_none$p.adj <= 0.05, na.rm = TRUE)`
+cells are significant, and the best of them would be reported as the best
+window. With the adjustment `r sum(sc_holm$p.adj <= 0.05, na.rm = TRUE)`
+are. The Tarazona
+chronology has a strong signal, and many cells remain significant after
+the adjustment
+(`r sum(sc$p.adj <= 0.05, na.rm = TRUE)` of `r sum(!is.na(sc$cor))`).
 
 The adjustment is conservative, because neighbouring cells share most of
 their data. With short series it may leave no significant cell even when
@@ -186,28 +295,29 @@ too. The argument `lag` scans the months of previous years directly:
 `lag = 0:1` correlates the annual series of year Y with the index of year
 Y and of year Y-1.
 
-Our second synthetic series is a tree-ring index that responds to the water
-balance of July to September of the previous year:
-
-```{r}
-set.seed(5)
-rings <- 1 + 0.2 * season(bal, 7:9, back = 1) +
-  rnorm(length(years), sd = 0.1)
-rings <- ts(rings, start = 1980, frequency = 1)
-```
-
-```{r, fig.width = 8, fig.height = 5, fig.alt = "Heatmap of the correlation between the synthetic tree-ring index and the SPEI, for the months of the previous and the current year. The highest correlation is in September of the previous year."}
-sc_lag <- scale_scan(bal, rings, scales = 1:12, lag = 0:1)
+```{r, fig.width = 8, fig.height = 5, fig.alt = "Heatmap of the correlation between the Tarazona BAI chronology and the SPEI, for the months of the previous and the current year. The correlations with the months of the previous year are weak; the highest ones are in the summer of the current year."}
+sc_lag <- scale_scan(bal, rbai, scales = 1:24, lag = 0:1)
 sc_lag$best
 plot(sc_lag)
 ```
 
+```{r, include = FALSE}
+prev <- sc_lag$rows$lag == 1
+r_prev <- max(abs(sc_lag$cor[prev, ]), na.rm = TRUE)
+p_prev <- min(sc_lag$p.adj[prev, ], na.rm = TRUE)
+```
+
 The rows are now in chronological order. `Jan-1` to `Dec-1` are the
 months of the previous year, and `Jan` to `Dec` those of the current year.
-The best window is found in September of the previous year at a time scale
-of three months. The `lag` column of `best` gives the year. The adjustment
-of the p-values covers all the cells, so the scan with `lag = 0:1` is
-stricter than one with `lag = 0`.
+The best window is the same as before, in the current year. In the months
+of the previous year, the largest correlation (in absolute value) is
+`r round(r_prev, 2)`, and no cell is significant (smallest adjusted
+p-value `r signif(p_prev, 2)`). So at this site the water balance of the
+previous year matters only through the long time scales of the current
+year, which reach into it. The
+`lag` column of `best` gives the year. The adjustment of the p-values
+covers all the cells, so the scan with `lag = 0:1` is stricter than one
+with `lag = 0`.
 
 ## Extracting the series of a window
 
@@ -217,36 +327,37 @@ window with a lag of one year, the value of year Y is the index of year
 Y-1.
 
 ```{r}
-spei_best <- scale_extract(sc_lag)
-spei_best
+spei_best <- scale_extract(sc)
+window(spei_best, end = 1970)
 ```
 
-The series covers all the years of the climate data, shifted by the lag
-(here 1981 to 2012), so it does not span the same years as the annual
-series. Use `ts.intersect()` to align them by year before using them
-together in other models. Note that `lm()` does not align time series by
-itself.
+The series covers all the years of the climate data (here 1961 to 2020),
+so it does not span the same years as the annual series. Use
+`ts.intersect()` to align them by year before using them together in other
+models. Note that `lm()` does not align time series by itself.
 
 ```{r}
-d <- ts.intersect(rings, spei_best)
-fit <- lm(rings ~ spei_best, data = d)
+d <- ts.intersect(chron, spei_best)
+fit <- lm(chron ~ spei_best, data = d)
 summary(fit)$r.squared
 ```
 
 Plotting the two series together shows how closely the index of the best
 window follows the annual series. They are in different units, so here the
-ring series is standardized (mean 0, standard deviation 1) to plot it on
+chronology is standardized (mean 0, standard deviation 1) to plot it on
 the scale of the index:
 
-```{r, fig.alt = "Time plot of the standardized synthetic ring-width series and the SPEI of the best window (previous September, 3-month scale), which follow each other closely"}
-rings_std <- (rings - mean(rings, na.rm = TRUE)) / sd(rings, na.rm = TRUE)
-plot(spei_best, type = "l", col = "red", lwd = 2,
-  ylim = range(c(spei_best, rings_std), na.rm = TRUE),
+```{r, fig.alt = "Time plot of the standardized Tarazona BAI chronology and the SPEI of the best window from 1965 to 2017. The two series follow each other, with the lowest values of both in the driest years."}
+chron_std <- (chron - mean(chron)) / sd(chron)
+spei_plot <- window(spei_best, end = 2017)
+plot(spei_plot,
+  type = "l", col = "red", lwd = 2,
+  ylim = range(c(spei_plot, chron_std), na.rm = TRUE),
   xlab = "Year", ylab = "Standardized value"
 )
-lines(rings_std, col = "black", lwd = 2)
+lines(chron_std, col = "black", lwd = 2)
 abline(h = 0, lty = 3)
-legend("bottomleft", c("Ring width (standardized)", "SPEI, best window"),
+legend("bottomleft", c("BAI chronology (standardized)", "SPEI, best window"),
   col = c("black", "red"), lwd = 2, bty = "n"
 )
 ```
@@ -254,7 +365,7 @@ legend("bottomleft", c("Ring width (standardized)", "SPEI, best window"),
 Any other window can be extracted by giving `cycle`, `scale` and `lag`:
 
 ```{r}
-spei_jul6 <- scale_extract(sc_lag, cycle = 7, scale = 6, lag = 0)
+spei_jun3 <- scale_extract(sc, cycle = 6, scale = 3, lag = 0)
 ```
 
 The correlation of the best window is chosen as the highest of many. It is
@@ -268,12 +379,17 @@ reference period or a kernel. With `index = "spi"` the SPI is computed
 instead, from a precipitation series.
 
 ```{r}
-sc_spi <- scale_scan(wichita[, "PRCP"], yield,
-  scales = 1:12, index = "spi",
-  detrend = TRUE, distribution = "PearsonIII"
+prcp <- to_monthly(clim[, "PRCP"])
+sc_spi <- scale_scan(prcp, rbai,
+  scales = 1:24, index = "spi",
+  distribution = "PearsonIII"
 )
 sc_spi$best
 ```
+
+The SPI gives the same window, with a correlation of
+`r round(sc_spi$best$r[1], 2)`. At this site the variation of the water
+balance between years comes mostly from the precipitation.
 
 The index can also be computed beforehand and passed with
 `index = "precomputed"`, as a time series with one column per time scale.
@@ -283,10 +399,14 @@ The time scales are taken from the column names, or given in `scales`:
 idx <- sapply(c(1, 3, 6, 12), function(s) {
   spei(bal, s, verbose = FALSE)$fitted
 })
-idx <- ts(idx, start = c(1980, 1), frequency = 12)
+idx <- ts(idx, start = c(1961, 1), frequency = 12)
 colnames(idx) <- c("SPEI-1", "SPEI-3", "SPEI-6", "SPEI-12")
-scale_scan(idx, yield, index = "precomputed", detrend = TRUE)$best
+sc_pre <- scale_scan(idx, rbai, index = "precomputed")
+sc_pre$best
 ```
+
+With only these four time scales, the best window is
+`r month.name[sc_pre$best$cycle[1]]` at `r sc_pre$best$scale[1]` months.
 
 This is useful to scan an index computed elsewhere, or a set of time scales
 computed once and used for several annual series.
@@ -295,13 +415,42 @@ computed once and used for several annual series.
 
 The scan is not limited to monthly data. The position of each value in the
 year comes from the frequency of the time series. Weekly data (frequency
-52) give one row per week, labelled `W1` to `W52`, and `W1-1` to `W52-1`
-for the previous year. The time scales are then in weeks:
+52) give one row per week, labelled `W1` to `W52`. Other frequencies give
+one row per period, labelled `P1`, `P2`, etc. The time scales are then in
+periods.
 
-```{r, eval = FALSE}
-# bal_week: a weekly water balance, as a ts with frequency 52
-sc_week <- scale_scan(bal_week, rings, scales = seq(2, 52, by = 2))
+The original analysis of these data used the 48 periods per year of the
+Spanish drought monitor (Manrique-Alba et al., 2025). We scan time scales
+from 4 to 96 periods (1 to 24 months) in steps of 4:
+
+```{r}
+bal48 <- clim[, "PRCP"] - clim[, "ETO"]
+sc48 <- scale_scan(bal48, rbai, scales = seq(4, 96, by = 4))
+sc48$best
 ```
+
+```{r, include = FALSE}
+p48 <- sc48$best$cycle[1]
+s48 <- sc48$best$scale[1]
+q48 <- c("first", "second", "third", "fourth")[(p48 - 1) %% 4 + 1]
+```
+
+The best window ends in period `r p48`, the `r q48` quarter of
+`r month.name[ceiling(p48 / 4)]`, and has a time scale of `r s48` periods
+(`r s48 / 4` months), with r = `r round(sc48$best$r[1], 2)`. The monthly
+scan found a window of `r sc$best$scale[1]` months ending in
+`r month.name[sc$best$cycle[1]]`. The heatmap shows that many neighbouring
+cells have almost the same correlation, so the exact position and length
+of the best window are not well determined. Manrique-Alba et al. (2025)
+used period 34 and a time scale of 12 months for this site, with a
+different model that included the thinned plots.
+
+```{r, fig.width = 8, fig.height = 5, fig.alt = "Heatmap of the correlation between the Tarazona BAI chronology and the SPEI computed with 48 periods per year, by period and time scale. The highest correlations are in late summer at time scales of about 30 to 50 periods."}
+plot(sc48)
+```
+
+See `vignette("weekly")` for how to compute the indices with weekly and
+other non-monthly data.
 
 ## Several annual series
 
@@ -309,49 +458,52 @@ Often there are several series for the same site, such as several trees, or
 several fields of the same crop. There are two ways to analyse them.
 
 The first one is to average them into a single series, and scan it once.
-`y` can be a time series with one column per series, a data frame with the
-years in the first column and one column per series, or a data frame with
-repeated years (one row per year and series). All the values of each year
-are averaged. `y.count` keeps the number of values in each year.
-
-Our synthetic 'trees' share a common signal, the water balance of April
-to June, and each one has its own noise. The noise is large, as it is in
-real trees:
+This is what we did above. `y` can be a time series with one column per
+series, a data frame with the years in the first column and one column per
+series, or a data frame with repeated years (one row per year and series).
+All the values of each year are averaged. `y.count` keeps the number of
+values in each year. The long format gives the same result as the matrix:
 
 ```{r}
-set.seed(11)
-common <- season(bal, 4:6)
-trees <- sapply(1:8, function(i) 0.5 * common + rnorm(length(years)))
-colnames(trees) <- paste0("tree", 1:8)
-trees <- ts(trees, start = 1980, frequency = 1)
-
-sc_mean <- scale_scan(bal, trees, scales = 1:12)
-sc_mean$best
+long <- data.frame(
+  year = rep(as.numeric(time(rbai)), ncol(rbai)),
+  bai = as.vector(rbai)
+)
+head(long[!is.na(long$bai), ])
+scale_scan(bal, long, scales = 1:24)$best[1, ]
 ```
 
 The second one is to scan each series on its own:
 
 ```{r}
-per_tree <- lapply(colnames(trees), function(tr) {
-  scale_scan(bal, trees[, tr], scales = 1:12)$best[1, ]
+per_core <- lapply(colnames(rbai), function(core) {
+  scale_scan(bal, rbai[, core], scales = 1:24)$best[1, ]
 })
-per_tree <- do.call(rbind, per_tree)
-cbind(tree = colnames(trees), per_tree[, c("label", "scale", "r", "p.adj")])
+per_core <- do.call(rbind, per_core)
+per_core$r <- round(per_core$r, 2)
+per_core$p.adj <- signif(per_core$p.adj, 2)
+cbind(core = colnames(rbai), per_core[, c("label", "scale", "r", "p.adj")])
 ```
 
-The average has a much stronger and more stable signal than any single
-tree, because the individual noise cancels out. This is the standard way
-of building tree-ring chronologies. But averaging is only valid if all the
-series share the same climate data and respond to it in a similar way. It
-also hides any difference between sites or individuals. If the series are
-on different scales, standardize them before averaging.
+```{r, include = FALSE}
+same <- sum(per_core$label == sc$best$label[1])
+```
+
+Most cores (`r same` of `r nrow(per_core)`) have their best window in
+`r month.name[sc$best$cycle[1]]`, but with time scales from `r min(per_core$scale)` to
+`r max(per_core$scale)` months, and correlations from
+`r min(per_core$r)` to `r max(per_core$r)`. The average has a stronger
+signal than all but `r sum(per_core$r > round(sc$best$r[1], 2))` of the
+single cores, because the individual noise cancels out. This is the standard way of building tree-ring chronologies.
+But averaging is only valid if all the series share the same climate data
+and respond to it in a similar way. It also hides any difference between
+sites or individuals. If the series are on different scales, standardize
+them before averaging. Here the detrending already puts all the cores on
+the same scale.
 
 Scanning each series gives a window for each one, so it can reveal
 different responses, and each series can have its own climate data. But
-each scan has more noise, and there are more tests in total. In the
-example above, the windows of the single trees are scattered, and some
-trees have no significant window, although all of them respond to the same
-months.
+each scan has more noise, and there are more tests in total.
 
 ## References
 
@@ -363,6 +515,13 @@ Sánchez-Miranda, Á. (2025). Adaptive responses to thinning: growth and
 sensitivity to hydric and thermal stress in four widely planted pine
 species. *Agricultural and Forest Meteorology*, 373, 110777.
 <https://doi.org/10.1016/j.agrformet.2025.110777>
+
+Manrique-Alba, À., Beguería, S., Molina, A.J., González-Sanchis, M.,
+Tomàs-Burguera, M., del Campo, A.D., Colangelo, M., Camarero, J.J. (2020).
+Long-term thinning effects on tree growth, drought response and water use
+efficiency at two Aleppo pine plantations in Spain. *Science of the Total
+Environment*, 728, 138536.
+<https://doi.org/10.1016/j.scitotenv.2020.138536>
 
 Pasho, E., Camarero, J.J., de Luis, M., Vicente-Serrano, S.M. (2011).
 Impacts of drought at different time scales on forest growth across a wide
@@ -376,3 +535,9 @@ Revuelto, J., Morán-Tejeda, E., Sanchez-Lorenzo, A. (2013). Response of
 vegetation to drought time-scales across global land biomes. *Proceedings
 of the National Academy of Sciences*, 110(1), 52–57.
 <https://doi.org/10.1073/pnas.1207068110>
+
+Vicente-Serrano, S.M., Tomas-Burguera, M., Beguería, S., Reig, F.,
+Latorre, B., Peña-Gallardo, M., Luna, M.Y., Morata, A., González-Hidalgo,
+J.C. (2017). A high resolution dataset of drought indices for Spain.
+*Data*, 2(3), 22. <https://doi.org/10.3390/data2030022>. Data available
+from the Spanish drought monitor, <https://monitordesequia.csic.es>.

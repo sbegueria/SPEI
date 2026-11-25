@@ -28,7 +28,7 @@
 #'
 #' \method{print}{scale_scan}(x, ...)
 #' \method{summary}{scale_scan}(object, ...)
-#' \method{plot}{scale_scan}(x, sig = 'mark', main = NULL, ...)
+#' \method{plot}{scale_scan}(x, sig = 'mark', main = NULL, colour = 'r2', ...)
 #' @param data a univariate or multivariate time series (\code{ts}) object.
 #' Its frequency (12 for monthly data, 52 for weekly data, etc.) and the
 #' function \code{\link{cycle}} determine the position of each value in the
@@ -84,6 +84,12 @@
 #' @param sig how to show the significance of the correlations in the plot:
 #' \code{'mark'} (default), \code{'mask'} or \code{'none'}. See 'Value'.
 #' @param main optional, a character string with the plot title.
+#' @param colour how the correlations are mapped to colours in the plot:
+#'   \code{"r2"} (default) uses a scale proportional to the squared
+#'   correlation with its sign, which spreads the colours over the high
+#'   correlations and highlights the differences between them; \code{"r"}
+#'   uses a scale proportional to the correlation. The legend shows the
+#'   correlation in both cases.
 #'
 #'
 #' @details
@@ -569,7 +575,12 @@ summary.scale_scan <- function(object, ...) {
 #' @rdname Scale-scan
 #' @export
 #'
-plot.scale_scan <- function(x, sig = "mark", main = NULL, ...) {
+plot.scale_scan <- function(x, sig = "mark", main = NULL, colour = "r2",
+                            ...) {
+  if (!is.character(colour) || length(colour) != 1 ||
+    !colour %in% c("r2", "r")) {
+    stop("Argument `colour` must be one of `r2` or `r`.")
+  }
   if (!is.character(sig) || length(sig) != 1 ||
     !sig %in% c("mark", "mask", "none")) {
     stop("Argument `sig` must be one of `mark`, `mask` or `none`.")
@@ -589,11 +600,18 @@ plot.scale_scan <- function(x, sig = "mark", main = NULL, ...) {
   lim <- suppressWarnings(max(abs(x$cor), na.rm = TRUE))
   if (!is.finite(lim)) lim <- 1
 
+  # Colour scale: either proportional to r, or to the signed r^2 (which
+  # spreads the colours over the high correlations); the legend is in r
+  tr <- if (colour == "r2") function(v) sign(v) * v^2 else function(v) v
+  kk$fill <- tr(kk$r)
+  brk_r <- pretty(c(-lim, lim), n = 6)
+  brk_r <- brk_r[abs(brk_r) <= lim]
   g <- ggplot(kk, aes(.data[["pos"]], .data[["scale"]])) +
-    geom_tile(aes(fill = .data[["r"]]), color = "grey90") +
+    geom_tile(aes(fill = .data[["fill"]]), color = "grey90") +
     scale_fill_gradient2(
       low = "tomato", mid = "white", high = "cyan4",
-      midpoint = 0, limits = c(-lim, lim), na.value = "grey95"
+      midpoint = 0, limits = tr(c(-lim, lim)), na.value = "grey95",
+      breaks = tr(brk_r), labels = format(brk_r)
     )
   if (sig == "mark" && any(kk$signif)) {
     g <- g + geom_point(data = kk[kk$signif, ], size = 0.6, alpha = 0.5)
