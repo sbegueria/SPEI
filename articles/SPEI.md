@@ -71,7 +71,7 @@ pet_har <- hargreaves(wichita[, "TMIN"], wichita[, "TMAX"], lat = lat)
 pet_pen <- penman(wichita[, "TMIN"], wichita[, "TMAX"], wichita[, "AWND"],
   tsun = wichita[, "TSUN"], lat = lat, z = 402.6, na.rm = TRUE
 )
-#> Using user-provided wind speed at 2 m height (`U2`) data. Using latitude (`lat`) to estimate extraterrestrial radiation. Using bright sunshine duration data (`tsun`) to estimate incoming solar radiation. Using minimum temperature (`Tmin`) to estimate dewpoint temperature and actual vapour pressure. Assuming constant atmospheric surface pressure corresponding to elevation `z`. Computing for a short crop. Missing values (`NA`) will not be considered in the calculation. Input type is tsvector. Time series spanning Jan 1980 to Oct 2011. Calculation method is ICID.
+#> Using user-provided wind speed at 2 m height (`U2`) data. Using latitude (`lat`) to estimate extraterrestrial radiation. Using bright sunshine duration data (`tsun`) to estimate incoming solar radiation. Using minimum temperature (`Tmin`) to estimate dewpoint temperature and actual vapour pressure (Tdew = Tmin - aT, with `aT` = 0). Assuming constant atmospheric surface pressure corresponding to elevation `z`. Computing for a short crop. Missing values (`NA`) will not be considered in the calculation. Input type is tsvector. Time series spanning Jan 1980 to Oct 2011. Calculation method is ICID.
 ```
 
 [`penman()`](https://sbegueria.github.io/SPEI/reference/Potential-evapotranspiration.md)

@@ -23,7 +23,7 @@ verbose=TRUE, dates = NULL)
 penman(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL, tsun = NULL,
        CC = NULL, ed = NULL, Tdew = NULL, RH = NULL, P = NULL, P0 = NULL,
        CO2 = NULL, z = NULL, crop='short', na.rm = FALSE, method='ICID',
-       verbose=TRUE, dates = NULL)
+       verbose=TRUE, dates = NULL, kRs = NULL, aT = 0)
 
 penman(
   Tmin,
@@ -45,7 +45,9 @@ penman(
   na.rm = FALSE,
   method = "ICID",
   verbose = TRUE,
-  dates = NULL
+  dates = NULL,
+  kRs = NULL,
+  aT = 0
 )
 
 thornthwaite(Tave, lat, na.rm = FALSE, verbose = TRUE)
@@ -108,7 +110,8 @@ thornthwaite(Tave, lat, na.rm = FALSE, verbose = TRUE)
   of monthly mean daily wind speeds at 2 m height, m s-1. No height
   conversion is applied, so wind speeds measured at other heights must
   be converted to 2 m by the user (e.g., FAO-56 eq. 47). If not
-  provided, a constant value of 2 m s-1 is used.
+  provided, a constant value of 2 m s-1 is used. Values below 0.5 m s-1
+  are set to 0.5 m s-1 (Pereira et al., 2025, p. 105).
 
 - Rs:
 
@@ -176,6 +179,27 @@ thornthwaite(Tave, lat, na.rm = FALSE, verbose = TRUE)
 
   optional, character string, Penman-Monteith calculation method. Either
   one of 'ICID' (default), 'FAO', or 'ASCE'.
+
+- kRs:
+
+  optional, a single numeric value, or one value per site (a vector, or
+  a matrix for 3-d array input), with the radiation adjustment
+  coefficient of the temperature-only method (Pereira et al., 2025, eq.
+  3.52), ºC^-0.5. Only used by `penman` when no radiation data (`Rs`,
+  `tsun` or `CC`) are given; otherwise it is ignored with a warning. It
+  must be between 0.1 and 0.35. If `NULL` (the default), 0.16 is used.
+  See Details.
+
+- aT:
+
+  optional, a single numeric value, or one value per site (a vector, or
+  a matrix for 3-d array input), with the difference between the minimum
+  temperature and the dewpoint temperature, ºC (Pereira et al., 2025,
+  eq. 2.6). Only used by `penman` when the actual vapour pressure is
+  estimated from `Tmin` (no `ed`, `Tdew` or `RH` given); otherwise a
+  non-zero value is ignored with a warning. It must be between -5
+  and 10. The default, 0, assumes that the dewpoint temperature equals
+  the minimum temperature. See Details.
 
 - Tave:
 
@@ -250,31 +274,74 @@ reference crop of 0.5 m height (Walter et al., 2002) can also be used,
 by setting the `crop` parameter to 'tall'. The method requires data on
 the incoming solar radiation, `Rs`; since this is seldom available, the
 code will estimate it from data on the bright sunshine duration `tsun`,
-or alternatively from data on the percent cloud cover `CC`. Similarly,
-if data on the actual vapour pressure `ed` are not available, it is
+or alternatively from data on the percent cloud cover `CC`. If none of
+`Rs`, `tsun` or `CC` is given (or they contain only missing values),
+`Rs` is estimated from the temperature range (see below). Similarly, if
+data on the actual vapour pressure `ed` are not available, it is
 possible to estimate it from the dew point temperature `Tdew`, from the
 relative humidity `RH` or even from the minimum temperature `Tmin`
-(sorted from least to most uncertain method). Similarly, the atmospheric
-surface pressure `P` required for computing the psychrometric constant
-can be calculated from the atmospheric pressure at sea level `P0` and
-the elevation `z`, or else from the elevation `z` assuming a sea level
+(sorted from least to most uncertain method), as the saturation vapour
+pressure at Tdew = Tmin - `aT`. Similarly, the atmospheric surface
+pressure `P` required for computing the psychrometric constant can be
+calculated from the atmospheric pressure at sea level `P0` and the
+elevation `z`, or else from the elevation `z` assuming a sea level
 pressure of 101.3 kPa (FAO-56 eq. 7). The elevation `z` is always
 required by `penman` (there is no default value), since it is also used
 to compute the clear-sky solar radiation, Rso = (0.75 + 2e-5 z) Ra. The
 ratio Rs/Rso used in the net longwave radiation term is limited to 1.
 Wind speed `U2` must refer to 2 m height, as no height conversion is
 applied. If no wind speed data `U2` are available, a constant value of 2
-m s-1 is used. Custom CO2 atmospheric concentration `CO2` can also be
-provided, following Yang et al. (2019): the term 0.00024 (CO2 - 300) is
-added to the wind coefficient of the denominator (0.34 for the short
-crop, 0.38 for the tall crop). This correction was derived for the short
-reference crop, but it is applied to whichever crop is selected,
+m s-1 is used. Wind speeds below 0.5 m s-1 are set to 0.5 m s-1, with
+all three methods, following Pereira et al. (2025, p. 105): under calm
+conditions the buoyancy of warm air still promotes the exchange of
+vapour at the surface. Custom CO2 atmospheric concentration `CO2` can
+also be provided, following Yang et al. (2019): the term 0.00024 (CO2 -
+300) is added to the wind coefficient of the denominator (0.34 for the
+short crop, 0.38 for the tall crop). This correction was derived for the
+short reference crop, but it is applied to whichever crop is selected,
 including 'tall'. With monthly data, the soil heat flux G is computed
 from the difference in mean temperature between the previous and the
 following months (FAO-56 eq. 43), using forward or backward differences
 at the first and last time steps. `penman` works with series of any
 length; with a single time step G is set to 0. With daily data
 (`dates`), G is always 0.
+
+**FAO-56 revision 1 and the temperature-only method.** The revision of
+FAO-56 (Pereira et al., 2025) keeps the FAO Penman-Monteith equation and
+its components unchanged from Allen et al. (1998). It recommends the
+Penman-Monteith temperature approach (PMT) over the Hargreaves-Samani
+equation (`hargreaves`) when only maximum and minimum temperatures are
+available, because the Penman-Monteith equation keeps the physical
+relations between the weather variables. In PMT the missing variables
+are estimated as follows, and `penman` does so when only `Tmin` and
+`Tmax` are given:
+
+- Solar radiation: Rs = kRs sqrt(Tmax - Tmin) Ra (Pereira et al., 2025,
+  eq. 3.52), limited to Rso. The coefficient `kRs` was originally 0.16
+  for interior locations and 0.19 for coastal locations (Hargreaves and
+  Samani, as cited by Pereira et al., 2025). Pereira et al. (2025, eqs.
+  3.53 and 3.54) also give regressions of kRs on the long-term means of
+  Tmax - Tmin, wind speed and relative humidity, for all climates or by
+  aridity class; these are not implemented, but their result can be
+  passed as `kRs`. The default is 0.16.
+
+- Humidity: Tdew = Tmin - aT (Pereira et al., 2025, eqs. 2.6 and 2.7),
+  with aT depending on the aridity of the region (UNEP aridity index,
+  AI): 4-6 ºC in hyper-arid regions (AI \< 0.05), 2-3 ºC in arid regions
+  (0.05-0.20), 1-2 ºC in semiarid regions (0.20-0.50), 0-1 ºC in dry
+  sub-humid regions (0.50-0.65) and 0 ºC in moist sub-humid and humid
+  regions (AI \>= 0.65). The value 6 ºC is only for very arid sites. The
+  revision also allows aT calibrated for each calendar month with
+  regional data, which can be negative in winter. `aT` takes a single
+  value or one value per site; monthly values can be applied by passing
+  `Tdew = Tmin - aT` instead.
+
+- Wind speed: the regional mean, or 2 m s-1 if it is not known (the
+  default of `U2`).
+
+The cloud cover route (`CC`) and the CO2 correction (`CO2`) are not FAO
+procedures. The tall reference crop (`crop = 'tall'`) follows ASCE-EWRI
+(Walter et al., 2002; ASCE-EWRI, 2005).
 
 The function will produce an error message if a valid combination of
 input parameters is not provided. If `verbose` is \`TRUE\` (the default
@@ -349,6 +416,16 @@ Allen R.G., Pereira L.S., Raes D., Smith, M., 1998. *Crop
 evapotranspiration - Guidelines for computing crop water requirements -
 FAO Irrigation and drainage paper 56*. FAO, Rome. ISBN 92-5-104219-5.
 
+Pereira L.S., Allen R.G., Paredes P., López-Urrea R., Raes D., Smith M.,
+Kilic A., Salman M., 2025. *Crop evapotranspiration - Guidelines for
+computing crop water requirements - FAO Irrigation and Drainage Paper 56
+Rev. 1*. FAO, Rome. DOI:10.4060/cd6621en.
+
+ASCE-EWRI, 2005. *The ASCE standardized reference evapotranspiration
+equation.* Report of the Task Committee on Standardization of Reference
+Evapotranspiration, R.G. Allen et al. (eds.), American Society of Civil
+Engineers, Reston, VA.
+
 Walter I.A. and 14 co-authors, 2002. *The ASCE standardized reference
 evapotranspiration equation.* Rep. Task Com. on Standardized Reference
 Evapotranspiration July 9, 2002, EWRI–Am. Soc. Civil Engr., Reston, VA,
@@ -383,22 +460,28 @@ har <- hargreaves(TMIN, TMAX, lat = 37.6475)
 
 # ETo by Penman, based on sun hours, ignore NAs
 pen <- penman(TMIN, TMAX, AWND, tsun = TSUN, lat = 37.6475, z = 402.6, na.rm = TRUE)
-#> Using user-provided wind speed at 2 m height (`U2`) data. Using latitude (`lat`) to estimate extraterrestrial radiation. Using bright sunshine duration data (`tsun`) to estimate incoming solar radiation. Using minimum temperature (`Tmin`) to estimate dewpoint temperature and actual vapour pressure. Assuming constant atmospheric surface pressure corresponding to elevation `z`. Computing for a short crop. Missing values (`NA`) will not be considered in the calculation. Input type is vector. Assuming the data are monthly time series starting in January, all regular (non-leap) years. Calculation method is ICID.
+#> Using user-provided wind speed at 2 m height (`U2`) data. Using latitude (`lat`) to estimate extraterrestrial radiation. Using bright sunshine duration data (`tsun`) to estimate incoming solar radiation. Using minimum temperature (`Tmin`) to estimate dewpoint temperature and actual vapour pressure (Tdew = Tmin - aT, with `aT` = 0). Assuming constant atmospheric surface pressure corresponding to elevation `z`. Computing for a short crop. Missing values (`NA`) will not be considered in the calculation. Input type is vector. Assuming the data are monthly time series starting in January, all regular (non-leap) years. Calculation method is ICID.
 
 # Penman, based on cloud cover
 pen2 <- penman(TMIN, TMAX, AWND, CC = ACSH, lat = 37.6475, z = 402.6, na.rm = TRUE)
-#> Using user-provided wind speed at 2 m height (`U2`) data. Using latitude (`lat`) to estimate extraterrestrial radiation. Using fraction cloud cover (`CC`) to estimate incoming solar radiation. Using minimum temperature (`Tmin`) to estimate dewpoint temperature and actual vapour pressure. Assuming constant atmospheric surface pressure corresponding to elevation `z`. Computing for a short crop. Missing values (`NA`) will not be considered in the calculation. Input type is vector. Assuming the data are monthly time series starting in January, all regular (non-leap) years. Calculation method is ICID.
+#> Using user-provided wind speed at 2 m height (`U2`) data. Using latitude (`lat`) to estimate extraterrestrial radiation. Using fraction cloud cover (`CC`) to estimate incoming solar radiation. Using minimum temperature (`Tmin`) to estimate dewpoint temperature and actual vapour pressure (Tdew = Tmin - aT, with `aT` = 0). Assuming constant atmospheric surface pressure corresponding to elevation `z`. Computing for a short crop. Missing values (`NA`) will not be considered in the calculation. Input type is vector. Assuming the data are monthly time series starting in January, all regular (non-leap) years. Calculation method is ICID.
 
 # Penman, with constant wind
 pen3 <- penman(TMIN, TMAX, tsun = TSUN, lat = 37.6475, z = 402.6, na.rm = TRUE)
-#> No wind data (`U2`) provided, so using a constant value of 2 m s-1. Using latitude (`lat`) to estimate extraterrestrial radiation. Using bright sunshine duration data (`tsun`) to estimate incoming solar radiation. Using minimum temperature (`Tmin`) to estimate dewpoint temperature and actual vapour pressure. Assuming constant atmospheric surface pressure corresponding to elevation `z`. Computing for a short crop. Missing values (`NA`) will not be considered in the calculation. Input type is vector. Assuming the data are monthly time series starting in January, all regular (non-leap) years. Calculation method is ICID.
+#> No wind data (`U2`) provided, so using a constant value of 2 m s-1. Using latitude (`lat`) to estimate extraterrestrial radiation. Using bright sunshine duration data (`tsun`) to estimate incoming solar radiation. Using minimum temperature (`Tmin`) to estimate dewpoint temperature and actual vapour pressure (Tdew = Tmin - aT, with `aT` = 0). Assuming constant atmospheric surface pressure corresponding to elevation `z`. Computing for a short crop. Missing values (`NA`) will not be considered in the calculation. Input type is vector. Assuming the data are monthly time series starting in January, all regular (non-leap) years. Calculation method is ICID.
+
+# Penman with temperature only (PMT): Rs from the temperature range,
+# constant wind, ed from Tmin with aT = 1 (e.g., a dry sub-humid region)
+pen4 <- penman(TMIN, TMAX, lat = 37.6475, z = 402.6, kRs = 0.16, aT = 1,
+  na.rm = TRUE)
+#> No wind data (`U2`) provided, so using a constant value of 2 m s-1. Using latitude (`lat`) to estimate extraterrestrial radiation. No radiation data (`Rs`, `tsun` or `CC`) provided, so estimating incoming solar radiation from the temperature range with `kRs` = 0.16 (FAO-56 Rev.1 eq. 3.52). Using minimum temperature (`Tmin`) to estimate dewpoint temperature and actual vapour pressure (Tdew = Tmin - aT, with `aT` = 1). Assuming constant atmospheric surface pressure corresponding to elevation `z`. Computing for a short crop. Missing values (`NA`) will not be considered in the calculation. Input type is vector. Assuming the data are monthly time series starting in January, all regular (non-leap) years. Calculation method is ICID.
 
 # Plot them together
-plot(ts(cbind(tho, har, pen, pen2, pen3), fr = 12))
+plot(ts(cbind(tho, har, pen, pen2, pen3, pen4), fr = 12))
 
 
 # Compare between methods
-pairs(cbind(tho, har, pen, pen2, pen3))
+pairs(cbind(tho, har, pen, pen2, pen3, pen4))
 
 
 # Input data as a time series vector; note that only the first parameter
@@ -577,7 +660,7 @@ penman(ts(TMIN, start = c(1980, 1), frequency = 12), TMAX, AWND,
   tsun = TSUN,
   lat = 37.6475, z = 402.6, na.rm = TRUE
 )
-#> Using user-provided wind speed at 2 m height (`U2`) data. Using latitude (`lat`) to estimate extraterrestrial radiation. Using bright sunshine duration data (`tsun`) to estimate incoming solar radiation. Using minimum temperature (`Tmin`) to estimate dewpoint temperature and actual vapour pressure. Assuming constant atmospheric surface pressure corresponding to elevation `z`. Computing for a short crop. Missing values (`NA`) will not be considered in the calculation. Input type is tsvector. Time series spanning Jan 1980 to Oct 2011. Calculation method is ICID.
+#> Using user-provided wind speed at 2 m height (`U2`) data. Using latitude (`lat`) to estimate extraterrestrial radiation. Using bright sunshine duration data (`tsun`) to estimate incoming solar radiation. Using minimum temperature (`Tmin`) to estimate dewpoint temperature and actual vapour pressure (Tdew = Tmin - aT, with `aT` = 0). Assuming constant atmospheric surface pressure corresponding to elevation `z`. Computing for a short crop. Missing values (`NA`) will not be considered in the calculation. Input type is tsvector. Time series spanning Jan 1980 to Oct 2011. Calculation method is ICID.
 #>            Jan       Feb       Mar       Apr       May       Jun       Jul
 #> 1980        NA        NA        NA        NA        NA        NA        NA
 #> 1981        NA        NA        NA        NA        NA        NA        NA
@@ -798,17 +881,17 @@ pen_icid <- penman(TMIN, TMAX, AWND,
   tsun = TSUN, lat = 37.6475, z = 402.6,
   na.rm = TRUE, method = "ICID"
 )
-#> Using user-provided wind speed at 2 m height (`U2`) data. Using latitude (`lat`) to estimate extraterrestrial radiation. Using bright sunshine duration data (`tsun`) to estimate incoming solar radiation. Using minimum temperature (`Tmin`) to estimate dewpoint temperature and actual vapour pressure. Assuming constant atmospheric surface pressure corresponding to elevation `z`. Computing for a short crop. Missing values (`NA`) will not be considered in the calculation. Input type is vector. Assuming the data are monthly time series starting in January, all regular (non-leap) years. Calculation method is ICID.
+#> Using user-provided wind speed at 2 m height (`U2`) data. Using latitude (`lat`) to estimate extraterrestrial radiation. Using bright sunshine duration data (`tsun`) to estimate incoming solar radiation. Using minimum temperature (`Tmin`) to estimate dewpoint temperature and actual vapour pressure (Tdew = Tmin - aT, with `aT` = 0). Assuming constant atmospheric surface pressure corresponding to elevation `z`. Computing for a short crop. Missing values (`NA`) will not be considered in the calculation. Input type is vector. Assuming the data are monthly time series starting in January, all regular (non-leap) years. Calculation method is ICID.
 pen_asce <- penman(TMIN, TMAX, AWND,
   tsun = TSUN, lat = 37.6475, z = 402.6,
   na.rm = TRUE, method = "ASCE"
 )
-#> Using user-provided wind speed at 2 m height (`U2`) data. Using latitude (`lat`) to estimate extraterrestrial radiation. Using bright sunshine duration data (`tsun`) to estimate incoming solar radiation. Using minimum temperature (`Tmin`) to estimate dewpoint temperature and actual vapour pressure. Assuming constant atmospheric surface pressure corresponding to elevation `z`. Computing for a short crop. Missing values (`NA`) will not be considered in the calculation. Input type is vector. Assuming the data are monthly time series starting in January, all regular (non-leap) years. Calculation method is ASCE.
+#> Using user-provided wind speed at 2 m height (`U2`) data. Using latitude (`lat`) to estimate extraterrestrial radiation. Using bright sunshine duration data (`tsun`) to estimate incoming solar radiation. Using minimum temperature (`Tmin`) to estimate dewpoint temperature and actual vapour pressure (Tdew = Tmin - aT, with `aT` = 0). Assuming constant atmospheric surface pressure corresponding to elevation `z`. Computing for a short crop. Missing values (`NA`) will not be considered in the calculation. Input type is vector. Assuming the data are monthly time series starting in January, all regular (non-leap) years. Calculation method is ASCE.
 pen_fao <- penman(TMIN, TMAX, AWND,
   tsun = TSUN, lat = 37.6475, z = 402.6,
   na.rm = TRUE, method = "FAO"
 )
-#> Using user-provided wind speed at 2 m height (`U2`) data. Using latitude (`lat`) to estimate extraterrestrial radiation. Using bright sunshine duration data (`tsun`) to estimate incoming solar radiation. Using minimum temperature (`Tmin`) to estimate dewpoint temperature and actual vapour pressure. Assuming constant atmospheric surface pressure corresponding to elevation `z`. Computing for a short crop. Missing values (`NA`) will not be considered in the calculation. Input type is vector. Assuming the data are monthly time series starting in January, all regular (non-leap) years. Calculation method is FAO.
+#> Using user-provided wind speed at 2 m height (`U2`) data. Using latitude (`lat`) to estimate extraterrestrial radiation. Using bright sunshine duration data (`tsun`) to estimate incoming solar radiation. Using minimum temperature (`Tmin`) to estimate dewpoint temperature and actual vapour pressure (Tdew = Tmin - aT, with `aT` = 0). Assuming constant atmospheric surface pressure corresponding to elevation `z`. Computing for a short crop. Missing values (`NA`) will not be considered in the calculation. Input type is vector. Assuming the data are monthly time series starting in January, all regular (non-leap) years. Calculation method is FAO.
 plot(ts(cbind(pen_icid, pen_asce, pen_fao), fr = 12))
 
 
@@ -819,13 +902,13 @@ pen_300 <- penman(TMIN, TMAX, AWND,
   tsun = TSUN, lat = 37.6475, z = 402.6,
   na.rm = TRUE
 )
-#> Using user-provided wind speed at 2 m height (`U2`) data. Using latitude (`lat`) to estimate extraterrestrial radiation. Using bright sunshine duration data (`tsun`) to estimate incoming solar radiation. Using minimum temperature (`Tmin`) to estimate dewpoint temperature and actual vapour pressure. Assuming constant atmospheric surface pressure corresponding to elevation `z`. Computing for a short crop. Missing values (`NA`) will not be considered in the calculation. Input type is vector. Assuming the data are monthly time series starting in January, all regular (non-leap) years. Calculation method is ICID.
+#> Using user-provided wind speed at 2 m height (`U2`) data. Using latitude (`lat`) to estimate extraterrestrial radiation. Using bright sunshine duration data (`tsun`) to estimate incoming solar radiation. Using minimum temperature (`Tmin`) to estimate dewpoint temperature and actual vapour pressure (Tdew = Tmin - aT, with `aT` = 0). Assuming constant atmospheric surface pressure corresponding to elevation `z`. Computing for a short crop. Missing values (`NA`) will not be considered in the calculation. Input type is vector. Assuming the data are monthly time series starting in January, all regular (non-leap) years. Calculation method is ICID.
 # Increased to 450 ppm
 pen_450 <- penman(TMIN, TMAX, AWND,
   tsun = TSUN, lat = 37.6475, z = 402.6,
   CO2 = 450, na.rm = TRUE
 )
-#> Using user-provided wind speed at 2 m height (`U2`) data. Using latitude (`lat`) to estimate extraterrestrial radiation. Using bright sunshine duration data (`tsun`) to estimate incoming solar radiation. Using minimum temperature (`Tmin`) to estimate dewpoint temperature and actual vapour pressure. Assuming constant atmospheric surface pressure corresponding to elevation `z`. Using custom CO2 concentration. Computing for a short crop. Missing values (`NA`) will not be considered in the calculation. Input type is vector. Assuming the data are monthly time series starting in January, all regular (non-leap) years. Calculation method is ICID.
+#> Using user-provided wind speed at 2 m height (`U2`) data. Using latitude (`lat`) to estimate extraterrestrial radiation. Using bright sunshine duration data (`tsun`) to estimate incoming solar radiation. Using minimum temperature (`Tmin`) to estimate dewpoint temperature and actual vapour pressure (Tdew = Tmin - aT, with `aT` = 0). Assuming constant atmospheric surface pressure corresponding to elevation `z`. Using custom CO2 concentration. Computing for a short crop. Missing values (`NA`) will not be considered in the calculation. Input type is vector. Assuming the data are monthly time series starting in January, all regular (non-leap) years. Calculation method is ICID.
 plot(pen_450, pen_300)
 abline(0, 1)
 
@@ -835,7 +918,7 @@ pen_co2 <- penman(TMIN, TMAX, AWND,
   tsun = TSUN, lat = 37.6475, z = 402.6,
   CO2 = co2, na.rm = TRUE
 )
-#> Using user-provided wind speed at 2 m height (`U2`) data. Using latitude (`lat`) to estimate extraterrestrial radiation. Using bright sunshine duration data (`tsun`) to estimate incoming solar radiation. Using minimum temperature (`Tmin`) to estimate dewpoint temperature and actual vapour pressure. Assuming constant atmospheric surface pressure corresponding to elevation `z`. Using custom CO2 concentration. Computing for a short crop. Missing values (`NA`) will not be considered in the calculation. Input type is vector. Assuming the data are monthly time series starting in January, all regular (non-leap) years. Calculation method is ICID.
+#> Using user-provided wind speed at 2 m height (`U2`) data. Using latitude (`lat`) to estimate extraterrestrial radiation. Using bright sunshine duration data (`tsun`) to estimate incoming solar radiation. Using minimum temperature (`Tmin`) to estimate dewpoint temperature and actual vapour pressure (Tdew = Tmin - aT, with `aT` = 0). Assuming constant atmospheric surface pressure corresponding to elevation `z`. Using custom CO2 concentration. Computing for a short crop. Missing values (`NA`) will not be considered in the calculation. Input type is vector. Assuming the data are monthly time series starting in January, all regular (non-leap) years. Calculation method is ICID.
 plot(ts(cbind(pen_300, pen_co2), fr = 12))
 
 
@@ -855,7 +938,7 @@ pen_d <- penman(tmin_d, tmax_d,
   tsun = tsun_d, lat = 40, z = 500,
   method = "FAO", dates = dates
 )
-#> No wind data (`U2`) provided, so using a constant value of 2 m s-1. Using latitude (`lat`) to estimate extraterrestrial radiation. Using bright sunshine duration data (`tsun`) to estimate incoming solar radiation. Using minimum temperature (`Tmin`) to estimate dewpoint temperature and actual vapour pressure. Assuming constant atmospheric surface pressure corresponding to elevation `z`. Computing for a short crop. Checking for missing values (`NA`): all the data must be complete. Input type is vector. Daily data (`dates` provided) spanning 2020-01-01 to 2020-12-31; ET0 is given in mm per day and the soil heat flux is set to zero. Calculation method is FAO.
+#> No wind data (`U2`) provided, so using a constant value of 2 m s-1. Using latitude (`lat`) to estimate extraterrestrial radiation. Using bright sunshine duration data (`tsun`) to estimate incoming solar radiation. Using minimum temperature (`Tmin`) to estimate dewpoint temperature and actual vapour pressure (Tdew = Tmin - aT, with `aT` = 0). Assuming constant atmospheric surface pressure corresponding to elevation `z`. Computing for a short crop. Checking for missing values (`NA`): all the data must be complete. Input type is vector. Daily data (`dates` provided) spanning 2020-01-01 to 2020-12-31; ET0 is given in mm per day and the soil heat flux is set to zero. Calculation method is FAO.
 # The result is a zoo object indexed by the dates
 class(pen_d)
 #> [1] "zoo"
