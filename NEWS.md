@@ -22,6 +22,12 @@
   periods per year (quarter-months), 1961-2020, from the Spanish drought
   monitor. It is used in `vignette("scale_scan")`. See `?Datasets`.
 
+* New vignette, `vignette("weekly")`, on computing the indices with weekly
+  and other non-monthly time series: building quarter-month and 52-week
+  series from daily data, evapotranspiration at those resolutions, the
+  reference period, and the comparison with the monthly index, using the
+  `tarazona` dataset.
+
 # SPEI 1.9.0
 
 ## Changes in results with respect to 1.8.1
