@@ -140,8 +140,16 @@ depth <- rowSums(!is.na(bai[, -1]))
 
 The number of cores per year is low at the start. Until
 `r max(bai$year[depth == 1])` the chronology rests on a single core, and
-from 1970 on it has `r min(depth[bai$year >= 1970])` cores or more. The
-climate data start in 1961, so the first two years are not used.
+its variability in those years is larger than later on. All 18 cores are
+present from `r min(bai$year[depth == max(depth)])`. A mean of very few
+series is not representative of the site, so we restrict the analysis to
+the years with at least 10 cores, from `r min(bai$year[depth >= 10])` on:
+
+```{r}
+first <- min(bai$year[depth >= 10])
+rbai <- window(rbai, start = first)
+chron <- window(chron, start = first)
+```
 
 The annual series is a time series with frequency 1, or a data frame with
 the years in the first column and the values in the other columns.
@@ -188,14 +196,14 @@ For comparison, the average of the raw BAI with a linear trend removed
 (`detrend = TRUE`) gives:
 
 ```{r}
-sc_raw <- scale_scan(bal, ts(bai[, -1], start = bai$year[1]),
-  scales = 1:24, detrend = TRUE
-)
+raw <- window(ts(bai[, -1], start = bai$year[1]), start = first)
+sc_raw <- scale_scan(bal, raw, scales = 1:24, detrend = TRUE)
 sc_raw$best[1, ]
 ```
 
-The window is the same, with a slightly lower correlation
-(r = `r round(sc_raw$best$r[1], 2)`). Here the simple approach gives
+The window is very similar
+(`r month.name[sc_raw$best$cycle[1]]`, `r sc_raw$best$scale[1]` months),
+with a slightly lower correlation (r = `r round(sc_raw$best$r[1], 2)`). Here the simple approach gives
 almost the same result, because most cores are mature and the year-to-year
 variation is large. This will not hold in general, for example with young
 trees or with cores of very different ages.
@@ -339,7 +347,7 @@ window follows the annual series. They are in different units, so here the
 chronology is standardized (mean 0, standard deviation 1) to plot it on
 the scale of the index:
 
-```{r, fig.alt = "Time plot of the standardized Tarazona BAI chronology and the SPEI of the best window (August, 8-month scale) from 1961 to 2017. The two series follow each other, with the lowest values of both in the driest years."}
+```{r, fig.alt = "Time plot of the standardized Tarazona BAI chronology and the SPEI of the best window from 1965 to 2017. The two series follow each other, with the lowest values of both in the driest years."}
 chron_std <- (chron - mean(chron)) / sd(chron)
 spei_plot <- window(spei_best, end = 2017)
 plot(spei_plot,
@@ -347,7 +355,7 @@ plot(spei_plot,
   ylim = range(c(spei_plot, chron_std), na.rm = TRUE),
   xlab = "Year", ylab = "Standardized value"
 )
-lines(window(chron_std, start = 1961), col = "black", lwd = 2)
+lines(chron_std, col = "black", lwd = 2)
 abline(h = 0, lty = 3)
 legend("bottomleft", c("BAI chronology (standardized)", "SPEI, best window"),
   col = c("black", "red"), lwd = 2, bty = "n"
@@ -458,7 +466,7 @@ values in each year. The long format gives the same result as the matrix:
 
 ```{r}
 long <- data.frame(
-  year = rep(bai$year, ncol(rbai)),
+  year = rep(as.numeric(time(rbai)), ncol(rbai)),
   bai = as.vector(rbai)
 )
 head(long[!is.na(long$bai), ])
