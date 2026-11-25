@@ -7,13 +7,14 @@ pen <- function(...) penman(..., verbose = FALSE)
 # Rn = 13.28 MJ m-2 d-1 and, with daily data, G = 0
 lat18 <- 50 + 48 / 60
 
-test_that("FAO-56 Example 18: PET = 0.8 Rn / 2.45 (daily, G = 0)", {
+test_that("FAO-56 Example 18: PET = 0.8 Rn / Lv(T) (daily, G = 0)", {
+  lv <- 2.501 - 0.002361 * (12.3 + 21.5) / 2
   e <- pen(12.3, 21.5,
     tsun = 9.25, lat = lat18, z = 100, ed = 1.409,
     method = "energy", dates = "2005-07-06"
   )
   expect_s3_class(e, "zoo")
-  expect_equal(as.numeric(e), 0.8 * 13.28 / 2.45, tolerance = 0.02 / 4.34)
+  expect_equal(as.numeric(e), 0.8 * 13.28 / lv, tolerance = 0.005)
   # Exact value, with Rn reproduced as in penman()
   j <- 187
   delta <- 0.409 * sin(0.0172 * j - 1.39)
@@ -28,14 +29,14 @@ test_that("FAO-56 Example 18: PET = 0.8 Rn / 2.45 (daily, G = 0)", {
     (0.34 - 0.14 * sqrt(1.409)) * 4.9e-9 *
     ((273.15 + 21.5)^4 + (273.15 + 12.3)^4) / 2
   expect_equal(rn, 13.28, tolerance = 0.03 / 13.28)
-  expect_equal(as.numeric(e), 0.8 * rn / 2.45, tolerance = 1e-12)
+  expect_equal(as.numeric(e), 0.8 * rn / lv, tolerance = 1e-12)
   # Same with Ra and Rs given
   expect_equal(
     as.numeric(pen(12.3, 21.5,
       Ra = ra, Rs = rs, z = 100, ed = 1.409,
       method = "energy", dates = "2005-07-06"
     )),
-    0.8 * rn / 2.45,
+    0.8 * rn / lv,
     tolerance = 1e-12
   )
 })
@@ -58,7 +59,8 @@ test_that("monthly mode uses G (FAO-56 eq. 43) and the month length", {
     0.14 * (tmean[12] - tmean[11])
   )
   mlen <- c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
-  expect_equal(e, pmax(0.8 * (rn - g) / 2.45, 0) * mlen, tolerance = 1e-12)
+  lv <- 2.501 - 0.002361 * tmean
+  expect_equal(e, pmax(0.8 * (rn - g) / lv, 0) * mlen, tolerance = 1e-12)
 })
 
 test_that("negative values are set to zero", {

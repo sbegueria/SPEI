@@ -643,9 +643,10 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
   # Daily ET0 (eq. 2.18)
   if (energy) {
     # Energy-only potential evapotranspiration (Milly and Dunne, 2016):
-    # 0.8 (Rn - G), converted from MJ m-2 d-1 to mm d-1 with a latent heat
-    # of vaporization of 2.45 MJ kg-1 (as the factor 0.408 of FAO-56)
-    ET0 <- 0.8 * (Rn - G) / 2.45
+    # 0.8 (Rn - G) (their eq. 8), converted from MJ m-2 d-1 to mm d-1 with
+    # the temperature-dependent latent heat of vaporization of their eq. 2,
+    # Lv = 2.501 - 0.002361 T (MJ kg-1), the same as `lambda` above
+    ET0 <- 0.8 * (Rn - G) / lambda
   } else if (crop == "short") {
     c1 <- 900
     c2 <- 0.34 # short reference crop (e.g. clipped grass, 0.12 m)

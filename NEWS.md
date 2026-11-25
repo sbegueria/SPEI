@@ -66,7 +66,8 @@
 
 * `<penman>` has a new method, `method = "energy"`, for the energy-only
   potential evapotranspiration of Milly and Dunne (2016), 0.8 (Rn - G)
-  converted to mm with a latent heat of vaporization of 2.45 MJ kg-1 (#27).
+  converted to mm with their temperature-dependent latent heat of
+  vaporization, 2.501 - 0.002361 T MJ kg-1 (#27).
   Rn and G are computed as for the other methods (net radiation of the
   reference grass surface, with any of the solar radiation and humidity
   routes, including the temperature-only one; G from the monthly

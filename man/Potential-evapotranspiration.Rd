@@ -315,9 +315,11 @@ follows ASCE-EWRI (Walter et al., 2002; ASCE-EWRI, 2005).
 \code{method = 'energy'}, \code{penman} computes the energy-only potential
 evapotranspiration proposed by Milly and Dunne (2016), PET = 0.8 (Rn - G),
 with the available energy Rn - G (MJ m-2 d-1) converted to an equivalent
-depth of water with a latent heat of vaporization of 2.45 MJ kg-1 (as the
-factor 0.408 of FAO-56), so PET = 0.8 (Rn - G) / 2.45 mm d-1. As with the
-other methods, negative values are set to 0, and monthly values are
+depth of water with the latent heat of vaporization of their equation 2,
+which depends on the mean air temperature T (ºC): Lv = 2.501 - 0.002361 T
+MJ kg-1, so PET = 0.8 (Rn - G) / Lv mm d-1. Milly and Dunne (2016) do not
+say how negative values are treated; as with the other methods, they are
+set to 0 here, and monthly values are
 multiplied by the number of days in the month. Milly and Dunne (2016)
 found that the Penman-Monteith equation, driven by the projected
 increase of the vapour pressure deficit, overestimates the increase of
