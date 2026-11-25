@@ -15,7 +15,7 @@
   and `<scale_extract>` extracts the annual series of the index for a given
   window. A new vignette, `vignette("scale_scan")`, shows how to use them.
 
-* New function `<drought_events>` finds the drought (or wet) events of an
+* New function `<index_events>` finds the drought (or wet) events of an
   index series using run theory (#41): runs of consecutive time steps with
   the index at or below a threshold (dry events, default -1) or at or above
   it (wet events, default 1). It returns a data frame with one row per

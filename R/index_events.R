@@ -1,8 +1,8 @@
-#' @name Drought-events
+#' @name Index-events
 #' @title Drought and wet events of an index series.
-#' @aliases drought_events
+#' @aliases index_events
 #' @description
-#' \code{drought_events} finds the drought (or wet) events of a series of a
+#' \code{index_events} finds the drought (or wet) events of a series of a
 #' drought index, such as the SPEI or the SPI, and returns their start,
 #' end, duration, severity, intensity and peak, using the run theory of
 #' Yevjevich (1967).
@@ -55,7 +55,7 @@
 #'
 #' The function works on series. To get the events of each cell of gridded
 #' data (a 3-d array), apply it to the series of each cell, e.g.
-#' \code{drought_events(x[, i, j])}.
+#' \code{index_events(x[, i, j])}.
 #'
 #' @return
 #' A data frame with one row per event, in chronological order (and by
@@ -100,26 +100,26 @@
 #' spei12 <- spei(wichita[, "BAL"], 12, verbose = FALSE)
 #'
 #' # Drought events (SPEI-12 at or below -1)
-#' drought_events(spei12)
+#' index_events(spei12)
 #'
 #' # Only those lasting six months or more, merging events separated by one
 #' # or two months
-#' drought_events(spei12, min.duration = 6, pool = 2)
+#' index_events(spei12, min.duration = 6, pool = 2)
 #'
 #' # Wet events (SPEI-12 at or above 1)
-#' drought_events(spei12, type = "wet")
+#' index_events(spei12, type = "wet")
 #'
 #' # All the runs of negative values, as in the run theory with threshold 0
-#' head(drought_events(spei12, threshold = 0))
+#' head(index_events(spei12, threshold = 0))
 #'
 #' # Several series: SPEI-6 and SPEI-12
 #' spei6 <- spei(wichita[, "BAL"], 6, verbose = FALSE)
 #' x <- cbind(spei6 = spei6$fitted, spei12 = spei12$fitted)
-#' drought_events(x, min.duration = 3)
+#' index_events(x, min.duration = 3)
 #'
 #' @export
 #'
-drought_events <- function(x, type = "dry", threshold = NULL,
+index_events <- function(x, type = "dry", threshold = NULL,
                            min.duration = 1, pool = 0) {
   ### Argument check - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -138,8 +138,8 @@ drought_events <- function(x, type = "dry", threshold = NULL,
     ))
   } else if (length(dim(x)) > 2) {
     check$push(paste(
-      "Argument `x` can not be a 3-d array: apply `drought_events()` to",
-      "the series of each cell, e.g. `drought_events(x[, i, j])`."
+      "Argument `x` can not be a 3-d array: apply `index_events()` to",
+      "the series of each cell, e.g. `index_events(x[, i, j])`."
     ))
   }
   if (!is.character(type) || length(type) != 1 ||
