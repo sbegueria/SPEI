@@ -213,7 +213,10 @@
 #' values, e.g. c(1900,1), in the time of \code{data}: that of the time
 #' series, or the one given by \code{start} and \code{frequency} (see Time
 #' information). Without time information, the years are counted from year
-#' 1 at the start of \code{data}.
+#' 1 at the start of \code{data}. If \code{ref.start} or \code{ref.end} fall
+#' outside the time span of \code{data} a warning is issued, and the
+#' reference period is limited to the data (e.g. a \code{ref.start} before
+#' the first observation is taken as the first observation).
 #'
 #'
 #' @section Processing large datasets:
@@ -342,12 +345,13 @@
 #' # Time series not starting in January
 #' plot(spei(ts(wichita[, "BAL"], freq = 12, start = c(1980, 6)), 12))
 #'
-#' # Using a particular reference period (1980-2000) for computing the
-#' # parameters. This may result in unexpected values (Inf, NaN) if data
-#' # outside the reference period are way higher or lower than those within
-#' # the reference period.
+#' # Using a particular reference period (June 1980 to January 2000) for
+#' # computing the parameters. This may result in unexpected values (Inf,
+#' # NaN) if data outside the reference period are way higher or lower than
+#' # those within the reference period. A reference period outside the time
+#' # span of the data gives a warning.
 #' plot(spei(ts(wichita[, "BAL"], freq = 12, start = c(1980, 6)), 12,
-#'   ref.start = c(1980, 1), ref.end = c(2000, 1)
+#'   ref.start = c(1980, 6), ref.end = c(2000, 1)
 #' ))
 #'
 #' # Using different kernels
@@ -793,6 +797,33 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
   # Convert to time series
   if (!is.ts(acu)) {
     acu <- ts(acu, start = ts_start, frequency = ts_freq)
+  }
+
+  # Warn if the reference period falls outside the time span of the data
+  # (the data limits are then used instead, as before)
+  if (using$ref.start | using$ref.end) {
+    span <- tsp(acu)[1:2]
+    eps <- 1e-6 / ts_freq
+    outside <- function(r) {
+      t <- r[1] + (r[2] - 1) / ts_freq
+      t < span[1] - eps || t > span[2] + eps
+    }
+    bad <- c(
+      ref.start = using$ref.start && outside(ref.start),
+      ref.end = using$ref.end && outside(ref.end)
+    )
+    if (any(bad)) {
+      ym <- as.yearmon(span)
+      warning(
+        paste0("`", names(bad)[bad], "`", collapse = " and "),
+        ifelse(sum(bad) > 1, " fall", " falls"),
+        " outside the time span of `data` (", ym[1], " to ", ym[2],
+        ", frequency ", ts_freq, "); the reference period is limited to ",
+        "the data. Check the time information of `data` (see `start` and ",
+        "`frequency`).",
+        call. = FALSE
+      )
+    }
   }
 
   # Trim data set to reference period for fitting (acu.ref)

@@ -51,10 +51,10 @@ test_that("weekly arrays (frequency 48 and 52)", {
   for (f in c(48, 52)) {
     a <- spei(cruts4, 4,
       start = c(1961, 3), frequency = f,
-      ref.start = c(1970, 1), ref.end = c(1990, f), verbose = FALSE
+      ref.start = c(1970, 1), ref.end = c(1985, f), verbose = FALSE
     )
     s <- spei(as_tsmat(cruts4, c(1961, 3), f), 4,
-      ref.start = c(1970, 1), ref.end = c(1990, f), verbose = FALSE
+      ref.start = c(1970, 1), ref.end = c(1985, f), verbose = FALSE
     )
     expect_equal(as.vector(a$fitted), as.vector(s$fitted), tolerance = 1e-12)
     expect_equal(dim(a$coefficients), c(3, 6, f))
@@ -175,6 +175,63 @@ test_that("errors for bad or conflicting start / frequency", {
   expect_error(spei(cruts4, 1, frequency = 0), "Argument `frequency` must be")
   expect_error(spei(cruts4, 1, frequency = 12.5), "Argument `frequency` must be")
   expect_error(spei(cruts4, 1, frequency = c(12, 48)), "Argument `frequency` must be")
+})
+
+# Reference period outside the time span of the data
+
+test_that("a reference period outside the data gives a warning, same result", {
+  m <- as_tsmat(cruts4, c(1900, 1))
+  inside <- spei(m, 12,
+    ref.start = c(1900, 1), ref.end = c(2019, 12),
+    verbose = FALSE
+  )
+  whole <- spei(m, 12, verbose = FALSE)
+  expect_silent(spei(m, 12,
+    ref.start = c(1900, 1), ref.end = c(2019, 12),
+    verbose = FALSE
+  ))
+  expect_equal(inside$fitted, whole$fitted, tolerance = 1e-12)
+  expect_warning(
+    s <- spei(m, 12, ref.start = c(1850, 1), verbose = FALSE),
+    "`ref.start` falls outside the time span of `data`"
+  )
+  expect_equal(s$fitted, whole$fitted, tolerance = 1e-12)
+  expect_warning(
+    s <- spi(abs(m), 12, ref.end = c(2020, 1), verbose = FALSE),
+    "`ref.end` falls outside the time span"
+  )
+  expect_equal(s$fitted, spi(abs(m), 12, verbose = FALSE)$fitted,
+    tolerance = 1e-12
+  )
+  # both
+  expect_warning(
+    spei(m, 1, ref.start = c(1800, 1), ref.end = c(2100, 1), verbose = FALSE),
+    "`ref.start` and `ref.end` fall outside"
+  )
+  # an array without time information: years counted from year 1
+  expect_warning(
+    spei(cruts4, 1, ref.start = c(62, 1), ref.end = c(1990, 12), verbose = FALSE),
+    "`ref.end` falls outside the time span of `data`"
+  )
+  # an array with time information inferred from its dimnames, and the
+  # reference period given in years counted from year 1 (the old way)
+  x <- cruts4
+  dimnames(x)[[1]] <- time_labels(c(1900, 1), 12, 1440)
+  expect_warning(
+    s <- spei(x, 12, ref.start = c(62, 1), ref.end = c(2019, 12), verbose = FALSE),
+    "`ref.start` falls outside the time span"
+  )
+  expect_equal(as.vector(s$fitted), as.vector(whole$fitted), tolerance = 1e-12)
+  # weekly data
+  expect_warning(
+    spei(cruts4, 4, start = c(1961, 1), frequency = 48, ref.end = c(1991, 1),
+      verbose = FALSE),
+    "`ref.end` falls outside"
+  )
+  expect_silent(
+    spei(cruts4, 4, start = c(1961, 1), frequency = 48, ref.end = c(1990, 48),
+      verbose = FALSE)
+  )
 })
 
 # Monthly PET functions with 3-d arrays and start

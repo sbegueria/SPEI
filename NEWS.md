@@ -89,6 +89,16 @@
   start in January. `vignette("gridded")` now uses `start` instead of
   reshaping the array into a time series matrix.
 
+* `<spei>` and `<spi>` warn when `ref.start` and/or `ref.end` fall outside
+  the time span of `data`. Such a reference period used to be silently
+  limited to the data, which could hide a mistake in the time information
+  (e.g. an array without `start`, whose years are counted from year 1, or
+  an array whose time `dimnames` are now used, with the reference period
+  given in years counted from year 1). The results are the same as before:
+  the reference period is still limited to the data. The example of a
+  reference period in `?spei`, which started before the data, now starts
+  with them (same result).
+
 ## Changes in results
 
 * `<penman>`: wind speeds `U2` below 0.5 m s-1 are set to 0.5 m s-1, as

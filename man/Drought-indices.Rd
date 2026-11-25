@@ -295,7 +295,10 @@ reference period are defined as pairs of year and period (e.g. month)
 values, e.g. c(1900,1), in the time of \code{data}: that of the time
 series, or the one given by \code{start} and \code{frequency} (see Time
 information). Without time information, the years are counted from year
-1 at the start of \code{data}.
+1 at the start of \code{data}. If \code{ref.start} or \code{ref.end} fall
+outside the time span of \code{data} a warning is issued, and the
+reference period is limited to the data (e.g. a \code{ref.start} before
+the first observation is taken as the first observation).
 }
 
 \section{Processing large datasets}{
@@ -355,12 +358,13 @@ plot(spi_12, main = "Wichita, SPI-12")
 # Time series not starting in January
 plot(spei(ts(wichita[, "BAL"], freq = 12, start = c(1980, 6)), 12))
 
-# Using a particular reference period (1980-2000) for computing the
-# parameters. This may result in unexpected values (Inf, NaN) if data
-# outside the reference period are way higher or lower than those within
-# the reference period.
+# Using a particular reference period (June 1980 to January 2000) for
+# computing the parameters. This may result in unexpected values (Inf,
+# NaN) if data outside the reference period are way higher or lower than
+# those within the reference period. A reference period outside the time
+# span of the data gives a warning.
 plot(spei(ts(wichita[, "BAL"], freq = 12, start = c(1980, 6)), 12,
-  ref.start = c(1980, 1), ref.end = c(2000, 1)
+  ref.start = c(1980, 6), ref.end = c(2000, 1)
 ))
 
 # Using different kernels
