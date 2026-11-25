@@ -31,6 +31,7 @@ DOI: 10.1175/2009JCLI2909.1.
 Useful links:
 \itemize{
   \item \url{https://spei.csic.es}
+  \item \url{https://sbegueria.github.io/SPEI/}
   \item \url{https://github.com/sbegueria/SPEI}
   \item Report bugs at \url{https://github.com/sbegueria/SPEI/issues}
 }

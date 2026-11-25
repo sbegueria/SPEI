@@ -1,5 +1,20 @@
 # SPEI (development version)
 
+## New features
+
+* New function `<scale_scan>` finds the time scale and the position in the
+  year (month, week, etc.) at which the SPEI or the SPI best correlates
+  with an annual series, such as tree-ring widths, crop yields or reservoir
+  levels (#7). It computes the index at a set of time scales (or takes
+  already computed index values), correlates it with the annual series at
+  every position in the year and time scale, optionally also in previous
+  years (`lag`), adjusts the p-values for multiple testing, and reports the
+  strongest significant positive and negative windows. It works with any
+  time series frequency. Several annual series (e.g. several trees) are
+  averaged per year. A `plot` method draws a heatmap of the correlations,
+  and `<scale_extract>` extracts the annual series of the index for a given
+  window. A new vignette, `vignette("scale_scan")`, shows how to use them.
+
 # SPEI 1.9.0
 
 ## Changes in results with respect to 1.8.1

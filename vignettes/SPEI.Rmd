@@ -1,5 +1,6 @@
 ---
 title: "Getting started with SPEI"
+author: "S. Beguería"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Getting started with SPEI}

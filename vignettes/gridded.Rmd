@@ -1,5 +1,6 @@
 ---
 title: "Many sites and gridded data"
+author: "S. Beguería"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Many sites and gridded data}

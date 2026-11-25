@@ -1,5 +1,6 @@
 ---
 title: "Choosing the options"
+author: "S. Beguería"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Choosing the options}
