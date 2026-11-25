@@ -190,7 +190,9 @@ thornthwaite(Tave, lat, na.rm = FALSE, verbose = TRUE, start = NULL)
 - method:
 
   optional, character string, Penman-Monteith calculation method. Either
-  one of 'ICID' (default), 'FAO', or 'ASCE'.
+  one of 'ICID' (default), 'FAO', or 'ASCE'; or 'energy' for the
+  energy-only potential evapotranspiration of Milly and Dunne (2016),
+  0.8 (Rn - G), which does not use the wind speed (see Details).
 
 - kRs:
 
@@ -357,6 +359,37 @@ The cloud cover route (`CC`) and the CO2 correction (`CO2`) are not FAO
 procedures. The tall reference crop (`crop = 'tall'`) follows ASCE-EWRI
 (Walter et al., 2002; ASCE-EWRI, 2005).
 
+**Energy-only potential evapotranspiration.** With `method = 'energy'`,
+`penman` computes the energy-only potential evapotranspiration proposed
+by Milly and Dunne (2016), PET = 0.8 (Rn - G), with the available energy
+Rn - G (MJ m-2 d-1) converted to an equivalent depth of water with the
+latent heat of vaporization of their equation 2, which depends on the
+mean air temperature T (ºC): Lv = 2.501 - 0.002361 T MJ kg-1, so PET =
+0.8 (Rn - G) / Lv mm d-1. Milly and Dunne (2016) do not say how negative
+values are treated; as with the other methods, they are set to 0 here,
+and monthly values are multiplied by the number of days in the month.
+Milly and Dunne (2016) found that the Penman-Monteith equation, driven
+by the projected increase of the vapour pressure deficit, overestimates
+the increase of the evaporative demand under warming (and thus the
+drying of the continents) with respect to the evapotranspiration of
+non-water-stressed vegetation simulated by climate models, which was
+much better described by a fixed fraction of the available energy. The
+energy-only estimate is therefore much less sensitive to warming than
+`penman` with the other methods. Rn and G are computed exactly as for
+the other methods: Rn is the net radiation of the reference grass
+surface (albedo 0.23, net longwave radiation from `Tmin`, `Tmax`, the
+actual vapour pressure and Rs/Rso), with any of the routes for the solar
+radiation (`Rs`, `tsun`, `CC` or the temperature range with `kRs`) and
+for the actual vapour pressure (`ed`, `Tdew`, `RH` as in FAO-56 eq. 19,
+or `Tmin` - `aT`); and G is computed from the monthly mean temperatures
+(FAO-56 eq. 43) or set to 0 with daily data. Milly and Dunne (2016) used
+instead the net radiation and ground heat flux of the actual land
+surface simulated by the climate models, so the result is an
+approximation of their method. The wind speed, the atmospheric pressure,
+the crop and the CO2 concentration are not used: `U2`, `CO2` and
+`crop = 'tall'` are ignored with a warning, and `P` and `P0` are
+ignored.
+
 The function will produce an error message if a valid combination of
 input parameters is not provided. If `verbose` is \`TRUE\` (the default
 value), a message will be produced informing on the computation options
@@ -453,6 +486,10 @@ Walter I.A. and 14 co-authors, 2002. *The ASCE standardized reference
 evapotranspiration equation.* Rep. Task Com. on Standardized Reference
 Evapotranspiration July 9, 2002, EWRI–Am. Soc. Civil Engr., Reston, VA,
 57 pp.
+
+Milly, P.C.D., Dunne, K.A., 2016. Potential evapotranspiration and
+continental drying. *Nature Climate Change* **6**: 946–949.
+DOI:10.1038/nclimate3046.
 
 Yang, Y., Roderick, M.L., Zhang, S. McVicar, T., Donohue, R.J., 2019.
 Hydrologic implications of vegetation response to elevated CO2 in
@@ -916,6 +953,16 @@ pen_fao <- penman(TMIN, TMAX, AWND,
 )
 #> Using user-provided wind speed at 2 m height (`U2`) data. Using latitude (`lat`) to estimate extraterrestrial radiation. Using bright sunshine duration data (`tsun`) to estimate incoming solar radiation. Using minimum temperature (`Tmin`) to estimate dewpoint temperature and actual vapour pressure (Tdew = Tmin - aT, with `aT` = 0). Assuming constant atmospheric surface pressure corresponding to elevation `z`. Computing for a short crop. Missing values (`NA`) will not be considered in the calculation. Input type is vector. Assuming the data are monthly time series starting in January, all regular (non-leap) years. Calculation method is FAO.
 plot(ts(cbind(pen_icid, pen_asce, pen_fao), fr = 12))
+
+
+# Energy-only potential evapotranspiration (Milly and Dunne, 2016); the
+# wind speed is not needed
+pen_energy <- penman(TMIN, TMAX,
+  tsun = TSUN, lat = 37.6475, z = 402.6,
+  na.rm = TRUE, method = "energy"
+)
+#> Wind speed (`U2`) is not used by the energy-only method. Using latitude (`lat`) to estimate extraterrestrial radiation. Using bright sunshine duration data (`tsun`) to estimate incoming solar radiation. Using minimum temperature (`Tmin`) to estimate dewpoint temperature and actual vapour pressure (Tdew = Tmin - aT, with `aT` = 0). Missing values (`NA`) will not be considered in the calculation. Input type is vector. Assuming the data are monthly time series starting in January, all regular (non-leap) years. Calculation method is energy (energy-only potential evapotranspiration, 0.8 (Rn - G), Milly and Dunne, 2016).
+plot(ts(cbind(pen_fao, pen_energy), fr = 12))
 
 
 # Different CO2 concentrations

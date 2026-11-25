@@ -242,7 +242,9 @@ one of 'short' (default) or 'tall'.</p></dd>
 
 <dt id="arg-method">method<a class="anchor" aria-label="anchor" href="#arg-method"></a></dt>
 <dd><p>optional, character string, Penman-Monteith calculation
-method. Either one of 'ICID' (default), 'FAO', or 'ASCE'.</p></dd>
+method. Either one of 'ICID' (default), 'FAO', or 'ASCE'; or 'energy' for
+the energy-only potential evapotranspiration of Milly and Dunne (2016),
+0.8 (Rn - G), which does not use the wind speed (see Details).</p></dd>
 
 
 <dt id="arg-krs">kRs<a class="anchor" aria-label="anchor" href="#arg-krs"></a></dt>
@@ -403,6 +405,37 @@ estimated as follows, and <code>penman</code> does so when only <code>Tmin</code
 </ul><p>The cloud cover route (<code>CC</code>) and the CO2 correction (<code>CO2</code>)
 are not FAO procedures. The tall reference crop (<code>crop = 'tall'</code>)
 follows ASCE-EWRI (Walter et al., 2002; ASCE-EWRI, 2005).</p>
+<p><strong>Energy-only potential evapotranspiration.</strong> With
+<code>method = 'energy'</code>, <code>penman</code> computes the energy-only potential
+evapotranspiration proposed by Milly and Dunne (2016), PET = 0.8 (Rn - G),
+with the available energy Rn - G (MJ m-2 d-1) converted to an equivalent
+depth of water with the latent heat of vaporization of their equation 2,
+which depends on the mean air temperature T (ºC): Lv = 2.501 - 0.002361 T
+MJ kg-1, so PET = 0.8 (Rn - G) / Lv mm d-1. Milly and Dunne (2016) do not
+say how negative values are treated; as with the other methods, they are
+set to 0 here, and monthly values are
+multiplied by the number of days in the month. Milly and Dunne (2016)
+found that the Penman-Monteith equation, driven by the projected
+increase of the vapour pressure deficit, overestimates the increase of
+the evaporative demand under warming (and thus the drying of the
+continents) with respect to the evapotranspiration of non-water-stressed
+vegetation simulated by climate models, which was much better described
+by a fixed fraction of the available energy. The energy-only estimate is
+therefore much less sensitive to warming than <code>penman</code> with the
+other methods. Rn and G are computed exactly as for the other methods:
+Rn is the net radiation of the reference grass surface (albedo 0.23, net
+longwave radiation from <code>Tmin</code>, <code>Tmax</code>, the actual vapour
+pressure and Rs/Rso), with any of the routes for the solar radiation
+(<code>Rs</code>, <code>tsun</code>, <code>CC</code> or the temperature range with
+<code>kRs</code>) and for the actual vapour pressure (<code>ed</code>, <code>Tdew</code>,
+<code>RH</code> as in FAO-56 eq. 19, or <code>Tmin</code> - <code>aT</code>); and G is
+computed from the monthly mean temperatures (FAO-56 eq. 43) or set to 0
+with daily data. Milly and Dunne (2016) used instead the net radiation
+and ground heat flux of the actual land surface simulated by the climate
+models, so the result is an approximation of their method. The wind
+speed, the atmospheric pressure, the crop and the CO2 concentration are
+not used: <code>U2</code>, <code>CO2</code> and <code>crop = 'tall'</code> are ignored
+with a warning, and <code>P</code> and <code>P0</code> are ignored.</p>
 <p>The function will produce an error message if a valid combination of input
 parameters is not provided.
 If <code>verbose</code> is `TRUE` (the default value), a message will be produced
@@ -487,6 +520,9 @@ Standardization of Reference Evapotranspiration, R.G. Allen et al.
 evapotranspiration equation.</em> Rep. Task Com. on Standardized Reference
 Evapotranspiration July 9, 2002, EWRI–Am. Soc. Civil Engr., Reston, VA,
 57 pp.</p>
+<p>Milly, P.C.D., Dunne, K.A., 2016. Potential evapotranspiration and
+continental drying. <em>Nature Climate Change</em> <b>6</b>: 946–949.
+DOI:10.1038/nclimate3046.</p>
 <p>Yang, Y., Roderick, M.L., Zhang, S. McVicar, T., Donohue, R.J., 2019.
 Hydrologic implications of vegetation response to elevated CO2 in climate
 projections. <em>Nature Climate Change</em> <b>9</b>: 44–48.</p>
@@ -951,6 +987,16 @@ projections. <em>Nature Climate Change</em> <b>9</b>: 44–48.</p>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/ts.html" class="external-link">ts</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="va">pen_icid</span>, <span class="va">pen_asce</span>, <span class="va">pen_fao</span><span class="op">)</span>, fr <span class="op">=</span> <span class="fl">12</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="Potential-evapotranspiration-6.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Energy-only potential evapotranspiration (Milly and Dunne, 2016); the</span></span></span>
+<span class="r-in"><span><span class="co"># wind speed is not needed</span></span></span>
+<span class="r-in"><span><span class="va">pen_energy</span> <span class="op">&lt;-</span> <span class="fu">penman</span><span class="op">(</span><span class="va">TMIN</span>, <span class="va">TMAX</span>,</span></span>
+<span class="r-in"><span>  tsun <span class="op">=</span> <span class="va">TSUN</span>, lat <span class="op">=</span> <span class="fl">37.6475</span>, z <span class="op">=</span> <span class="fl">402.6</span>,</span></span>
+<span class="r-in"><span>  na.rm <span class="op">=</span> <span class="cn">TRUE</span>, method <span class="op">=</span> <span class="st">"energy"</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Wind speed (`U2`) is not used by the energy-only method. Using latitude (`lat`) to estimate extraterrestrial radiation. Using bright sunshine duration data (`tsun`) to estimate incoming solar radiation. Using minimum temperature (`Tmin`) to estimate dewpoint temperature and actual vapour pressure (Tdew = Tmin - aT, with `aT` = 0). Missing values (`NA`) will not be considered in the calculation. Input type is vector. Assuming the data are monthly time series starting in January, all regular (non-leap) years. Calculation method is energy (energy-only potential evapotranspiration, 0.8 (Rn - G), Milly and Dunne, 2016).</span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/ts.html" class="external-link">ts</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="va">pen_fao</span>, <span class="va">pen_energy</span><span class="op">)</span>, fr <span class="op">=</span> <span class="fl">12</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-plt img"><img src="Potential-evapotranspiration-7.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Different CO2 concentrations</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Default (300 ppm)</span></span></span>
@@ -967,7 +1013,7 @@ projections. <em>Nature Climate Change</em> <b>9</b>: 44–48.</p>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Using user-provided wind speed at 2 m height (`U2`) data. Using latitude (`lat`) to estimate extraterrestrial radiation. Using bright sunshine duration data (`tsun`) to estimate incoming solar radiation. Using minimum temperature (`Tmin`) to estimate dewpoint temperature and actual vapour pressure (Tdew = Tmin - aT, with `aT` = 0). Assuming constant atmospheric surface pressure corresponding to elevation `z`. Using custom CO2 concentration. Computing for a short crop. Missing values (`NA`) will not be considered in the calculation. Input type is vector. Assuming the data are monthly time series starting in January, all regular (non-leap) years. Calculation method is ICID.</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">pen_450</span>, <span class="va">pen_300</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="Potential-evapotranspiration-7.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="Potential-evapotranspiration-8.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span><span class="co"># Increasing from 300 to 450</span></span></span>
 <span class="r-in"><span><span class="va">co2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">300</span>, <span class="fl">450</span>, length.out <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">TMIN</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">pen_co2</span> <span class="op">&lt;-</span> <span class="fu">penman</span><span class="op">(</span><span class="va">TMIN</span>, <span class="va">TMAX</span>, <span class="va">AWND</span>,</span></span>
@@ -976,7 +1022,7 @@ projections. <em>Nature Climate Change</em> <b>9</b>: 44–48.</p>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Using user-provided wind speed at 2 m height (`U2`) data. Using latitude (`lat`) to estimate extraterrestrial radiation. Using bright sunshine duration data (`tsun`) to estimate incoming solar radiation. Using minimum temperature (`Tmin`) to estimate dewpoint temperature and actual vapour pressure (Tdew = Tmin - aT, with `aT` = 0). Assuming constant atmospheric surface pressure corresponding to elevation `z`. Using custom CO2 concentration. Computing for a short crop. Missing values (`NA`) will not be considered in the calculation. Input type is vector. Assuming the data are monthly time series starting in January, all regular (non-leap) years. Calculation method is ICID.</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/ts.html" class="external-link">ts</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="va">pen_300</span>, <span class="va">pen_co2</span><span class="op">)</span>, fr <span class="op">=</span> <span class="fl">12</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="Potential-evapotranspiration-8.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="Potential-evapotranspiration-9.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Daily data</span></span></span>
 <span class="r-in"><span></span></span>
@@ -1005,7 +1051,7 @@ projections. <em>Nature Climate Change</em> <b>9</b>: 44–48.</p>
 <span class="r-in"><span>  plot.type <span class="op">=</span> <span class="st">"single"</span>,</span></span>
 <span class="r-in"><span>  col <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"black"</span>, <span class="st">"red"</span><span class="op">)</span>, ylab <span class="op">=</span> <span class="st">"ETo (mm/day)"</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="Potential-evapotranspiration-9.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="Potential-evapotranspiration-10.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span><span class="co"># Monthly and weekly totals of the daily values</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/aggregate.html" class="external-link">aggregate</a></span><span class="op">(</span><span class="va">pen_d</span>, <span class="fu">zoo</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/zoo/man/yearmon.html" class="external-link">as.yearmon</a></span>, <span class="va">sum</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Jan 2020  Feb 2020  Mar 2020  Apr 2020  May 2020  Jun 2020  Jul 2020  Aug 2020 </span>

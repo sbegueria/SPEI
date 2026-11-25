@@ -95,6 +95,20 @@
   cloud cover (`CC`) route and the CO2 correction are not FAO
   procedures.
 
+- `<penman>` has a new method, `method = "energy"`, for the energy-only
+  potential evapotranspiration of Milly and Dunne (2016), 0.8 (Rn - G)
+  converted to mm with their temperature-dependent latent heat of
+  vaporization, 2.501 - 0.002361 T MJ kg-1
+  ([\#27](https://github.com/sbegueria/SPEI/issues/27)). Rn and G are
+  computed as for the other methods (net radiation of the reference
+  grass surface, with any of the solar radiation and humidity routes,
+  including the temperature-only one; G from the monthly temperatures,
+  or 0 with daily data), so it approximates the method of Milly and
+  Dunne, who used the land-surface net radiation of climate models. The
+  wind speed is not needed: `U2`, `CO2` and `crop = "tall"` are ignored
+  with a warning. It is much less sensitive to warming than the
+  Penman-Monteith equation.
+
 - Time information for data that are not time series, in particular 3-d
   arrays of gridded data
   ([\#94](https://github.com/sbegueria/SPEI/issues/94)). `<spei>` and

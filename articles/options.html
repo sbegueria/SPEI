@@ -348,6 +348,117 @@ distribution: a longer reference period, or a different distribution,
 may fit the data better.</p>
 </div>
 <div class="section level2">
+<h2 id="evapotranspiration-method">Evapotranspiration method<a class="anchor" aria-label="anchor" href="#evapotranspiration-method"></a>
+</h2>
+<p>The SPEI depends on the potential evapotranspiration (PET) used to
+compute the water balance. <code><a href="../articles/SPEI.html">vignette("SPEI")</a></code> compares the
+levels given by the PET methods. The choice matters even more for
+trends, and in particular for the response of the index to warming.</p>
+<p>Milly and Dunne (2016) compared the PET of the Penman-Monteith
+equation, computed from the outputs of 16 climate models, with the
+evapotranspiration that the same models simulate where the surface is
+not short of water. Penman-Monteith reproduced the present level well,
+but it overestimated the increase under warming by about a factor of
+two, partly because it ignores the closure of stomata that the models
+simulate under higher CO2. They proposed an “energy-only” PET, 80% of
+the available energy, PET = 0.8 (Rn − G), which predicted the change
+much better. It is available as
+<code>penman(..., method = "energy")</code>. It needs no wind data, but
+it uses the same radiation and humidity inputs as the other methods.</p>
+<p>We compute both for Wichita, with the sunshine duration for the
+radiation:</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">pet_fao</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Potential-evapotranspiration.html">penman</a></span><span class="op">(</span><span class="va">wichita</span><span class="op">[</span>, <span class="st">"TMIN"</span><span class="op">]</span>, <span class="va">wichita</span><span class="op">[</span>, <span class="st">"TMAX"</span><span class="op">]</span>, <span class="va">wichita</span><span class="op">[</span>, <span class="st">"AWND"</span><span class="op">]</span>,</span>
+<span>  tsun <span class="op">=</span> <span class="va">wichita</span><span class="op">[</span>, <span class="st">"TSUN"</span><span class="op">]</span>, lat <span class="op">=</span> <span class="fl">37.6475</span>, z <span class="op">=</span> <span class="fl">402.6</span>,</span>
+<span>  method <span class="op">=</span> <span class="st">"FAO"</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">pet_eo</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Potential-evapotranspiration.html">penman</a></span><span class="op">(</span><span class="va">wichita</span><span class="op">[</span>, <span class="st">"TMIN"</span><span class="op">]</span>, <span class="va">wichita</span><span class="op">[</span>, <span class="st">"TMAX"</span><span class="op">]</span>,</span>
+<span>  tsun <span class="op">=</span> <span class="va">wichita</span><span class="op">[</span>, <span class="st">"TSUN"</span><span class="op">]</span>, lat <span class="op">=</span> <span class="fl">37.6475</span>, z <span class="op">=</span> <span class="fl">402.6</span>,</span>
+<span>  method <span class="op">=</span> <span class="st">"energy"</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co"># Use the same months for both (the FAO method also needs wind data)</span></span>
+<span><span class="va">pet_eo</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">pet_fao</span><span class="op">)</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="cn">NA</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fl">12</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>FAO <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">pet_fao</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>  energy <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">pet_eo</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt;    FAO energy </span></span>
+<span><span class="co">#&gt;   1494   1104</span></span></code></pre></div>
+<p>The energy-only PET is about a quarter lower than the FAO reference
+evapotranspiration in this dry, windy climate, where the aerodynamic
+term of Penman-Monteith is large. Note that the net radiation computed
+by <code><a href="../reference/Potential-evapotranspiration.html">penman()</a></code> is that of a reference grass surface, not the
+land surface simulated by a climate model, so this is an approximation
+of the method of Milly and Dunne.</p>
+<p>The difference matters most under warming. A simple sensitivity test
+adds a uniform warming to the temperatures and keeps everything else
+unchanged (precipitation, sunshine and wind; the humidity is estimated
+from the minimum temperature, so the relative humidity is roughly
+kept):</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">pet_warm</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">dT</span>, <span class="va">method</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/warning.html" class="external-link">suppressWarnings</a></span><span class="op">(</span><span class="fu"><a href="../reference/Potential-evapotranspiration.html">penman</a></span><span class="op">(</span><span class="va">wichita</span><span class="op">[</span>, <span class="st">"TMIN"</span><span class="op">]</span> <span class="op">+</span> <span class="va">dT</span>, <span class="va">wichita</span><span class="op">[</span>, <span class="st">"TMAX"</span><span class="op">]</span> <span class="op">+</span> <span class="va">dT</span>,</span>
+<span>    <span class="kw">if</span> <span class="op">(</span><span class="va">method</span> <span class="op">==</span> <span class="st">"FAO"</span><span class="op">)</span> <span class="va">wichita</span><span class="op">[</span>, <span class="st">"AWND"</span><span class="op">]</span>,</span>
+<span>    tsun <span class="op">=</span> <span class="va">wichita</span><span class="op">[</span>, <span class="st">"TSUN"</span><span class="op">]</span>, lat <span class="op">=</span> <span class="fl">37.6475</span>, z <span class="op">=</span> <span class="fl">402.6</span>,</span>
+<span>    method <span class="op">=</span> <span class="va">method</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  <span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span><span class="va">change</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">4</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">dT</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>    FAO <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="fu">pet_warm</span><span class="op">(</span><span class="va">dT</span>, <span class="st">"FAO"</span><span class="op">)</span> <span class="op">/</span> <span class="va">pet_fao</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    energy <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="fu">pet_warm</span><span class="op">(</span><span class="va">dT</span>, <span class="st">"energy"</span><span class="op">)</span><span class="op">[</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">pet_fao</span><span class="op">)</span><span class="op">]</span> <span class="op">/</span></span>
+<span>      <span class="va">pet_eo</span><span class="op">[</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">pet_fao</span><span class="op">)</span><span class="op">]</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">change</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"+1 ºC"</span>, <span class="st">"+2 ºC"</span>, <span class="st">"+4 ºC"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fl">100</span> <span class="op">*</span> <span class="op">(</span><span class="va">change</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span>, <span class="fl">1</span><span class="op">)</span> <span class="co"># change of PET, %</span></span>
+<span><span class="co">#&gt;        +1 ºC +2 ºC +4 ºC</span></span>
+<span><span class="co">#&gt; FAO      3.7   7.4  15.0</span></span>
+<span><span class="co">#&gt; energy   0.7   1.4   3.1</span></span></code></pre></div>
+<p>The FAO PET rises by about 4% per degree, the energy-only PET by
+about 1%. To see the effect on the index, we fit the SPEI-12 to the
+present climate and apply the same parameters (see ‘Reusing the fitted
+parameters’) to the water balance with 4 ºC of warming:</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">warm_spei</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">method</span>, <span class="va">pet0</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">s0</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Drought-indices.html">spei</a></span><span class="op">(</span><span class="va">prcp</span> <span class="op">-</span> <span class="va">pet0</span>, <span class="fl">12</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span>  <span class="va">s4</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Drought-indices.html">spei</a></span><span class="op">(</span><span class="va">prcp</span> <span class="op">-</span> <span class="fu">pet_warm</span><span class="op">(</span><span class="fl">4</span>, <span class="va">method</span><span class="op">)</span>, <span class="fl">12</span>,</span>
+<span>    na.rm <span class="op">=</span> <span class="cn">TRUE</span>, params <span class="op">=</span> <span class="va">s0</span><span class="op">$</span><span class="va">coefficients</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  <span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>present <span class="op">=</span> <span class="va">s0</span><span class="op">$</span><span class="va">fitted</span>, warm <span class="op">=</span> <span class="va">s4</span><span class="op">$</span><span class="va">fitted</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span><span class="va">w_fao</span> <span class="op">&lt;-</span> <span class="fu">warm_spei</span><span class="op">(</span><span class="st">"FAO"</span>, <span class="va">pet_fao</span><span class="op">)</span></span>
+<span><span class="va">w_eo</span> <span class="op">&lt;-</span> <span class="fu">warm_spei</span><span class="op">(</span><span class="st">"energy"</span>, <span class="va">pet_eo</span><span class="op">)</span></span>
+<span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>FAO <span class="op">=</span> <span class="va">w_fao</span>, energy <span class="op">=</span> <span class="va">w_eo</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">w</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>    mean_shift <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">w</span><span class="op">$</span><span class="va">warm</span> <span class="op">-</span> <span class="va">w</span><span class="op">$</span><span class="va">present</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    drought_present <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">w</span><span class="op">$</span><span class="va">present</span> <span class="op">&lt;=</span> <span class="op">-</span><span class="fl">1</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    drought_warm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">w</span><span class="op">$</span><span class="va">warm</span> <span class="op">&lt;=</span> <span class="op">-</span><span class="fl">1</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">res</span>, <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="co">#&gt;                   FAO energy</span></span>
+<span><span class="co">#&gt; mean_shift      -0.72  -0.19</span></span>
+<span><span class="co">#&gt; drought_present  0.21   0.19</span></span>
+<span><span class="co">#&gt; drought_warm     0.37   0.22</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">1</span><span class="op">)</span>, mar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">4</span>, <span class="fl">2</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="kw">for</span> <span class="op">(</span><span class="va">m</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"FAO"</span>, <span class="st">"energy"</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">w</span> <span class="op">&lt;-</span> <span class="kw">if</span> <span class="op">(</span><span class="va">m</span> <span class="op">==</span> <span class="st">"FAO"</span><span class="op">)</span> <span class="va">w_fao</span> <span class="kw">else</span> <span class="va">w_eo</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">w</span><span class="op">$</span><span class="va">present</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">4</span>, <span class="fl">3</span><span class="op">)</span>, ylab <span class="op">=</span> <span class="st">"SPEI-12"</span>,</span>
+<span>    main <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">m</span>, <span class="st">" PET: present (black) and +4 ºC (red)"</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">w</span><span class="op">$</span><span class="va">warm</span>, col <span class="op">=</span> <span class="st">"red"</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>h <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="op">-</span><span class="fl">1</span><span class="op">)</span>, lty <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre></div>
+<p><img src="options_files/figure-html/unnamed-chunk-15-1.png" class="r-plt" alt="SPEI-12 of Wichita computed with the FAO and the energy-only PET, for the present climate and with 4 degrees of warming applied with the parameters of the present climate. With the FAO PET the warmed series is shifted much further towards drought." width="672"></p>
+<p>With the FAO PET, 4 ºC of warming alone, with no change in
+precipitation, shifts the SPEI-12 by about -0.7 and makes the share of
+months in moderate or worse drought rise from 21% to 37%. With the
+energy-only PET the shift is -0.2. This test is deliberately simple:
+real warming also changes humidity, radiation, wind and precipitation,
+and the vegetation response is not represented by either method. But it
+shows that trends and projections of the SPEI under warming depend
+strongly on the PET method, which should be chosen and reported with
+care. Comparing the results of both methods is a useful check.</p>
+</div>
+<div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
 <p>Guttman, N.B. (1999). Accepting the Standardized Precipitation Index:
@@ -357,6 +468,8 @@ Association</em>, 35(2), 311–322. <a href="https://doi.org/10.1111/j.1752-1688
 drought frequency and duration to time scales. In <em>Proceedings of the
 8th Conference on Applied Climatology</em>, 17–22 January 1993, Anaheim,
 California. American Meteorological Society, Boston, 179–184.</p>
+<p>Milly, P.C.D., Dunne, K.A. (2016). Potential evapotranspiration and
+continental drying. <em>Nature Climate Change</em>, 6, 946–949. <a href="https://doi.org/10.1038/nclimate3046" class="external-link uri">https://doi.org/10.1038/nclimate3046</a></p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
