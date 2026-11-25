@@ -27,7 +27,7 @@ scale_extract(x, cycle = NULL, scale = NULL, lag = 0, which = 'positive')
 
 \method{print}{scale_scan}(x, ...)
 \method{summary}{scale_scan}(object, ...)
-\method{plot}{scale_scan}(x, sig = 'mark', main = NULL, ...)
+\method{plot}{scale_scan}(x, sig = 'mark', main = NULL, colour = 'r2', ...)
 
 scale_extract(x, cycle = NULL, scale = NULL, lag = 0, which = "positive")
 
@@ -35,7 +35,7 @@ scale_extract(x, cycle = NULL, scale = NULL, lag = 0, which = "positive")
 
 \method{summary}{scale_scan}(object, ...)
 
-\method{plot}{scale_scan}(x, sig = "mark", main = NULL, ...)
+\method{plot}{scale_scan}(x, sig = "mark", main = NULL, colour = "r2", ...)
 }
 \arguments{
 \item{data}{a univariate or multivariate time series (\code{ts}) object.
@@ -110,6 +110,13 @@ best window to extract, either \code{'positive'} (default) or
 \code{'mark'} (default), \code{'mask'} or \code{'none'}. See 'Value'.}
 
 \item{main}{optional, a character string with the plot title.}
+
+\item{colour}{how the correlations are mapped to colours in the plot:
+\code{"r2"} (default) uses a scale proportional to the squared
+correlation with its sign, which spreads the colours over the high
+correlations and highlights the differences between them; \code{"r"}
+uses a scale proportional to the correlation. The legend shows the
+correlation in both cases.}
 }
 \value{
 \code{scale_scan} returns an object of class \code{scale_scan}, a list

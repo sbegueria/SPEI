@@ -350,3 +350,15 @@ test_that("Argument checks", {
     "Argument `y` must be a time series with frequency 1"
   )
 })
+
+test_that("plot accepts both colour scales and rejects others", {
+  data(wichita)
+  w <- ts(wichita[, -c(1, 2)], start = c(1980, 1), frequency = 12)
+  bal <- w[, "PRCP"] - thornthwaite(w[, "TMED"], 37.6475, verbose = FALSE)
+  set.seed(1)
+  y <- ts(rnorm(32), start = 1980)
+  sc <- scale_scan(bal, y, scales = 1:6)
+  expect_s3_class(plot(sc), "ggplot")
+  expect_s3_class(plot(sc, colour = "r"), "ggplot")
+  expect_error(plot(sc, colour = "x"), "colour")
+})

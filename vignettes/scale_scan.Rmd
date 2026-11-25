@@ -167,6 +167,23 @@ r = `r round(sc$best$r[1], 2)` over `r sc$best$n[1]` years. There is no
 significant negative window. Growth is larger in the years in which this
 part of the year is wetter than usual.
 
+Each window is defined by a month and a time scale. The SPEI of a month at
+a time scale of `s` months summarizes the water balance accumulated over
+the `s` months that end in that month. So the SPEI of
+`r month.name[sc$best$cycle[1]]` at `r sc$best$scale[1]` months measures
+whether the period from
+`r month.name[(sc$best$cycle[1] - sc$best$scale[1]) %% 12 + 1]` to
+`r month.name[sc$best$cycle[1]]` of each year was wetter or drier than
+usual, and its value is known at the end of
+`r month.name[sc$best$cycle[1]]`. For the tree, the result means that the
+width of each ring depends on the water accumulated from the start of the
+year to the end of the summer, which includes the soil water recharged in
+winter and the water available during the growing season. In the same month,
+shorter or longer windows correlate less: r =
+`r round(sc$cor[sc$best$cycle[1], "1"], 2)` for that month alone (time
+scale 1) and r = `r round(sc$cor[sc$best$cycle[1], "12"], 2)` for the
+whole year to `r month.name[sc$best$cycle[1]]` (time scale 12).
+
 For comparison, the average of the raw BAI with a linear trend removed
 (`detrend = TRUE`) gives:
 
@@ -198,6 +215,16 @@ The correlations are highest from June to September, at time scales of
 about 6 to 12 months. In other words, growth depends on the water balance
 accumulated from the previous autumn or winter to the end of the summer.
 With `sig = "mask"` the non-significant cells are left blank.
+
+By default the colours are proportional to the squared correlation, with
+its sign (`colour = "r2"`). This spreads the colours over the high
+correlations, which are the ones of interest, while the legend still shows
+the correlation. With `colour = "r"` the colours are proportional to the
+correlation itself:
+
+```{r, fig.height = 5, fig.alt = "The same heatmap with colours proportional to the correlation instead of the squared correlation; the differences among the high correlations are less visible."}
+plot(sc, colour = "r")
+```
 
 The results are kept in the object. `sc$cor` holds the correlations, with
 one row per month and one column per time scale. `sc$p` and `sc$p.adj`
