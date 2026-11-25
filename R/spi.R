@@ -6,7 +6,8 @@
 #'
 spi <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
                 distribution = "Gamma", fit = "ub-pwm", na.rm = FALSE,
-                ref.start = NULL, ref.end = NULL, keep.x = FALSE, params = NULL, verbose = TRUE, ...) {
+                ref.start = NULL, ref.end = NULL, keep.x = FALSE, params = NULL,
+                verbose = TRUE, start = NULL, frequency = NULL, ...) {
   # input checks
 
   # spei() reports the options for the SPEI; reword them for the SPI
@@ -20,7 +21,8 @@ spi <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
   sol <- withCallingHandlers(
     spei(
       data, scale, kernel, distribution, fit, na.rm,
-      ref.start, ref.end, keep.x, params, verbose
+      ref.start, ref.end, keep.x, params, verbose,
+      start = start, frequency = frequency
     ),
     message = function(m) {
       message(to_spi(conditionMessage(m)), appendLF = FALSE)

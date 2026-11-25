@@ -2,15 +2,15 @@
 #' @title Computation of potential and reference evapotranspiration
 #' @aliases thornthwaite penman
 #' @usage
-#' thornthwaite(Tave, lat, na.rm = FALSE, verbose=TRUE)
+#' thornthwaite(Tave, lat, na.rm = FALSE, verbose=TRUE, start = NULL)
 #'
 #' hargreaves(Tmin, Tmax, Ra = NULL, lat = NULL, Pre = NULL, na.rm = FALSE,
-#' verbose=TRUE, dates = NULL)
+#' verbose=TRUE, dates = NULL, start = NULL)
 #'
 #' penman(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL, tsun = NULL,
 #'        CC = NULL, ed = NULL, Tdew = NULL, RH = NULL, P = NULL, P0 = NULL,
 #'        CO2 = NULL, z = NULL, crop='short', na.rm = FALSE, method='ICID',
-#'        verbose=TRUE, dates = NULL, kRs = NULL, aT = 0)
+#'        verbose=TRUE, dates = NULL, kRs = NULL, aT = 0, start = NULL)
 #'
 #'
 #' @description
@@ -85,6 +85,14 @@
 #' must not contain missing values and must be in strictly increasing order;
 #' gaps between dates are allowed. If \code{NULL} (the default), the data
 #' are monthly. See Details.
+#' @param start   optional, the month of the first observation of monthly
+#' data that are not a time series (a vector, matrix or 3-d array): a single
+#' year (i.e. starting in January), or a vector \code{c(year, month)}, as in
+#' \code{\link{ts}}. It sets the calendar month of each time step (used for
+#' the month length and the mid-month day of the year). If \code{NULL} (the
+#' default), the data are taken to start in January, all years being
+#' regular (non-leap) years. Can not be used if the main input is a time
+#' series, nor with \code{dates}. See Details.
 #' @param kRs   optional, a single numeric value, or one value per site (a
 #' vector, or a matrix for 3-d array input), with the radiation adjustment
 #' coefficient of the temperature-only method (Pereira et al., 2025, eq.
@@ -231,8 +239,16 @@
 #' series then the function \code{\link{cycle}} will be used to determine the
 #' position of each observation within the
 #' year (month), allowing the data to start in a month different than January.
-#' If no time information is provided, then the input data will be treated as
-#' a sequence of monthly values starting in January.
+#' For a vector, matrix or 3-d array, the first month can be given with the
+#' argument \code{start}: a vector or a matrix is then converted to a
+#' monthly time series (\code{ts(x, start = start, frequency = 12)}), and
+#' the result is a time series; a 3-d array keeps its shape, and the time
+#' (first) \code{dimnames} of the result are the months, as "YYYY-MM"
+#' (the format used by \code{\link{spei}}). As with time series, the actual
+#' length of each month (including leap years) is used. If no time
+#' information is provided, then the input data will be treated as a
+#' sequence of monthly values starting in January, all years being regular
+#' (non-leap) years.
 #'
 #' \strong{Daily data.} By default all three functions work with monthly
 #' data. \code{hargreaves} and \code{penman} can also compute daily ETo by
@@ -263,7 +279,9 @@
 #' @return A vector, matrix or 3-d array with the values of monthly potential
 #' or reference evapotranspiration, in mm. If the main input is a time series
 #' (and \code{dates} is not given) the output is a time series with the same
-#' time attributes.
+#' time attributes. If \code{start} is given, a vector or matrix input gives
+#' a monthly time series, and a 3-d array input gives an array whose time
+#' \code{dimnames} are the months ("YYYY-MM").
 #'
 #' If \code{dates} is given, the output has one value of daily reference
 #' evapotranspiration per date, in mm per day. For vector or matrix input
@@ -475,7 +493,8 @@
 #' @export
 #'
 hargreaves <- function(Tmin, Tmax, Ra = NULL, lat = NULL, Pre = NULL,
-                       na.rm = FALSE, verbose = TRUE, dates = NULL) {
+                       na.rm = FALSE, verbose = TRUE, dates = NULL,
+                       start = NULL) {
   ### Argument check - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
   # Determine which combinations of inputs were passed and check their
@@ -542,6 +561,11 @@ hargreaves <- function(Tmin, Tmax, Ra = NULL, lat = NULL, Pre = NULL,
     check$push("`Pre` must not contain NA values if argument `na.rm` is set to FALSE.")
   }
 
+  # Time information for monthly input that is not a time series (`start`)
+  st <- pet_start(Tmin, start, daily, check)
+  Tmin <- st$x
+  start <- st$start
+
   if (using$lat && anyNA(lat)) {
     check$push("`lat` cannot be missing.")
   }
@@ -598,13 +622,18 @@ hargreaves <- function(Tmin, Tmax, Ra = NULL, lat = NULL, Pre = NULL,
       }
       msum_array <- array(yday(dates), dim = int_dims)
     }
-  } else if (is.ts(Tmin)) {
-    ts_freq <- frequency(Tmin)
-    ts_start <- start(Tmin)
+  } else if (is.ts(Tmin) || !is.null(start)) {
+    tt <- if (is.ts(Tmin)) {
+      Tmin
+    } else {
+      ts(seq_len(n_times), start = start, frequency = 12)
+    }
+    ts_freq <- stats::frequency(tt)
+    ts_start <- stats::start(tt)
     if (ts_freq != 12) {
       check$push("Input data needs to be have a frequency of 12 if provided as a time series (i.e., a monthly time series).")
     }
-    ym <- as.yearmon(time(Tmin))
+    ym <- as.yearmon(time(tt))
     warn$push(paste0("Time series spanning ", ym[1], " to ", ym[n_times], "."))
     date <- as.Date.yearmon(ym)
     mlen_array <- array(as.numeric(lubridate::days_in_month(date)), dim = int_dims)
@@ -732,6 +761,9 @@ hargreaves <- function(Tmin, Tmax, Ra = NULL, lat = NULL, Pre = NULL,
   }
 
   dimnames(ET0) <- names
+  if (!is.null(start)) {
+    ET0 <- set_time_dimnames(ET0, names, time_labels(ts_start, 12, n_times))
+  }
 
   return(ET0)
 }

@@ -20,6 +20,8 @@
 #'  keep.x=FALSE,
 #'  params=NULL,
 #'  verbose=TRUE,
+#'  start=NULL,
+#'  frequency=NULL,
 #'  ...)
 #'
 #' spi(
@@ -34,8 +36,11 @@
 #'  keep.x=FALSE,
 #'  params=NULL,
 #'  verbose=TRUE,
+#'  start=NULL,
+#'  frequency=NULL,
 #'  ...)
-#' @param data a vector, matrix or data frame with time ordered values
+#' @param data a vector, matrix (one series per column), 3-d array (time x
+#' longitude x latitude) or time series (\code{ts}) with time ordered values
 #' of precipitation (for the SPI) or of the climatic balance
 #' precipitation minus potential evapotranspiration (for the SPEI).
 #' @param scale a positive integer, representing the time scale at which
@@ -67,6 +72,18 @@
 #' @param verbose optional, logical, report the computation options during
 #' calculation. Either 'TRUE' (default) or 'FALSE'. The report is issued as
 #' a message, so it can also be silenced with \code{suppressMessages()}.
+#' @param start optional, the time of the first observation of \code{data},
+#' when \code{data} is not a time series: a single year, or a vector
+#' \code{c(year, period)} with the year and the period within the year
+#' (e.g. the month), as in \code{\link{ts}}. Defaults to NULL, i.e. the data
+#' start in the first period of year 1 (but see Time information for 3-d
+#' arrays with time dimnames). Can not be used if \code{data} is a time
+#' series. See Time information.
+#' @param frequency optional, the number of periods per year of \code{data}
+#' (a positive integer, e.g. 12 for monthly, 48 or 52 for weekly data), when
+#' \code{data} is not a time series, as in \code{\link{ts}}. Defaults to
+#' NULL, i.e. 12 (monthly data). Can not be used if \code{data} is a time
+#' series. See Time information.
 #' @param ... not used.
 #'
 #'
@@ -91,11 +108,42 @@
 #' The SPEI and the SPI were defined for monthly data. Since the PDFs of the
 #' data are not homogenous from month to month, the data is split into twelve
 #' series (one for each month) and independent PDFs are fit to each series. If
-#' \code{data} is a vector or a matrix it will be treated as a sequence of
-#' monthly values starting in January. If it is a (univariate or multivariate)
-#' time series then the function \code{\link{cycle}} will be used to determine
-#' the position of each observation within the year (month), allowing the data
-#' to start in a month other than January.
+#' \code{data} is a (univariate or multivariate) time series then the
+#' function \code{\link{cycle}} will be used to determine the position of
+#' each observation within the year (month), allowing the data to start in a
+#' month other than January, and to have other frequencies (e.g. weekly
+#' data). See Time information for data that are not time series.
+#'
+#'
+#' @section Time information:
+#' The position of each observation within the year, and the dates of the
+#' reference period, come from the time attributes of \code{data} when it
+#' is a time series (\code{ts}). Vectors, matrices and 3-d arrays have no
+#' time attributes; their time information can be given with the arguments
+#' \code{start} and \code{frequency}, which have the same meaning as in
+#' \code{\link{ts}}. A vector or a matrix with \code{start} and/or
+#' \code{frequency} is equivalent to \code{ts(data, start = start,
+#' frequency = frequency)}, and the result is a time series. A 3-d array
+#' (which can't be a time series) keeps its shape, and the result is a 3-d
+#' array whose time (first) \code{dimnames} label each period: "YYYY-MM" for
+#' monthly data (frequency 12), "YYYY" for annual data (frequency 1) and
+#' "YYYY-Pnn" otherwise, where nn is the period within the year,
+#' zero-padded (e.g. "1961-P01" to "1961-P48" for frequency 48). The
+#' other \code{dimnames} of \code{data} are kept. Since these labels are
+#' \code{dimnames}, they are kept when the array is subset, e.g.
+#' \code{x$fitted["2019-12", , ]}.
+#'
+#' If \code{start} and \code{frequency} are not given and \code{data} is a
+#' 3-d array whose time \code{dimnames} are the consecutive months of a
+#' monthly series, as "YYYY-MM" or "YYYY-MM-DD" (any day of the month, e.g.
+#' the mid-month dates of many NetCDF files), the start of the series is
+#' taken from them, with a frequency of 12 (this is reported in the
+#' message issued when \code{verbose = TRUE}); the \code{dimnames} of the
+#' result are those of \code{data}.
+#'
+#' Otherwise (no \code{start}, \code{frequency} or time \code{dimnames}),
+#' the data are treated as a sequence of monthly values starting in January
+#' of year 1, as in previous versions of the package.
 #'
 #'
 #' @section Time scales:
@@ -160,10 +208,12 @@
 #' of parameters \code{ref.start}  and \code{ref.end}. These parameters allow
 #' defining a subset of values that will be used  for parameter fitting, i.e.
 #' a reference period. The functions, however, will compute the  values of the
-#' indices for the whole data set. For these options to work it is necessary
-#' that \code{data} will be a time series object. The starting and ending
-#' points of the reference period  will then be defined as pairs of year and
-#' month values, e.g. c(1900,1).
+#' indices for the whole data set. The starting and ending points of the
+#' reference period are defined as pairs of year and period (e.g. month)
+#' values, e.g. c(1900,1), in the time of \code{data}: that of the time
+#' series, or the one given by \code{start} and \code{frequency} (see Time
+#' information). Without time information, the years are counted from year
+#' 1 at the start of \code{data}.
 #'
 #'
 #' @section Processing large datasets:
@@ -171,8 +221,10 @@
 #' processing multivariate datasets at once. If a matrix or data frame is
 #' supplied as \code{data}, with time series of precipitation or precipitation
 #' minus potential evapotranspiration arranged in columns, the result would be
-#' a matrix (data frame) of spi or spei series. This makes processing large
-#' datasets extremely easy, since no loops need to be used.
+#' a matrix (data frame) of spi or spei series. Gridded data can be given as
+#' a 3-d array (time x longitude x latitude), and the result is an array of
+#' the same dimensions. This makes processing large datasets extremely easy,
+#' since no loops need to be used.
 #'
 #'
 #' @return
@@ -192,7 +244,12 @@
 #'   Precipitation Index (SPI). If data consists of several columns the
 #'   function will treat each column as independent data, and the result will
 #'   be a multivariate time series. The names of the columns in \code{data}
-#'   will be used as column names in fitted.
+#'   will be used as column names in fitted. The result has the same form
+#'   as \code{data} (vector, matrix, time series or 3-d array), except that
+#'   a vector or a matrix given with \code{start} or \code{frequency}
+#'   gives a time series. For a 3-d array with \code{start} or
+#'   \code{frequency}, the time \code{dimnames} label each period (see Time
+#'   information).
 #'   \item coefficients: an array with the values of the coefficients of the
 #'   distribution function fitted to the data. The first dimension of the
 #'   array contains the coefficients (xi, alpha, kappa for log-Logistic;
@@ -330,6 +387,19 @@
 #' spei_12 <- spei(cruts4, 12)
 #' dim(spei_12$fitted)
 #'
+#' # The data start in January 1900: with `start`, the reference period can
+#' # be given in calendar years, and the time dimension of the result is
+#' # labelled
+#' spei_12 <- spei(cruts4, 12,
+#'   start = c(1900, 1),
+#'   ref.start = c(1961, 1), ref.end = c(1990, 12)
+#' )
+#' spei_12$fitted["2019-12", , ]
+#'
+#' # Non-monthly data, e.g. weekly (48 periods per year), with `frequency`
+#' spei_4w <- spei(cruts4[1:480, , ], 4, start = c(2000, 1), frequency = 48)
+#' dim(spei_4w$coefficients)
+#'
 #' # Modding the plot
 #' # Since plot.spei() returns a ggplot object, it is possible to add or tweak
 #' # parts of the plot.
@@ -347,7 +417,7 @@
 spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
                  distribution = "log-Logistic", fit = "ub-pwm", na.rm = FALSE,
                  ref.start = NULL, ref.end = NULL, keep.x = FALSE, params = NULL,
-                 verbose = TRUE, ...) {
+                 verbose = TRUE, start = NULL, frequency = NULL, ...) {
   ### Argument check - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
   # Determine which combinations of inputs were passed and check their
@@ -485,6 +555,30 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
     check$push("Argument `verbose` must be set to either TRUE or FALSE.")
   }
 
+  # Time information for data that are not a time series (`start`,
+  # `frequency`, with the meaning of `ts()`). A vector or a matrix is
+  # converted to a time series; a 3-d array keeps its shape, and gets the
+  # time information internally.
+  using_start <- !is.null(start) || !is.null(frequency)
+  if (using_start) {
+    if (is.ts(data)) {
+      check$push(paste(
+        "Arguments `start` and `frequency` can not be used when `data` is",
+        "a time series (`ts`), which already has its own time attributes."
+      ))
+      using_start <- FALSE
+    } else if (!check_start(start, frequency, check)) {
+      using_start <- FALSE
+    } else {
+      if (is.null(start)) start <- c(1, 1)
+      if (is.null(frequency)) frequency <- 12
+      if (is.numeric(data) && (is.vector(data) || is.matrix(data))) {
+        data <- ts(data, start = start, frequency = frequency)
+        using_start <- FALSE
+      }
+    }
+  }
+
   # Check for missing values in inputs
   if (isFALSE(na.rm) && anyNA(data)) {
     check$push("`data` must not contain NA values if argument `na.rm` is set to FALSE.")
@@ -544,18 +638,41 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
   }
   warn$push(paste0("Input type is ", out_type, "."))
 
-  # Determine time properties
-  if (is.ts(data)) {
-    ts_freq <- frequency(data)
-    ts_start <- start(data)
-    ts_end <- end(data)
+  # Determine time properties. A 3-d array can't be a time series: its time
+  # information comes from `start` and `frequency` or, if they are not
+  # given, from its time dimnames (only monthly labels, "YYYY-MM" or
+  # "YYYY-MM-DD", one per month)
+  time_inferred <- FALSE
+  if (identical(out_type, "array") && !using_start) {
+    inferred <- parse_time_labels(dimnames(data)[[1]], 12)
+    if (!is.null(inferred)) {
+      start <- inferred
+      frequency <- 12
+      using_start <- TRUE
+      time_inferred <- TRUE
+    }
+  }
+  if (is.ts(data) || using_start) {
+    tt <- if (is.ts(data)) {
+      data
+    } else {
+      ts(seq_len(n_times), start = start, frequency = frequency)
+    }
+    ts_freq <- stats::frequency(tt)
+    ts_start <- stats::start(tt)
     if (ts_freq %% 1 != 0) {
       check$push(paste0(
         "The frequency of `data` must be an integer number of periods ",
         "per year (", ts_freq, " was given)."
       ))
     }
-    ym <- as.yearmon(time(data))
+    if (time_inferred) {
+      warn$push(paste(
+        "Time information taken from the time dimnames of `data`",
+        "(a monthly series)."
+      ))
+    }
+    ym <- as.yearmon(time(tt))
     warn$push(paste0(
       "Time series spanning ", ym[1], " to ", ym[n_times],
       ", with frequency = ", ts_freq, "."
@@ -563,7 +680,6 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
   } else {
     ts_freq <- 12
     ts_start <- 1
-    ts_end <- n_times
     warn$push("No time information provided, assuming a monthly time series.")
   }
 
@@ -846,6 +962,14 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
     spei <- matrix(spei, nrow = n_times, dimnames = list(NULL, colnames(spei)))
   } else { # array
     spei <- array(spei, dim = int_dims, dimnames = dimnames(data))
+    # Label each period, if the time information was given with `start` /
+    # `frequency` (time dimnames it was taken from are kept as they are)
+    if (using_start && !time_inferred) {
+      spei <- set_time_dimnames(
+        spei, dimnames(data),
+        time_labels(ts_start, ts_freq, n_times)
+      )
+    }
   }
 
   z <- list(
@@ -1001,12 +1125,22 @@ plot.spei <- function(x, main = NULL, ...) {
   }
 
   # Determine time properties
+  # (the time labels of a 3-d array, see time_labels(), give its start; its
+  # frequency is the number of periods in the coefficients array)
   if (is.ts(data)) {
     ts_freq <- frequency(data)
     ts_start <- start(data)
   } else {
     ts_freq <- 12
     ts_start <- 1
+    if (out_type == "array") {
+      freq <- dim(x$coefficients)[3]
+      first <- parse_time_labels(dimnames(data)[[1]], freq)
+      if (!is.null(first)) {
+        ts_freq <- freq
+        ts_start <- first
+      }
+    }
   }
 
   # Create uniformly-dimensioned ts-matrices from input for internal use (acu)

@@ -20,6 +20,8 @@ spei(
  keep.x=FALSE,
  params=NULL,
  verbose=TRUE,
+ start=NULL,
+ frequency=NULL,
  ...)
 
 spi(
@@ -34,6 +36,8 @@ spi(
  keep.x=FALSE,
  params=NULL,
  verbose=TRUE,
+ start=NULL,
+ frequency=NULL,
  ...)
 
 spi(
@@ -48,11 +52,14 @@ spi(
   keep.x = FALSE,
   params = NULL,
   verbose = TRUE,
+  start = NULL,
+  frequency = NULL,
   ...
 )
 }
 \arguments{
-\item{data}{a vector, matrix or data frame with time ordered values
+\item{data}{a vector, matrix (one series per column), 3-d array (time x
+longitude x latitude) or time series (\code{ts}) with time ordered values
 of precipitation (for the SPI) or of the climatic balance
 precipitation minus potential evapotranspiration (for the SPEI).}
 
@@ -95,6 +102,20 @@ spei. This option overrides computation of fitting parameters.}
 calculation. Either 'TRUE' (default) or 'FALSE'. The report is issued as
 a message, so it can also be silenced with \code{suppressMessages()}.}
 
+\item{start}{optional, the time of the first observation of \code{data},
+when \code{data} is not a time series: a single year, or a vector
+\code{c(year, period)} with the year and the period within the year
+(e.g. the month), as in \code{\link{ts}}. Defaults to NULL, i.e. the data
+start in the first period of year 1 (but see Time information for 3-d
+arrays with time dimnames). Can not be used if \code{data} is a time
+series. See Time information.}
+
+\item{frequency}{optional, the number of periods per year of \code{data}
+(a positive integer, e.g. 12 for monthly, 48 or 52 for weekly data), when
+\code{data} is not a time series, as in \code{\link{ts}}. Defaults to
+NULL, i.e. 12 (monthly data). Can not be used if \code{data} is a time
+series. See Time information.}
+
 \item{...}{not used.}
 }
 \value{
@@ -114,7 +135,12 @@ following components:
   Precipitation Index (SPI). If data consists of several columns the
   function will treat each column as independent data, and the result will
   be a multivariate time series. The names of the columns in \code{data}
-  will be used as column names in fitted.
+  will be used as column names in fitted. The result has the same form
+  as \code{data} (vector, matrix, time series or 3-d array), except that
+  a vector or a matrix given with \code{start} or \code{frequency}
+  gives a time series. For a 3-d array with \code{start} or
+  \code{frequency}, the time \code{dimnames} label each period (see Time
+  information).
   \item coefficients: an array with the values of the coefficients of the
   distribution function fitted to the data. The first dimension of the
   array contains the coefficients (xi, alpha, kappa for log-Logistic;
@@ -158,11 +184,43 @@ in the references given below.
 The SPEI and the SPI were defined for monthly data. Since the PDFs of the
 data are not homogenous from month to month, the data is split into twelve
 series (one for each month) and independent PDFs are fit to each series. If
-\code{data} is a vector or a matrix it will be treated as a sequence of
-monthly values starting in January. If it is a (univariate or multivariate)
-time series then the function \code{\link{cycle}} will be used to determine
-the position of each observation within the year (month), allowing the data
-to start in a month other than January.
+\code{data} is a (univariate or multivariate) time series then the
+function \code{\link{cycle}} will be used to determine the position of
+each observation within the year (month), allowing the data to start in a
+month other than January, and to have other frequencies (e.g. weekly
+data). See Time information for data that are not time series.
+}
+
+\section{Time information}{
+
+The position of each observation within the year, and the dates of the
+reference period, come from the time attributes of \code{data} when it
+is a time series (\code{ts}). Vectors, matrices and 3-d arrays have no
+time attributes; their time information can be given with the arguments
+\code{start} and \code{frequency}, which have the same meaning as in
+\code{\link{ts}}. A vector or a matrix with \code{start} and/or
+\code{frequency} is equivalent to \code{ts(data, start = start,
+frequency = frequency)}, and the result is a time series. A 3-d array
+(which can't be a time series) keeps its shape, and the result is a 3-d
+array whose time (first) \code{dimnames} label each period: "YYYY-MM" for
+monthly data (frequency 12), "YYYY" for annual data (frequency 1) and
+"YYYY-Pnn" otherwise, where nn is the period within the year,
+zero-padded (e.g. "1961-P01" to "1961-P48" for frequency 48). The
+other \code{dimnames} of \code{data} are kept. Since these labels are
+\code{dimnames}, they are kept when the array is subset, e.g.
+\code{x$fitted["2019-12", , ]}.
+
+If \code{start} and \code{frequency} are not given and \code{data} is a
+3-d array whose time \code{dimnames} are the consecutive months of a
+monthly series, as "YYYY-MM" or "YYYY-MM-DD" (any day of the month, e.g.
+the mid-month dates of many NetCDF files), the start of the series is
+taken from them, with a frequency of 12 (this is reported in the
+message issued when \code{verbose = TRUE}); the \code{dimnames} of the
+result are those of \code{data}.
+
+Otherwise (no \code{start}, \code{frequency} or time \code{dimnames}),
+the data are treated as a sequence of monthly values starting in January
+of year 1, as in previous versions of the package.
 }
 
 \section{Time scales}{
@@ -232,10 +290,12 @@ The default behavior of the functions is using all the values provided in
 of parameters \code{ref.start}  and \code{ref.end}. These parameters allow
 defining a subset of values that will be used  for parameter fitting, i.e.
 a reference period. The functions, however, will compute the  values of the
-indices for the whole data set. For these options to work it is necessary
-that \code{data} will be a time series object. The starting and ending
-points of the reference period  will then be defined as pairs of year and
-month values, e.g. c(1900,1).
+indices for the whole data set. The starting and ending points of the
+reference period are defined as pairs of year and period (e.g. month)
+values, e.g. c(1900,1), in the time of \code{data}: that of the time
+series, or the one given by \code{start} and \code{frequency} (see Time
+information). Without time information, the years are counted from year
+1 at the start of \code{data}.
 }
 
 \section{Processing large datasets}{
@@ -244,8 +304,10 @@ It is possible to use the \code{spei} and \code{spi} functions for
 processing multivariate datasets at once. If a matrix or data frame is
 supplied as \code{data}, with time series of precipitation or precipitation
 minus potential evapotranspiration arranged in columns, the result would be
-a matrix (data frame) of spi or spei series. This makes processing large
-datasets extremely easy, since no loops need to be used.
+a matrix (data frame) of spi or spei series. Gridded data can be given as
+a 3-d array (time x longitude x latitude), and the result is an array of
+the same dimensions. This makes processing large datasets extremely easy,
+since no loops need to be used.
 }
 
 \examples{
@@ -337,6 +399,19 @@ data(cruts4)
 dim(cruts4)
 spei_12 <- spei(cruts4, 12)
 dim(spei_12$fitted)
+
+# The data start in January 1900: with `start`, the reference period can
+# be given in calendar years, and the time dimension of the result is
+# labelled
+spei_12 <- spei(cruts4, 12,
+  start = c(1900, 1),
+  ref.start = c(1961, 1), ref.end = c(1990, 12)
+)
+spei_12$fitted["2019-12", , ]
+
+# Non-monthly data, e.g. weekly (48 periods per year), with `frequency`
+spei_4w <- spei(cruts4[1:480, , ], 4, start = c(2000, 1), frequency = 48)
+dim(spei_4w$coefficients)
 
 # Modding the plot
 # Since plot.spei() returns a ggplot object, it is possible to add or tweak
