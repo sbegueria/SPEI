@@ -67,15 +67,15 @@ to the Thornthwaite, Hargreaves or Penman-Monteith equations.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">thornthwaite</span><span class="op">(</span><span class="va">Tave</span>, <span class="va">lat</span>, na.rm <span class="op">=</span> <span class="cn">FALSE</span>, verbose<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">thornthwaite</span><span class="op">(</span><span class="va">Tave</span>, <span class="va">lat</span>, na.rm <span class="op">=</span> <span class="cn">FALSE</span>, verbose<span class="op">=</span><span class="cn">TRUE</span>, start <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">hargreaves</span><span class="op">(</span><span class="va">Tmin</span>, <span class="va">Tmax</span>, Ra <span class="op">=</span> <span class="cn">NULL</span>, lat <span class="op">=</span> <span class="cn">NULL</span>, Pre <span class="op">=</span> <span class="cn">NULL</span>, na.rm <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>verbose<span class="op">=</span><span class="cn">TRUE</span>, dates <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
+<span>verbose<span class="op">=</span><span class="cn">TRUE</span>, dates <span class="op">=</span> <span class="cn">NULL</span>, start <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">penman</span><span class="op">(</span><span class="va">Tmin</span>, <span class="va">Tmax</span>, U2 <span class="op">=</span> <span class="cn">NULL</span>, Ra <span class="op">=</span> <span class="cn">NULL</span>, lat <span class="op">=</span> <span class="cn">NULL</span>, Rs <span class="op">=</span> <span class="cn">NULL</span>, tsun <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>       CC <span class="op">=</span> <span class="cn">NULL</span>, ed <span class="op">=</span> <span class="cn">NULL</span>, Tdew <span class="op">=</span> <span class="cn">NULL</span>, RH <span class="op">=</span> <span class="cn">NULL</span>, P <span class="op">=</span> <span class="cn">NULL</span>, P0 <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>       CO2 <span class="op">=</span> <span class="cn">NULL</span>, z <span class="op">=</span> <span class="cn">NULL</span>, crop<span class="op">=</span><span class="st">'short'</span>, na.rm <span class="op">=</span> <span class="cn">FALSE</span>, method<span class="op">=</span><span class="st">'ICID'</span>,</span>
-<span>       verbose<span class="op">=</span><span class="cn">TRUE</span>, dates <span class="op">=</span> <span class="cn">NULL</span>, kRs <span class="op">=</span> <span class="cn">NULL</span>, aT <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span>
+<span>       verbose<span class="op">=</span><span class="cn">TRUE</span>, dates <span class="op">=</span> <span class="cn">NULL</span>, kRs <span class="op">=</span> <span class="cn">NULL</span>, aT <span class="op">=</span> <span class="fl">0</span>, start <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">penman</span><span class="op">(</span></span>
 <span>  <span class="va">Tmin</span>,</span>
@@ -99,10 +99,11 @@ to the Thornthwaite, Hargreaves or Penman-Monteith equations.</p>
 <span>  verbose <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  dates <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  kRs <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  aT <span class="op">=</span> <span class="fl">0</span></span>
+<span>  aT <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  start <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">thornthwaite</span><span class="op">(</span><span class="va">Tave</span>, <span class="va">lat</span>, na.rm <span class="op">=</span> <span class="cn">FALSE</span>, verbose <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">thornthwaite</span><span class="op">(</span><span class="va">Tave</span>, <span class="va">lat</span>, na.rm <span class="op">=</span> <span class="cn">FALSE</span>, verbose <span class="op">=</span> <span class="cn">TRUE</span>, start <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -155,6 +156,17 @@ monthly means and totals) and the output is ETo in mm per day. The dates
 must not contain missing values and must be in strictly increasing order;
 gaps between dates are allowed. If <code>NULL</code> (the default), the data
 are monthly. See Details.</p></dd>
+
+
+<dt id="arg-start">start<a class="anchor" aria-label="anchor" href="#arg-start"></a></dt>
+<dd><p>optional, the month of the first observation of monthly
+data that are not a time series (a vector, matrix or 3-d array): a single
+year (i.e. starting in January), or a vector <code>c(year, month)</code>, as in
+<code><a href="https://rdrr.io/r/stats/ts.html" class="external-link">ts</a></code>. It sets the calendar month of each time step (used for
+the month length and the mid-month day of the year). If <code>NULL</code> (the
+default), the data are taken to start in January, all years being
+regular (non-leap) years. Can not be used if the main input is a time
+series, nor with <code>dates</code>. See Details.</p></dd>
 
 
 <dt id="arg-u-">U2<a class="anchor" aria-label="anchor" href="#arg-u-"></a></dt>
@@ -264,7 +276,9 @@ monthly mean temperatures, ºC.</p></dd>
     <p>A vector, matrix or 3-d array with the values of monthly potential
 or reference evapotranspiration, in mm. If the main input is a time series
 (and <code>dates</code> is not given) the output is a time series with the same
-time attributes.</p>
+time attributes. If <code>start</code> is given, a vector or matrix input gives
+a monthly time series, and a 3-d array input gives an array whose time
+<code>dimnames</code> are the months ("YYYY-MM").</p>
 <p>If <code>dates</code> is given, the output has one value of daily reference
 evapotranspiration per date, in mm per day. For vector or matrix input
 (including time series) it is a <code><a href="https://rdrr.io/pkg/zoo/man/zoo.html" class="external-link">zoo</a></code> object with
@@ -406,8 +420,16 @@ guidance on how to use these options.</p>
 series then the function <code><a href="https://rdrr.io/r/stats/time.html" class="external-link">cycle</a></code> will be used to determine the
 position of each observation within the
 year (month), allowing the data to start in a month different than January.
-If no time information is provided, then the input data will be treated as
-a sequence of monthly values starting in January.</p>
+For a vector, matrix or 3-d array, the first month can be given with the
+argument <code>start</code>: a vector or a matrix is then converted to a
+monthly time series (<code>ts(x, start = start, frequency = 12)</code>), and
+the result is a time series; a 3-d array keeps its shape, and the time
+(first) <code>dimnames</code> of the result are the months, as "YYYY-MM"
+(the format used by <code><a href="Drought-indices.html">spei</a></code>). As with time series, the actual
+length of each month (including leap years) is used. If no time
+information is provided, then the input data will be treated as a
+sequence of monthly values starting in January, all years being regular
+(non-leap) years.</p>
 <p><strong>Daily data.</strong> By default all three functions work with monthly
 data. <code>hargreaves</code> and <code>penman</code> can also compute daily ETo by
 passing the date of each time step in the argument <code>dates</code>

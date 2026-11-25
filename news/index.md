@@ -81,6 +81,46 @@
   cloud cover (`CC`) route and the CO2 correction are not FAO
   procedures.
 
+- Time information for data that are not time series, in particular 3-d
+  arrays of gridded data
+  ([\#94](https://github.com/sbegueria/SPEI/issues/94)). `<spei>` and
+  `<spi>` have two new arguments, `start` and `frequency`, with the
+  meaning of [`ts()`](https://rdrr.io/r/stats/ts.html), for vectors,
+  matrices and 3-d arrays; they give an error if `data` is a time
+  series. With them, `ref.start` and `ref.end` are calendar dates, the
+  data can start in any period of the year, and non-monthly gridded data
+  (e.g. weekly, `frequency = 48` or `52`) can be processed as arrays. A
+  vector or matrix with `start`/`frequency` is processed as
+  `ts(data, start, frequency)` and gives a time series. A 3-d array
+  gives an array whose time `dimnames` label each period: “YYYY-MM” for
+  monthly data, “YYYY” for annual data and “YYYY-Pnn” for other
+  frequencies (e.g. “1961-P01” to “1961-P48”); the other `dimnames` are
+  kept, and the `plot` method uses the labels. If neither argument is
+  given, a 3-d array whose time `dimnames` are consecutive months
+  (“YYYY-MM” or “YYYY-MM-DD”) is taken to be a monthly series starting
+  at the first of them (reported in the verbose message). The monthly
+  PET functions, `<thornthwaite>`, `<hargreaves>` and `<penman>`, have a
+  new argument `start` (the first month), used for the month length and
+  the mid-month day of non-ts input; a 3-d array gives an array with
+  “YYYY-MM” time `dimnames`, and a vector or matrix gives a monthly time
+  series. `start` gives an error with time series input or with `dates`.
+  Without the new arguments (or time `dimnames`) the results are the
+  same as before: the data are taken to start in January.
+  [`vignette("gridded")`](https://sbegueria.github.io/SPEI/articles/gridded.md)
+  now uses `start` instead of reshaping the array into a time series
+  matrix.
+
+- `<spei>` and `<spi>` warn when `ref.start` and/or `ref.end` fall
+  outside the time span of `data`. Such a reference period used to be
+  silently limited to the data, which could hide a mistake in the time
+  information (e.g. an array without `start`, whose years are counted
+  from year 1, or an array whose time `dimnames` are now used, with the
+  reference period given in years counted from year 1). The results are
+  the same as before: the reference period is still limited to the data.
+  The example of a reference period in
+  [`?spei`](https://sbegueria.github.io/SPEI/reference/Drought-indices.md),
+  which started before the data, now starts with them (same result).
+
 ### Changes in results
 
 - `<penman>`: wind speeds `U2` below 0.5 m s-1 are set to 0.5 m s-1, as

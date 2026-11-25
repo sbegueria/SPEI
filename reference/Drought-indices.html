@@ -64,6 +64,8 @@ Precipitation-Evapotranspiration Index (SPEI).</p>
 <span> keep.x<span class="op">=</span><span class="cn">FALSE</span>,</span>
 <span> params<span class="op">=</span><span class="cn">NULL</span>,</span>
 <span> verbose<span class="op">=</span><span class="cn">TRUE</span>,</span>
+<span> start<span class="op">=</span><span class="cn">NULL</span>,</span>
+<span> frequency<span class="op">=</span><span class="cn">NULL</span>,</span>
 <span> <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">spi</span><span class="op">(</span></span>
@@ -78,6 +80,8 @@ Precipitation-Evapotranspiration Index (SPEI).</p>
 <span> keep.x<span class="op">=</span><span class="cn">FALSE</span>,</span>
 <span> params<span class="op">=</span><span class="cn">NULL</span>,</span>
 <span> verbose<span class="op">=</span><span class="cn">TRUE</span>,</span>
+<span> start<span class="op">=</span><span class="cn">NULL</span>,</span>
+<span> frequency<span class="op">=</span><span class="cn">NULL</span>,</span>
 <span> <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">spi</span><span class="op">(</span></span>
@@ -92,6 +96,8 @@ Precipitation-Evapotranspiration Index (SPEI).</p>
 <span>  keep.x <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  params <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  start <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  frequency <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -101,7 +107,8 @@ Precipitation-Evapotranspiration Index (SPEI).</p>
 
 
 <dl><dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
-<dd><p>a vector, matrix or data frame with time ordered values
+<dd><p>a vector, matrix (one series per column), 3-d array (time x
+longitude x latitude) or time series (<code>ts</code>) with time ordered values
 of precipitation (for the SPI) or of the climatic balance
 precipitation minus potential evapotranspiration (for the SPEI).</p></dd>
 
@@ -165,6 +172,24 @@ calculation. Either 'TRUE' (default) or 'FALSE'. The report is issued as
 a message, so it can also be silenced with <code><a href="https://rdrr.io/r/base/message.html" class="external-link">suppressMessages()</a></code>.</p></dd>
 
 
+<dt id="arg-start">start<a class="anchor" aria-label="anchor" href="#arg-start"></a></dt>
+<dd><p>optional, the time of the first observation of <code>data</code>,
+when <code>data</code> is not a time series: a single year, or a vector
+<code>c(year, period)</code> with the year and the period within the year
+(e.g. the month), as in <code><a href="https://rdrr.io/r/stats/ts.html" class="external-link">ts</a></code>. Defaults to NULL, i.e. the data
+start in the first period of year 1 (but see Time information for 3-d
+arrays with time dimnames). Can not be used if <code>data</code> is a time
+series. See Time information.</p></dd>
+
+
+<dt id="arg-frequency">frequency<a class="anchor" aria-label="anchor" href="#arg-frequency"></a></dt>
+<dd><p>optional, the number of periods per year of <code>data</code>
+(a positive integer, e.g. 12 for monthly, 48 or 52 for weekly data), when
+<code>data</code> is not a time series, as in <code><a href="https://rdrr.io/r/stats/ts.html" class="external-link">ts</a></code>. Defaults to
+NULL, i.e. 12 (monthly data). Can not be used if <code>data</code> is a time
+series. See Time information.</p></dd>
+
+
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>not used.</p></dd>
 
@@ -184,7 +209,12 @@ following components:</p>
   Precipitation Index (SPI). If data consists of several columns the
   function will treat each column as independent data, and the result will
   be a multivariate time series. The names of the columns in <code>data</code>
-  will be used as column names in fitted.</p></li>
+  will be used as column names in fitted. The result has the same form
+  as <code>data</code> (vector, matrix, time series or 3-d array), except that
+  a vector or a matrix given with <code>start</code> or <code>frequency</code>
+  gives a time series. For a 3-d array with <code>start</code> or
+  <code>frequency</code>, the time <code>dimnames</code> label each period (see Time
+  information).</p></li>
 <li><p>coefficients: an array with the values of the coefficients of the
   distribution function fitted to the data. The first dimension of the
   array contains the coefficients (xi, alpha, kappa for log-Logistic;
@@ -224,11 +254,42 @@ in the references given below.</p>
 <p>The SPEI and the SPI were defined for monthly data. Since the PDFs of the
 data are not homogenous from month to month, the data is split into twelve
 series (one for each month) and independent PDFs are fit to each series. If
-<code>data</code> is a vector or a matrix it will be treated as a sequence of
-monthly values starting in January. If it is a (univariate or multivariate)
-time series then the function <code><a href="https://rdrr.io/r/stats/time.html" class="external-link">cycle</a></code> will be used to determine
-the position of each observation within the year (month), allowing the data
-to start in a month other than January.</p>
+<code>data</code> is a (univariate or multivariate) time series then the
+function <code><a href="https://rdrr.io/r/stats/time.html" class="external-link">cycle</a></code> will be used to determine the position of
+each observation within the year (month), allowing the data to start in a
+month other than January, and to have other frequencies (e.g. weekly
+data). See Time information for data that are not time series.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="time-information">Time information<a class="anchor" aria-label="anchor" href="#time-information"></a></h2>
+
+
+<p>The position of each observation within the year, and the dates of the
+reference period, come from the time attributes of <code>data</code> when it
+is a time series (<code>ts</code>). Vectors, matrices and 3-d arrays have no
+time attributes; their time information can be given with the arguments
+<code>start</code> and <code>frequency</code>, which have the same meaning as in
+<code><a href="https://rdrr.io/r/stats/ts.html" class="external-link">ts</a></code>. A vector or a matrix with <code>start</code> and/or
+<code>frequency</code> is equivalent to <code>ts(data, start = start,
+frequency = frequency)</code>, and the result is a time series. A 3-d array
+(which can't be a time series) keeps its shape, and the result is a 3-d
+array whose time (first) <code>dimnames</code> label each period: "YYYY-MM" for
+monthly data (frequency 12), "YYYY" for annual data (frequency 1) and
+"YYYY-Pnn" otherwise, where nn is the period within the year,
+zero-padded (e.g. "1961-P01" to "1961-P48" for frequency 48). The
+other <code>dimnames</code> of <code>data</code> are kept. Since these labels are
+<code>dimnames</code>, they are kept when the array is subset, e.g.
+<code>x$fitted["2019-12", , ]</code>.</p>
+<p>If <code>start</code> and <code>frequency</code> are not given and <code>data</code> is a
+3-d array whose time <code>dimnames</code> are the consecutive months of a
+monthly series, as "YYYY-MM" or "YYYY-MM-DD" (any day of the month, e.g.
+the mid-month dates of many NetCDF files), the start of the series is
+taken from them, with a frequency of 12 (this is reported in the
+message issued when <code>verbose = TRUE</code>); the <code>dimnames</code> of the
+result are those of <code>data</code>.</p>
+<p>Otherwise (no <code>start</code>, <code>frequency</code> or time <code>dimnames</code>),
+the data are treated as a sequence of monthly values starting in January
+of year 1, as in previous versions of the package.</p>
     </div>
     <div class="section level2">
     <h2 id="time-scales">Time scales<a class="anchor" aria-label="anchor" href="#time-scales"></a></h2>
@@ -303,10 +364,15 @@ know what distribution function should be used.</p>
 of parameters <code>ref.start</code>  and <code>ref.end</code>. These parameters allow
 defining a subset of values that will be used  for parameter fitting, i.e.
 a reference period. The functions, however, will compute the  values of the
-indices for the whole data set. For these options to work it is necessary
-that <code>data</code> will be a time series object. The starting and ending
-points of the reference period  will then be defined as pairs of year and
-month values, e.g. c(1900,1).</p>
+indices for the whole data set. The starting and ending points of the
+reference period are defined as pairs of year and period (e.g. month)
+values, e.g. c(1900,1), in the time of <code>data</code>: that of the time
+series, or the one given by <code>start</code> and <code>frequency</code> (see Time
+information). Without time information, the years are counted from year
+1 at the start of <code>data</code>. If <code>ref.start</code> or <code>ref.end</code> fall
+outside the time span of <code>data</code> a warning is issued, and the
+reference period is limited to the data (e.g. a <code>ref.start</code> before
+the first observation is taken as the first observation).</p>
     </div>
     <div class="section level2">
     <h2 id="processing-large-datasets">Processing large datasets<a class="anchor" aria-label="anchor" href="#processing-large-datasets"></a></h2>
@@ -316,8 +382,10 @@ month values, e.g. c(1900,1).</p>
 processing multivariate datasets at once. If a matrix or data frame is
 supplied as <code>data</code>, with time series of precipitation or precipitation
 minus potential evapotranspiration arranged in columns, the result would be
-a matrix (data frame) of spi or spei series. This makes processing large
-datasets extremely easy, since no loops need to be used.</p>
+a matrix (data frame) of spi or spei series. Gridded data can be given as
+a 3-d array (time x longitude x latitude), and the result is an array of
+the same dimensions. This makes processing large datasets extremely easy,
+since no loops need to be used.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
@@ -726,12 +794,13 @@ Santiago Beguería.</p>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Calculating the Standardized Precipitation Evapotranspiration Index (SPEI) at a time scale of 12. Using kernel type 'rectangular', with 0 shift. Fitting the data to a log-Logistic distribution. Using the ub-pwm parameter fitting method. Checking for missing values (`NA`): all the data must be complete. Using the whole time series as reference period. Input type is tsvector. Time series spanning Jun 1980 to Mar 2012, with frequency = 12.</span>
 <span class="r-plt img"><img src="Drought-indices-8.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Using a particular reference period (1980-2000) for computing the</span></span></span>
-<span class="r-in"><span><span class="co"># parameters. This may result in unexpected values (Inf, NaN) if data</span></span></span>
-<span class="r-in"><span><span class="co"># outside the reference period are way higher or lower than those within</span></span></span>
-<span class="r-in"><span><span class="co"># the reference period.</span></span></span>
+<span class="r-in"><span><span class="co"># Using a particular reference period (June 1980 to January 2000) for</span></span></span>
+<span class="r-in"><span><span class="co"># computing the parameters. This may result in unexpected values (Inf,</span></span></span>
+<span class="r-in"><span><span class="co"># NaN) if data outside the reference period are way higher or lower than</span></span></span>
+<span class="r-in"><span><span class="co"># those within the reference period. A reference period outside the time</span></span></span>
+<span class="r-in"><span><span class="co"># span of the data gives a warning.</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu">spei</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/ts.html" class="external-link">ts</a></span><span class="op">(</span><span class="va">wichita</span><span class="op">[</span>, <span class="st">"BAL"</span><span class="op">]</span>, freq <span class="op">=</span> <span class="fl">12</span>, start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1980</span>, <span class="fl">6</span><span class="op">)</span><span class="op">)</span>, <span class="fl">12</span>,</span></span>
-<span class="r-in"><span>  ref.start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1980</span>, <span class="fl">1</span><span class="op">)</span>, ref.end <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2000</span>, <span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  ref.start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1980</span>, <span class="fl">6</span><span class="op">)</span>, ref.end <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2000</span>, <span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Calculating the Standardized Precipitation Evapotranspiration Index (SPEI) at a time scale of 12. Using kernel type 'rectangular', with 0 shift. Fitting the data to a log-Logistic distribution. Using the ub-pwm parameter fitting method. Checking for missing values (`NA`): all the data must be complete. Using a user-specified reference period. Input type is tsvector. Time series spanning Jun 1980 to Mar 2012, with frequency = 12.</span>
 <span class="r-plt img"><img src="Drought-indices-9.png" alt="" width="700" height="433"></span>
@@ -900,6 +969,25 @@ Santiago Beguería.</p>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Calculating the Standardized Precipitation Evapotranspiration Index (SPEI) at a time scale of 12. Using kernel type 'rectangular', with 0 shift. Fitting the data to a log-Logistic distribution. Using the ub-pwm parameter fitting method. Checking for missing values (`NA`): all the data must be complete. Using the whole time series as reference period. Input type is array. No time information provided, assuming a monthly time series.</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">spei_12</span><span class="op">$</span><span class="va">fitted</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1440    2    3</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># The data start in January 1900: with `start`, the reference period can</span></span></span>
+<span class="r-in"><span><span class="co"># be given in calendar years, and the time dimension of the result is</span></span></span>
+<span class="r-in"><span><span class="co"># labelled</span></span></span>
+<span class="r-in"><span><span class="va">spei_12</span> <span class="op">&lt;-</span> <span class="fu">spei</span><span class="op">(</span><span class="va">cruts4</span>, <span class="fl">12</span>,</span></span>
+<span class="r-in"><span>  start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1900</span>, <span class="fl">1</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  ref.start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1961</span>, <span class="fl">1</span><span class="op">)</span>, ref.end <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1990</span>, <span class="fl">12</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Calculating the Standardized Precipitation Evapotranspiration Index (SPEI) at a time scale of 12. Using kernel type 'rectangular', with 0 shift. Fitting the data to a log-Logistic distribution. Using the ub-pwm parameter fitting method. Checking for missing values (`NA`): all the data must be complete. Using a user-specified reference period. Input type is array. Time series spanning Jan 1900 to Dec 2019, with frequency = 12.</span>
+<span class="r-in"><span><span class="va">spei_12</span><span class="op">$</span><span class="va">fitted</span><span class="op">[</span><span class="st">"2019-12"</span>, , <span class="op">]</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           [,1]       [,2]      [,3]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1,] 0.8727836 0.06574688 0.5957531</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [2,] 0.6147859 0.28182338 0.6330118</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Non-monthly data, e.g. weekly (48 periods per year), with `frequency`</span></span></span>
+<span class="r-in"><span><span class="va">spei_4w</span> <span class="op">&lt;-</span> <span class="fu">spei</span><span class="op">(</span><span class="va">cruts4</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">480</span>, , <span class="op">]</span>, <span class="fl">4</span>, start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2000</span>, <span class="fl">1</span><span class="op">)</span>, frequency <span class="op">=</span> <span class="fl">48</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Calculating the Standardized Precipitation Evapotranspiration Index (SPEI) at a time scale of 4. Using kernel type 'rectangular', with 0 shift. Fitting the data to a log-Logistic distribution. Using the ub-pwm parameter fitting method. Checking for missing values (`NA`): all the data must be complete. Using the whole time series as reference period. Input type is array. Time series spanning Jan 2000 to Dec 2009, with frequency = 48.</span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">spei_4w</span><span class="op">$</span><span class="va">coefficients</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1]  3  6 48</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Modding the plot</span></span></span>
 <span class="r-in"><span><span class="co"># Since plot.spei() returns a ggplot object, it is possible to add or tweak</span></span></span>

@@ -15,15 +15,15 @@ See hargreaves
 ## Usage
 
 ``` r
-thornthwaite(Tave, lat, na.rm = FALSE, verbose=TRUE)
+thornthwaite(Tave, lat, na.rm = FALSE, verbose=TRUE, start = NULL)
 
 hargreaves(Tmin, Tmax, Ra = NULL, lat = NULL, Pre = NULL, na.rm = FALSE,
-verbose=TRUE, dates = NULL)
+verbose=TRUE, dates = NULL, start = NULL)
 
 penman(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL, tsun = NULL,
        CC = NULL, ed = NULL, Tdew = NULL, RH = NULL, P = NULL, P0 = NULL,
        CO2 = NULL, z = NULL, crop='short', na.rm = FALSE, method='ICID',
-       verbose=TRUE, dates = NULL, kRs = NULL, aT = 0)
+       verbose=TRUE, dates = NULL, kRs = NULL, aT = 0, start = NULL)
 
 penman(
   Tmin,
@@ -47,10 +47,11 @@ penman(
   verbose = TRUE,
   dates = NULL,
   kRs = NULL,
-  aT = 0
+  aT = 0,
+  start = NULL
 )
 
-thornthwaite(Tave, lat, na.rm = FALSE, verbose = TRUE)
+thornthwaite(Tave, lat, na.rm = FALSE, verbose = TRUE, start = NULL)
 ```
 
 ## Arguments
@@ -103,6 +104,17 @@ thornthwaite(Tave, lat, na.rm = FALSE, verbose = TRUE)
   day. The dates must not contain missing values and must be in strictly
   increasing order; gaps between dates are allowed. If `NULL` (the
   default), the data are monthly. See Details.
+
+- start:
+
+  optional, the month of the first observation of monthly data that are
+  not a time series (a vector, matrix or 3-d array): a single year (i.e.
+  starting in January), or a vector `c(year, month)`, as in
+  [`ts`](https://rdrr.io/r/stats/ts.html). It sets the calendar month of
+  each time step (used for the month length and the mid-month day of the
+  year). If `NULL` (the default), the data are taken to start in
+  January, all years being regular (non-leap) years. Can not be used if
+  the main input is a time series, nor with `dates`. See Details.
 
 - U2:
 
@@ -211,7 +223,9 @@ thornthwaite(Tave, lat, na.rm = FALSE, verbose = TRUE)
 A vector, matrix or 3-d array with the values of monthly potential or
 reference evapotranspiration, in mm. If the main input is a time series
 (and `dates` is not given) the output is a time series with the same
-time attributes.
+time attributes. If `start` is given, a vector or matrix input gives a
+monthly time series, and a 3-d array input gives an array whose time
+`dimnames` are the months ("YYYY-MM").
 
 If `dates` is given, the output has one value of daily reference
 evapotranspiration per date, in mm per day. For vector or matrix input
@@ -361,9 +375,18 @@ options.
 If the main input object (`Tave`, `Tmin`, `Tmax`) is a time series then
 the function [`cycle`](https://rdrr.io/r/stats/time.html) will be used
 to determine the position of each observation within the year (month),
-allowing the data to start in a month different than January. If no time
-information is provided, then the input data will be treated as a
-sequence of monthly values starting in January.
+allowing the data to start in a month different than January. For a
+vector, matrix or 3-d array, the first month can be given with the
+argument `start`: a vector or a matrix is then converted to a monthly
+time series (`ts(x, start = start, frequency = 12)`), and the result is
+a time series; a 3-d array keeps its shape, and the time (first)
+`dimnames` of the result are the months, as "YYYY-MM" (the format used
+by
+[`spei`](https://sbegueria.github.io/SPEI/reference/Drought-indices.md)).
+As with time series, the actual length of each month (including leap
+years) is used. If no time information is provided, then the input data
+will be treated as a sequence of monthly values starting in January, all
+years being regular (non-leap) years.
 
 **Daily data.** By default all three functions work with monthly data.
 `hargreaves` and `penman` can also compute daily ETo by passing the date

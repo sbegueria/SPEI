@@ -165,37 +165,52 @@ cell:</p>
 <span><span class="co">#&gt;      [,1]  [,2] [,3]</span></span>
 <span><span class="co">#&gt; [1,] 0.55 -0.20 0.35</span></span>
 <span><span class="co">#&gt; [2,] 0.31 -0.05 0.38</span></span></code></pre></div>
-<p>An array can’t be a time series, so it is taken to start in January.
-Its reference period would have to be given as years counted from the
-first one. To use calendar dates, reshape the array into a matrix with
-one column per cell, compute the index, and reshape the result back:</p>
+<p>An array can’t be a time series, so without more information it is
+taken to start in January, and a reference period would have to be given
+as years counted from the first one. The arguments <code>start</code>
+and <code>frequency</code> give the time information, as in
+<code><a href="https://rdrr.io/r/stats/ts.html" class="external-link">ts()</a></code>. With them the reference period is given in calendar
+dates, here 1961–1990:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/ts.html" class="external-link">ts</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="va">cruts4</span>, nrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">cruts4</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span>,</span>
-<span>  start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1900</span>, <span class="fl">1</span><span class="op">)</span>, frequency <span class="op">=</span> <span class="fl">12</span></span>
-<span><span class="op">)</span></span>
-<span><span class="va">s</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Drought-indices.html">spei</a></span><span class="op">(</span><span class="va">m</span>, <span class="fl">12</span>, ref.start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1961</span>, <span class="fl">1</span><span class="op">)</span>, ref.end <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1990</span>, <span class="fl">12</span><span class="op">)</span>,</span>
-<span>  verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
-<span><span class="op">)</span></span>
-<span><span class="va">spei12_ref</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/array.html" class="external-link">array</a></span><span class="op">(</span><span class="va">s</span><span class="op">$</span><span class="va">fitted</span>, dim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">cruts4</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">spei12_ref</span><span class="op">[</span><span class="fl">1440</span>, , <span class="op">]</span>, <span class="fl">2</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">spei12_ref</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Drought-indices.html">spei</a></span><span class="op">(</span><span class="va">cruts4</span>, <span class="fl">12</span>,</span>
+<span>  start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1900</span>, <span class="fl">1</span><span class="op">)</span>,</span>
+<span>  ref.start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1961</span>, <span class="fl">1</span><span class="op">)</span>, ref.end <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1990</span>, <span class="fl">12</span><span class="op">)</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>The time dimension of the result is labelled with the months, so it
+can be indexed by date. December 2019 again, now with the 1961–1990
+reference period:</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/dimnames.html" class="external-link">dimnames</a></span><span class="op">(</span><span class="va">spei12_ref</span><span class="op">$</span><span class="va">fitted</span><span class="op">)</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "1900-01" "1900-02" "1900-03" "1900-04" "1900-05" "1900-06"</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">spei12_ref</span><span class="op">$</span><span class="va">fitted</span><span class="op">[</span><span class="st">"2019-12"</span>, , <span class="op">]</span>, <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="co">#&gt;      [,1] [,2] [,3]</span></span>
 <span><span class="co">#&gt; [1,] 0.87 0.07 0.60</span></span>
 <span><span class="co">#&gt; [2,] 0.61 0.28 0.63</span></span></code></pre></div>
+<p>Monthly labels are “YYYY-MM”; with other frequencies the periods are
+numbered, e.g. “1961-P01” to “1961-P48” with <code>frequency = 48</code>
+(weekly data, see <code><a href="../articles/weekly.html">vignette("weekly")</a></code>). If the time
+<code>dimnames</code> of an array are already monthly dates (“YYYY-MM”
+or “YYYY-MM-DD”, as when they are read from a NetCDF file),
+<code>start</code> is not needed: the time information is taken from
+them.</p>
 <p>The PET functions take arrays too, with latitude given as a longitude
 × latitude matrix:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">tmed</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/array.html" class="external-link">array</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">wichita</span><span class="op">$</span><span class="va">TMED</span>, <span class="fl">6</span><span class="op">)</span>, dim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">382</span>, <span class="fl">2</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">lat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">42.25</span>, <span class="fl">42.75</span>, <span class="fl">43.25</span><span class="op">)</span>, nrow <span class="op">=</span> <span class="fl">2</span>, ncol <span class="op">=</span> <span class="fl">3</span>, byrow <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="va">pet</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Potential-evapotranspiration.html">thornthwaite</a></span><span class="op">(</span><span class="va">tmed</span>, <span class="va">lat</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">pet</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Potential-evapotranspiration.html">thornthwaite</a></span><span class="op">(</span><span class="va">tmed</span>, <span class="va">lat</span>, start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1980</span>, <span class="fl">1</span><span class="op">)</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">pet</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 382   2   3</span></span></code></pre></div>
+<p>The PET functions also take <code>start</code> (the first month; the
+frequency is always 12), which sets the calendar month of each time step
+and labels the time dimension of the result.</p>
 <div class="section level3">
 <h3 id="cells-with-no-data">Cells with no data<a class="anchor" aria-label="anchor" href="#cells-with-no-data"></a>
 </h3>
 <p>Grids often include cells with no data, such as the ocean in land
 datasets. Those cells need <code>na.rm = TRUE</code>, and their index is
 <code>NA</code>:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="va">cruts4</span></span>
 <span><span class="va">x</span><span class="op">[</span>, <span class="fl">1</span>, <span class="fl">1</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="cn">NA</span></span>
 <span><span class="va">s</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Drought-indices.html">spei</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">12</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
@@ -212,7 +227,7 @@ datasets. Those cells need <code>na.rm = TRUE</code>, and their index is
 code below sketches how to compute the SPEI from the CRU TS
 precipitation and PET files with the <code>ncdf4</code> package. It is
 not run here, because it needs the files, which are large.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://cirrus.ucsd.edu/~pierce/ncdf/" class="external-link">ncdf4</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">pre_nc</span> <span class="op">&lt;-</span> <span class="fu">nc_open</span><span class="op">(</span><span class="st">"cru_ts4.10.1901.2025.pre.dat.nc"</span><span class="op">)</span></span>
@@ -232,7 +247,7 @@ not run here, because it needs the files, which are large.</p>
 <span><span class="co"># Put time first, as spei() expects</span></span>
 <span><span class="va">bal</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/aperm.html" class="external-link">aperm</a></span><span class="op">(</span><span class="va">pre</span> <span class="op">-</span> <span class="va">pet</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">spei12</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Drought-indices.html">spei</a></span><span class="op">(</span><span class="va">bal</span>, <span class="fl">12</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">spei12</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Drought-indices.html">spei</a></span><span class="op">(</span><span class="va">bal</span>, <span class="fl">12</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span>, start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1901</span>, <span class="fl">1</span><span class="op">)</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Back to longitude x latitude x time for writing</span></span>
 <span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/aperm.html" class="external-link">aperm</a></span><span class="op">(</span><span class="va">spei12</span><span class="op">$</span><span class="va">fitted</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
