@@ -168,6 +168,21 @@ or the share of months in moderate or worse drought:
 mean(spei12$fitted <= -1, na.rm = TRUE)
 ```
 
+`index_events()` lists the drought events: the runs of consecutive months
+with the index at or below -1. For each event it gives the first and the
+last month, the duration in months, the severity (the sum of the index
+values), the intensity (the severity divided by the duration) and the peak
+(the lowest value) with its month:
+
+```{r}
+index_events(spei12)
+```
+
+The 2011 drought started in May and was still going on at the end of the
+series. The argument `threshold` changes the threshold, `type = "wet"` gives
+the wet events, and `min.duration` drops the shortest events. See
+`?index_events` for the details.
+
 `summary()` shows the call, the values and the fitted parameters of the
 distribution for each calendar month, which are also in
 `spei12$coefficients`.

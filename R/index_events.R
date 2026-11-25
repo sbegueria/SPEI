@@ -1,0 +1,271 @@
+#' @name Index-events
+#' @title Drought and wet events of an index series.
+#' @aliases index_events
+#' @description
+#' \code{index_events} finds the drought (or wet) events of a series of a
+#' drought index, such as the SPEI or the SPI, and returns their start,
+#' end, duration, severity, intensity and peak, using the run theory of
+#' Yevjevich (1967).
+#' @param x the index values: an object of class \code{spei} (as returned by
+#' \code{\link{spei}} or \code{\link{spi}}), whose \code{fitted} values are
+#' used; a univariate or multivariate time series (\code{ts}); a numeric
+#' vector; or a numeric matrix with one column per series. Three-dimensional
+#' arrays (gridded data) are not supported (see 'Details').
+#' @param type the type of events, either \code{'dry'} (default) or
+#' \code{'wet'}.
+#' @param threshold the threshold that defines an event. A dry event is a
+#' run of consecutive time steps with the index at or below the threshold,
+#' and a wet event a run with the index at or above it. Defaults to -1 for
+#' dry events and to 1 for wet events.
+#' @param min.duration a positive integer, the minimum duration (number of
+#' time steps) of an event. Shorter events are discarded. Defaults to 1
+#' (all events are kept).
+#' @param pool a non-negative integer. Events separated by \code{pool} time
+#' steps or fewer are merged into one event (pooling). Defaults to 0 (no
+#' pooling).
+#'
+#' @details
+#' Following the run theory (Yevjevich, 1967), an event is a run of
+#' consecutive time steps in which the index is beyond a threshold: at or
+#' below \code{threshold} for dry events, at or above it for wet events. The
+#' run starts at the first time step beyond the threshold and ends at the
+#' last one.
+#'
+#' A missing value (\code{NA}) breaks an event: the time steps before and
+#' after it belong to different events. Missing values at the start of the
+#' series (the first \code{scale - 1} time steps of the SPEI or the SPI at
+#' time scale \code{scale}) are simply skipped.
+#'
+#' With \code{pool} greater than 0, two consecutive events separated by
+#' \code{pool} or fewer time steps are merged into one event, which spans
+#' from the start of the first one to the end of the second one. The time
+#' steps between them count in the duration of the merged event, and their
+#' values in its severity. Events separated by a missing value are never
+#' merged. \code{min.duration} is applied after pooling.
+#'
+#' The severity of an event is the sum of the index values over its time
+#' steps, so it is negative for dry events (with a negative threshold) and
+#' positive for wet events. Its intensity is the severity divided by the
+#' duration (the mean value of the index during the event), and its peak is
+#' the most extreme value of the index: the lowest one for dry events and
+#' the highest one for wet events. Note that other definitions of severity
+#' are used in the literature, such as the cumulative deficit below the
+#' threshold; it can be computed from the output as \code{threshold *
+#' duration - severity} for dry events.
+#'
+#' The function works on series. To get the events of each cell of gridded
+#' data (a 3-d array), apply it to the series of each cell, e.g.
+#' \code{index_events(x[, i, j])}.
+#'
+#' @return
+#' A data frame with one row per event, in chronological order (and by
+#' series, if there are several), with the columns:
+#' \itemize{
+#'   \item \code{site}: only if \code{x} has several series (columns), the
+#'   series of the event: its column name, or its column number if the
+#'   columns have no names.
+#'   \item \code{start}, \code{end}: the first and the last time step of
+#'   the event.
+#'   \item \code{duration}: the number of time steps of the event.
+#'   \item \code{severity}: the sum of the index values over the event.
+#'   \item \code{intensity}: the severity divided by the duration.
+#'   \item \code{peak}: the most extreme index value of the event.
+#'   \item \code{peak.time}: the time step of the peak (the first one, if
+#'   it is reached more than once).
+#' }
+#' If \code{x} is a time series with a whole-number frequency, the time
+#' steps (\code{start}, \code{end} and \code{peak.time}) are labels:
+#' \code{'YYYY-MM'} for monthly series (e.g. \code{'2011-03'}),
+#' \code{'YYYY'} for annual series, and \code{'YYYY-Pnn'} for other
+#' frequencies, with the period \code{nn} within the year (e.g.
+#' \code{'1961-P05'} for the fifth period of 1961). For time series with
+#' other frequencies they are the decimal times given by
+#' \code{\link{time}}. If \code{x} carries no time information (a vector
+#' or a matrix), they are the positions of the time steps in the series.
+#' If there are no events, the data frame has no rows.
+#'
+#' @references
+#' Yevjevich, V. 1967. An objective approach to definitions and
+#' investigations of continental hydrologic droughts. Hydrology Paper 23,
+#' Colorado State University, Fort Collins.
+#'
+#' @seealso \code{\link{spei}}, \code{\link{spi}}.
+#'
+#' @examples
+#' # SPEI-12 at Wichita
+#' data(wichita)
+#' wichita$PET <- thornthwaite(wichita$TMED, 37.6475, verbose = FALSE)
+#' wichita$BAL <- wichita$PRCP - wichita$PET
+#' wichita <- ts(wichita[, -c(1, 2)], end = c(2011, 10), frequency = 12)
+#' spei12 <- spei(wichita[, "BAL"], 12, verbose = FALSE)
+#'
+#' # Drought events (SPEI-12 at or below -1)
+#' index_events(spei12)
+#'
+#' # Only those lasting six months or more, merging events separated by one
+#' # or two months
+#' index_events(spei12, min.duration = 6, pool = 2)
+#'
+#' # Wet events (SPEI-12 at or above 1)
+#' index_events(spei12, type = "wet")
+#'
+#' # All the runs of negative values, as in the run theory with threshold 0
+#' head(index_events(spei12, threshold = 0))
+#'
+#' # Several series: SPEI-6 and SPEI-12
+#' spei6 <- spei(wichita[, "BAL"], 6, verbose = FALSE)
+#' x <- cbind(spei6 = spei6$fitted, spei12 = spei12$fitted)
+#' index_events(x, min.duration = 3)
+#'
+#' @export
+#'
+index_events <- function(x, type = "dry", threshold = NULL,
+                           min.duration = 1, pool = 0) {
+  ### Argument check - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+  check <- makeAssertCollection()
+
+  if (inherits(x, "spei")) {
+    x <- x$fitted
+  }
+  if (is.data.frame(x)) {
+    x <- data.matrix(x)
+  }
+  if (!is.numeric(x) && !is.logical(x)) {
+    check$push(paste(
+      "Argument `x` must be a `spei` object, a time series (`ts`), a",
+      "numeric vector or a numeric matrix."
+    ))
+  } else if (length(dim(x)) > 2) {
+    check$push(paste(
+      "Argument `x` can not be a 3-d array: apply `index_events()` to",
+      "the series of each cell, e.g. `index_events(x[, i, j])`."
+    ))
+  }
+  if (!is.character(type) || length(type) != 1 ||
+    !type %in% c("dry", "wet")) {
+    check$push("Argument `type` must be either `dry` or `wet`.")
+    type <- "dry"
+  }
+  if (is.null(threshold)) {
+    threshold <- if (type == "dry") -1 else 1
+  } else if (!is.numeric(threshold) || length(threshold) != 1 ||
+    is.na(threshold)) {
+    check$push("Argument `threshold` must be a single number.")
+  }
+  if (!is.numeric(min.duration) || length(min.duration) != 1 ||
+    is.na(min.duration) || min.duration < 1 || min.duration %% 1 != 0) {
+    check$push("Argument `min.duration` must be a single positive integer.")
+  }
+  if (!is.numeric(pool) || length(pool) != 1 || is.na(pool) ||
+    pool < 0 || pool %% 1 != 0) {
+    check$push("Argument `pool` must be a single non-negative integer.")
+  }
+
+  if (!check$isEmpty()) {
+    stop(paste(check$getMessages(), collapse = " "))
+  }
+
+
+  ### Time steps - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+  n_times <- NROW(x)
+  if (is.ts(x)) {
+    freq <- frequency(x)
+    if (freq >= 1 && isTRUE(all.equal(freq, round(freq)))) {
+      times <- time_labels(start(x), round(freq), n_times)
+    } else {
+      times <- as.numeric(time(x))
+    }
+  } else {
+    times <- seq_len(n_times)
+  }
+
+
+  ### Events of each series - - - - - - - - - - - - - - - - - - - - - - - -
+
+  multi <- is.matrix(x) && ncol(x) > 1
+  mat <- matrix(as.numeric(x), nrow = n_times)
+  sites <- colnames(x)
+  if (is.null(sites)) {
+    sites <- seq_len(ncol(mat))
+  }
+
+  out <- lapply(seq_len(ncol(mat)), function(j) {
+    ev <- find_events(
+      mat[, j], threshold, type == "dry", min.duration, pool
+    )
+    res <- data.frame(
+      start = times[ev$start],
+      end = times[ev$end],
+      duration = ev$end - ev$start + 1,
+      severity = ev$severity,
+      intensity = ev$severity / (ev$end - ev$start + 1),
+      peak = ev$peak,
+      peak.time = times[ev$peak.pos],
+      stringsAsFactors = FALSE
+    )
+    if (multi) {
+      res <- cbind(site = rep(sites[j], nrow(res)), res,
+        stringsAsFactors = FALSE
+      )
+    }
+    res
+  })
+  out <- do.call(rbind, out)
+  rownames(out) <- NULL
+  out
+}
+
+
+# Find the events (runs beyond `threshold`) of the vector `v`: at or below
+# it if `dry`, at or above it otherwise. Missing values break the runs.
+# Runs separated by `pool` or fewer time steps without missing values are
+# merged, and then runs shorter than `min.duration` are dropped. Returns a
+# list with the start and end positions of the events, their severity (sum
+# of the values) and the value and position of their peak.
+find_events <- function(v, threshold, dry, min.duration, pool) {
+  beyond <- if (dry) v <= threshold else v >= threshold
+  beyond[is.na(beyond)] <- FALSE
+  r <- rle(beyond)
+  ends <- cumsum(r$lengths)
+  starts <- ends - r$lengths + 1
+  s <- starts[r$values]
+  e <- ends[r$values]
+
+  # Pooling
+  if (pool > 0 && length(s) > 1) {
+    keep <- rep(TRUE, length(s))
+    cur <- 1
+    for (i in 2:length(s)) {
+      gap <- (e[cur] + 1):(s[i] - 1)
+      if (length(gap) <= pool && !anyNA(v[gap])) {
+        e[cur] <- e[i]
+        keep[i] <- FALSE
+      } else {
+        cur <- i
+      }
+    }
+    s <- s[keep]
+    e <- e[keep]
+  }
+
+  # Minimum duration
+  long <- e - s + 1 >= min.duration
+  s <- s[long]
+  e <- e[long]
+
+  severity <- peak <- numeric(length(s))
+  peak.pos <- integer(length(s))
+  for (i in seq_along(s)) {
+    vals <- v[s[i]:e[i]]
+    severity[i] <- sum(vals)
+    k <- if (dry) which.min(vals) else which.max(vals)
+    peak[i] <- vals[k]
+    peak.pos[i] <- s[i] + k - 1L
+  }
+  list(
+    start = s, end = e, severity = severity, peak = peak,
+    peak.pos = peak.pos
+  )
+}
