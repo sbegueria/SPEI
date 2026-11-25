@@ -5,12 +5,12 @@
 #' thornthwaite(Tave, lat, na.rm = FALSE, verbose=TRUE)
 #'
 #' hargreaves(Tmin, Tmax, Ra = NULL, lat = NULL, Pre = NULL, na.rm = FALSE,
-#' verbose=TRUE)
+#' verbose=TRUE, dates = NULL)
 #'
 #' penman(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL, tsun = NULL,
 #'        CC = NULL, ed = NULL, Tdew = NULL, RH = NULL, P = NULL, P0 = NULL,
 #'        CO2 = NULL, z = NULL, crop='short', na.rm = FALSE, method='ICID',
-#'        verbose=TRUE)
+#'        verbose=TRUE, dates = NULL)
 #'
 #'
 #' @description
@@ -75,6 +75,15 @@
 #' @param verbose   optional, logical, report the computation options during
 #' calculation. Either 'TRUE' (default) or 'FALSE'. The report is issued as
 #' a message, so it can also be silenced with \code{suppressMessages()}.
+#' @param dates   optional, a \code{Date} vector (or a character vector that
+#' can be converted with \code{as.Date()}) with the date of each time step,
+#' i.e. one element per row (first dimension) of the input data. Only used
+#' by \code{hargreaves} and \code{penman}. If provided, the computation is
+#' done at a daily time step: the inputs are daily values (instead of
+#' monthly means and totals) and the output is ETo in mm per day. The dates
+#' must not contain missing values and must be in strictly increasing order;
+#' gaps between dates are allowed. If \code{NULL} (the default), the data
+#' are monthly. See Details.
 #'
 #'
 #' @details \code{thornthwaite} computes the monthly potential
@@ -138,10 +147,12 @@
 #' wind coefficient of the denominator (0.34 for the short crop, 0.38 for the
 #' tall crop). This correction was derived for the short reference crop, but
 #' it is applied to whichever crop is selected, including 'tall'.
-#' The soil heat flux G is computed from the difference in mean temperature
-#' between the previous and the following months, using forward or backward
-#' differences at the first and last time steps. \code{penman} works with
-#' series of any length; with a single time step G is set to 0.
+#' With monthly data, the soil heat flux G is computed from the difference
+#' in mean temperature between the previous and the following months
+#' (FAO-56 eq. 43), using forward or backward differences at the first and
+#' last time steps. \code{penman} works with series of any length; with a
+#' single time step G is set to 0. With daily data (\code{dates}), G is
+#' always 0.
 #'
 #' The function will produce an error message if a valid combination of input
 #' parameters is not provided.
@@ -165,9 +176,34 @@
 #' If no time information is provided, then the input data will be treated as
 #' a sequence of monthly values starting in January.
 #'
+#' \strong{Daily data.} By default all three functions work with monthly
+#' data. \code{hargreaves} and \code{penman} can also compute daily ETo by
+#' passing the date of each time step in the argument \code{dates}
+#' (\code{thornthwaite} is a monthly method and has no daily version). In
+#' that case all the inputs are daily values (e.g., daily maximum and
+#' minimum temperature, daily mean wind speed, daily sunshine hours or
+#' daily solar radiation) and the output is ETo in mm per day, following
+#' Allen et al. (1998). The day of the year used for the extraterrestrial
+#' radiation is that of each date (FAO-56 eq. 21-25), instead of the
+#' mid-month day used for monthly data, and the result is not multiplied by
+#' the number of days in the month. In \code{penman} the soil heat flux G is
+#' set to zero, as recommended for daily time steps (FAO-56 eq. 42), so
+#' the ETo of each day only depends on the inputs of that day. The
+#' precipitation-modified Hargreaves equation (Droogers and Allen, 2002)
+#' was calibrated with monthly precipitation, so \code{Pre} can not be used
+#' together with \code{dates}. If the main input is a time series
+#' (\code{ts}) and \code{dates} is given, the time attributes of the series
+#' are ignored and the result is a plain vector or matrix.
+#'
 #'
 #' @return A vector, matrix or 3-d array with the values of monthly potential
-#' or reference evapotranspiration, in mm.
+#' or reference evapotranspiration, in mm. If the main input is a time series
+#' (and \code{dates} is not given) the output is a time series with the same
+#' time attributes. If \code{dates} is given, the output has one value of
+#' daily reference evapotranspiration per date, in mm per day, as a vector,
+#' matrix or 3-d array with the same dimensions as the input (time series
+#' input gives a plain vector or matrix); the dates are not stored in the
+#' output.
 #'
 #'
 #' @references
@@ -319,10 +355,37 @@
 #' )
 #' plot(ts(cbind(pen_300, pen_co2), fr = 12))
 #'
+#' # Daily data
+#'
+#' # Synthetic daily series for one year (not real observations), for a site
+#' # at 40 N and 500 m a.s.l.
+#' dates <- seq(as.Date("2020-01-01"), as.Date("2020-12-31"), by = "day")
+#' doy <- as.numeric(format(dates, "%j"))
+#' tmin_d <- 5 - 8 * cos(2 * pi * (doy - 15) / 366)
+#' tmax_d <- tmin_d + 11 + 2 * sin(2 * pi * doy / 7)
+#' tsun_d <- 7 - 3 * cos(2 * pi * (doy - 15) / 366)
+#' # ETo in mm per day
+#' har_d <- hargreaves(tmin_d, tmax_d, lat = 40, dates = dates)
+#' pen_d <- penman(tmin_d, tmax_d,
+#'   tsun = tsun_d, lat = 40, z = 500,
+#'   method = "FAO", dates = dates
+#' )
+#' plot(dates, pen_d, type = "l", ylab = "ETo (mm/day)")
+#' lines(dates, har_d, col = "red")
+#' # Monthly totals of the daily values
+#' tapply(pen_d, format(dates, "%m"), sum)
+#'
+#' # FAO-56 Example 18 (Allen et al., 1998): Uccle (Brussels), 6 July,
+#' # 50 48'N, 100 m a.s.l.; ETo = 3.9 mm/day
+#' penman(12.3, 21.5, 2.078,
+#'   tsun = 9.25, ed = 1.409, lat = 50.8, z = 100,
+#'   method = "FAO", dates = as.Date("2023-07-06")
+#' )
+#'
 #' @export
 #'
 hargreaves <- function(Tmin, Tmax, Ra = NULL, lat = NULL, Pre = NULL,
-                       na.rm = FALSE, verbose = TRUE) {
+                       na.rm = FALSE, verbose = TRUE, dates = NULL) {
   ### Argument check - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
   # Determine which combinations of inputs were passed and check their
@@ -349,9 +412,19 @@ hargreaves <- function(Tmin, Tmax, Ra = NULL, lat = NULL, Pre = NULL,
     check$push("One of `Ra` or `lat` must be provided.")
   }
 
+  # Daily (`dates` given) or monthly (default) time step
+  daily <- !is.null(dates)
+
   if (!is.null(Pre)) {
     using$Pre <- TRUE
     warn$push("Using precipitation data, following Droogers and Allen (2002).")
+    if (daily) {
+      check$push(paste(
+        "The precipitation-modified Hargreaves equation (`Pre`; Droogers and",
+        "Allen, 2002) uses monthly precipitation, so it can not be used with",
+        "daily data (`dates`)."
+      ))
+    }
   }
 
   if (!is_flag(na.rm)) {
@@ -401,14 +474,15 @@ hargreaves <- function(Tmin, Tmax, Ra = NULL, lat = NULL, Pre = NULL,
   n_sites <- prod(int_dims[[2]], int_dims[[3]])
   n_times <- int_dims[[1]]
 
-  # Determine output data shape
-  if (is.ts(Tmin)) {
+  # Determine output data shape. With daily data a time series input gives
+  # a plain vector or matrix.
+  if (is.ts(Tmin) && !daily) {
     if (is.matrix(Tmin)) {
       out_type <- "tsmatrix"
     } else {
       out_type <- "tsvector"
     }
-  } else if (is.vector(Tmin)) {
+  } else if (is.vector(Tmin) || (is.ts(Tmin) && !is.matrix(Tmin))) {
     out_type <- "vector"
   } else if (is.matrix(Tmin)) {
     out_type <- "matrix"
@@ -420,8 +494,21 @@ hargreaves <- function(Tmin, Tmax, Ra = NULL, lat = NULL, Pre = NULL,
   # Save column names for later
   names <- dimnames(Tmin)
 
-  # Determine dates: month length and mid-month day-within-year
-  if (is.ts(Tmin)) {
+  # Determine dates: day of the year of each date (daily data), or month
+  # length and mid-month day-within-year (monthly data)
+  if (daily) {
+    dates <- check_dates(dates, n_times, check)
+    if (!is.null(dates)) {
+      warn$push(paste0(
+        "Daily data (`dates` provided) spanning ", dates[1], " to ",
+        dates[n_times], "; ET0 is given in mm per day."
+      ))
+      if (is.ts(Tmin)) {
+        warn$push("The time series attributes of `Tmin` are ignored.")
+      }
+      msum_array <- array(yday(dates), dim = int_dims)
+    }
+  } else if (is.ts(Tmin)) {
     ts_freq <- frequency(Tmin)
     ts_start <- start(Tmin)
     if (ts_freq != 12) {
@@ -494,7 +581,8 @@ hargreaves <- function(Tmin, Tmax, Ra = NULL, lat = NULL, Pre = NULL,
   # 1. External radiation, MJ m-2 d-1
   if (!using$Ra) {
     # estimate Ra, following Allen et al. (1994)
-    # number of day in the year
+    # number of day in the year: mid-month day for monthly data, day of the
+    # year of each date for daily data
     J <- msum_array
     # solar declination, rad (1 rad = 57.2957795 deg)
     delta <- 0.409 * sin(0.0172 * J - 1.39)
@@ -525,8 +613,11 @@ hargreaves <- function(Tmin, Tmax, Ra = NULL, lat = NULL, Pre = NULL,
   }
   ET0 <- ifelse(ET0 < 0, 0, ET0)
 
-  # Transform ET0 to mm month-1
-  ET0 <- ET0 * mlen_array
+  # Transform ET0 to mm month-1 (monthly data); daily data are kept in
+  # mm day-1
+  if (!daily) {
+    ET0 <- ET0 * mlen_array
+  }
 
 
   ### Format output and return - - - - - - - - - - - - - - - - - - - - - - -
