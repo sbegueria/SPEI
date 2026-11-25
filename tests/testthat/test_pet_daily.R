@@ -100,19 +100,23 @@ test_that("monthly results are unchanged (dates = NULL)", {
   )
   expect_identical(names(new), names(ref))
   for (k in names(ref)) {
-    expect_identical(new[[k]], ref[[k]], label = k)
+    # The baseline was saved on one platform; other platforms can differ
+    # in the last bits of floating-point results
+    expect_equal(new[[k]], ref[[k]], tolerance = 1e-12, label = k)
   }
   # An explicit `dates = NULL` is the default
-  expect_identical(
+  expect_equal(
     pen(w$TMIN, w$TMAX, w$AWND,
       tsun = w$TSUN, lat = 37.6475, z = 402.6,
       na.rm = TRUE, dates = NULL
     ),
-    ref$pen_tsun
+    ref$pen_tsun,
+    tolerance = 1e-12
   )
-  expect_identical(
+  expect_equal(
     har(w$TMIN, w$TMAX, lat = 37.6475, na.rm = TRUE, dates = NULL),
-    ref$har_lat
+    ref$har_lat,
+    tolerance = 1e-12
   )
 })
 
