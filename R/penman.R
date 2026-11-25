@@ -2,7 +2,8 @@
 #' @description See hargreaves
 #' @details See hargreaves
 #' @return  A time series with the values of monthly potential or reference
-#' evapotranspiration, in mm.
+#' evapotranspiration, in mm (or, if \code{dates} is given, a \code{zoo}
+#' object or an array of daily reference evapotranspiration, in mm per day).
 #' If the input is a matrix or a multivariate time series each column will be
 #' treated as independent data (e.g., different observatories), and the output
 #' will be a multivariate time series.
@@ -12,12 +13,14 @@
 #'
 #'
 #' @importFrom lubridate days_in_month yday
+#' @importFrom zoo zoo
 #' @export
 #'
 penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
                    tsun = NULL, CC = NULL, ed = NULL, Tdew = NULL, RH = NULL,
                    P = NULL, P0 = NULL, CO2 = NULL, z = NULL, crop = "short",
-                   na.rm = FALSE, method = "ICID", verbose = TRUE) {
+                   na.rm = FALSE, method = "ICID", verbose = TRUE,
+                   dates = NULL) {
   ### Argument check - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
   # Determine which combinations of inputs were passed and check their
@@ -164,14 +167,18 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
   n_sites <- prod(int_dims[[2]], int_dims[[3]])
   n_times <- int_dims[[1]]
 
-  # Determine output data shape
-  if (is.ts(Tmin)) {
+  # Daily (`dates` given) or monthly (default) time step
+  daily <- !is.null(dates)
+
+  # Determine output data shape. With daily data a time series input is
+  # treated as a plain vector or matrix (the output is a zoo object).
+  if (is.ts(Tmin) && !daily) {
     if (is.matrix(Tmin)) {
       out_type <- "tsmatrix"
     } else {
       out_type <- "tsvector"
     }
-  } else if (is.vector(Tmin)) {
+  } else if (is.vector(Tmin) || (is.ts(Tmin) && !is.matrix(Tmin))) {
     out_type <- "vector"
   } else if (is.matrix(Tmin)) {
     out_type <- "matrix"
@@ -183,8 +190,22 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
   # Save column names for later
   names <- dimnames(Tmin)
 
-  # Determine dates: month length and mid-month day-within-year
-  if (is.ts(Tmin)) {
+  # Determine dates: day of the year of each date (daily data), or month
+  # length and mid-month day-within-year (monthly data)
+  if (daily) {
+    dates <- check_dates(dates, n_times, check)
+    if (!is.null(dates)) {
+      warn$push(paste0(
+        "Daily data (`dates` provided) spanning ", dates[1], " to ",
+        dates[n_times], "; ET0 is given in mm per day and the soil heat flux ",
+        "is set to zero."
+      ))
+      if (is.ts(Tmin)) {
+        warn$push("The time series attributes of `Tmin` are ignored.")
+      }
+      msum_array <- array(yday(dates), dim = int_dims)
+    }
+  } else if (is.ts(Tmin)) {
     ts_freq <- frequency(Tmin)
     ts_start <- start(Tmin)
     if (ts_freq != 12) {
@@ -403,7 +424,8 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
   if (!using$Ra | (!using$Rs & using$tsun)) {
     # Note: For the winter months and latitudes higher than 55º the following
     # equations have limited validity (Allen et al., 1994).
-    # J: number of day in the year (eq. 1.27)
+    # J: number of day in the year (eq. 1.27); mid-month day for monthly
+    # data, day of the year of each date for daily data
     J <- msum_array
     # delta: solar declination, rad (1 rad = 57.2957795 deg) (eq. 1.25)
     delta <- 0.409 * sin(0.0172 * J - 1.39)
@@ -466,16 +488,18 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
   Rn[Rs == 0] <- 0
 
   # Soil heat flux density, G
-  # Using forward / backward differences for the first and last observations,
-  # and central differences for the remaining ones.
+  # Daily data: G is set to zero (FAO-56, eq. 42).
+  # Monthly data (FAO-56, eq. 43): using forward / backward differences for
+  # the first and last observations, and central differences for the
+  # remaining ones.
   # TODO: if na.rm is FALSE, act similarly if exactly one neighbour is NA.
   # With a single time step G cannot be estimated and is set to zero.
   G <- array(0, int_dims)
-  if (n_times >= 2) {
+  if (!daily && n_times >= 2) {
     G[1, , ] <- 0.14 * (Tmean[2, , ] - Tmean[1, , ])
     G[n_times, , ] <- 0.14 * (Tmean[n_times, , ] - Tmean[(n_times - 1), , ])
   }
-  if (n_times >= 3) {
+  if (!daily && n_times >= 3) {
     G[2:(n_times - 1), , ] <- 0.07 * (Tmean[3:n_times, , ] -
       Tmean[1:(n_times - 2), , ])
   }
@@ -505,11 +529,19 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
       (CO2 - 300))))
   }
 
-  # Transform ET0 to mm month-1
-  ET0 <- ifelse(ET0 < 0, 0, ET0) * mlen_array
+  # Transform ET0 to mm month-1 (monthly data); daily data are kept in
+  # mm day-1
+  if (daily) {
+    ET0 <- ifelse(ET0 < 0, 0, ET0)
+  } else {
+    ET0 <- ifelse(ET0 < 0, 0, ET0) * mlen_array
+  }
 
 
   ### Format output and return - - - - - - - - - - - - - - - - - - - - - - -
+  if (daily) {
+    return(daily_output(ET0, out_type, dates, names))
+  }
   if (out_type == "tsmatrix") {
     ET0 <- matrix(ET0, nrow = n_times)
     ET0 <- ts(ET0, frequency = ts_freq, start = ts_start)
