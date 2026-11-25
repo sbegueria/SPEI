@@ -15,6 +15,18 @@
   and `<scale_extract>` extracts the annual series of the index for a given
   window. A new vignette, `vignette("scale_scan")`, shows how to use them.
 
+* New function `<drought_events>` finds the drought (or wet) events of an
+  index series using run theory (#41): runs of consecutive time steps with
+  the index at or below a threshold (dry events, default -1) or at or above
+  it (wet events, default 1). It returns a data frame with one row per
+  event and its start, end, duration, severity (the sum of the index
+  values, negative for droughts), intensity (severity / duration), peak
+  (the most extreme value) and time of the peak. It takes `spei` objects,
+  time series (univariate or multivariate), vectors and matrices; time
+  series give the times as labels such as "2011-05". Events shorter than
+  `min.duration` can be dropped, and events separated by a few time steps
+  can be merged (`pool`). A missing value breaks an event.
+
 * New dataset `tarazona`: annual basal area increment of 18 cores of Aleppo
   pine (*Pinus halepensis*) in the unthinned plot of a plantation at
   Tarazona (Spain), 1959-2017, and the climate of the site (precipitation,
