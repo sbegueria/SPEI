@@ -1,5 +1,6 @@
 ---
 title: "Relating the index to annual series: finding the best time scale"
+author: "S. Beguería"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Relating the index to annual series: finding the best time scale}
