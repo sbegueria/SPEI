@@ -168,24 +168,51 @@ or the share of months in moderate or worse drought:
 mean(spei12$fitted <= -1, na.rm = TRUE)
 ```
 
-`index_events()` lists the drought events: the runs of consecutive months
-with the index at or below -1. For each event it gives the first and the
-last month, the duration in months, the severity (the sum of the index
-values), the intensity (the severity divided by the duration) and the peak
-(the lowest value) with its month:
-
-```{r}
-index_events(spei12)
-```
-
-The 2011 drought started in May and was still going on at the end of the
-series. The argument `threshold` changes the threshold, `type = "wet"` gives
-the wet events, and `min.duration` drops the shortest events. See
-`?index_events` for the details.
-
 `summary()` shows the call, the values and the fitted parameters of the
 distribution for each calendar month, which are also in
 `spei12$coefficients`.
+
+## Drought events
+
+A drought event is a run of consecutive months with the index below a
+threshold (run theory). `index_events()` lists the events of a series. By
+default it takes the runs at or below -1, i.e. moderate or worse drought.
+For each event it gives the first and the last month, the duration in
+months, the severity (the sum of the index values), the intensity (the
+severity divided by the duration) and the peak (the lowest value) with its
+month:
+
+```{r}
+ev <- index_events(spei12)
+ev
+```
+
+The longest and most severe event lasted `r max(ev$duration)` months, from
+`r ev$start[which.max(ev$duration)]` to `r ev$end[which.max(ev$duration)]`.
+The 2011 drought started in May and was still going on at the end of the
+series. The events can be shown on the plot of the index:
+
+```{r, fig.alt = "SPEI-12 of Wichita from 1980 to 2011, with the drought events (runs at or below -1) shaded in red"}
+to_time <- function(x) {
+  as.numeric(substr(x, 1, 4)) + (as.numeric(substr(x, 6, 7)) - 1) / 12
+}
+plot(spei12$fitted, ylab = "SPEI-12", xlab = "Year")
+rect(to_time(ev$start), -4, to_time(ev$end) + 1 / 12, 4,
+  col = adjustcolor("red", 0.2), border = NA
+)
+abline(h = c(0, -1), lty = c(1, 3))
+```
+
+The argument `threshold` changes the threshold, and `type = "wet"` gives the
+wet events. `min.duration` drops events shorter than a number of months,
+and `pool` merges events separated by short gaps. For example, the droughts
+of at least six months, joining those separated by one or two months:
+
+```{r}
+index_events(spei12, min.duration = 6, pool = 2)
+```
+
+See `?index_events` for the details.
 
 ## The SPI
 
