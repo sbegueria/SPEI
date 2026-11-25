@@ -225,6 +225,24 @@ fit <- lm(rings ~ spei_best, data = d)
 summary(fit)$r.squared
 ```
 
+Plotting the two series together shows how closely the index of the best
+window follows the annual series. They are in different units, so here the
+ring series is standardized (mean 0, standard deviation 1) to plot it on
+the scale of the index:
+
+```{r, fig.alt = "Time plot of the standardized synthetic ring-width series and the SPEI of the best window (previous September, 3-month scale), which follow each other closely"}
+rings_std <- (rings - mean(rings)) / sd(rings)
+plot(spei_best, type = "l", col = "red", lwd = 2,
+  ylim = range(c(spei_best, rings_std), na.rm = TRUE),
+  xlab = "Year", ylab = "Standardized value"
+)
+lines(rings_std, col = "black", lwd = 2)
+abline(h = 0, lty = 3)
+legend("bottomleft", c("Ring width (standardized)", "SPEI, best window"),
+  col = c("black", "red"), lwd = 2, bty = "n"
+)
+```
+
 Any other window can be extracted by giving `cycle`, `scale` and `lag`:
 
 ```{r}
