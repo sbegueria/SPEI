@@ -190,21 +190,43 @@ ev
 The longest and most severe event lasted `r max(ev$duration)` months, from
 `r ev$start[which.max(ev$duration)]` to `r ev$end[which.max(ev$duration)]`.
 The 2011 drought started in May and was still going on at the end of the
-series. The events can be shown on the plot of the index:
+series.
 
-```{r, fig.alt = "SPEI-12 of Wichita from 1980 to 2011, with the drought events (runs at or below -1) shaded in red"}
+With `type = "wet"` the function gives the wet events instead: the runs at
+or above +1, with the severity and the peak now positive:
+
+```{r}
+ev_wet <- index_events(spei12, type = "wet")
+ev_wet
+```
+
+The wettest period lasted `r max(ev_wet$duration)` months, from
+`r ev_wet$start[which.max(ev_wet$severity)]` to
+`r ev_wet$end[which.max(ev_wet$severity)]`, with a peak of
+`r round(max(ev_wet$peak), 1)`.
+
+Both kinds of events can be shown on the plot of the index:
+
+```{r, fig.alt = "SPEI-12 of Wichita from 1980 to 2011, with the drought events (runs at or below -1) shaded in red and the wet events (runs at or above +1) shaded in blue"}
 to_time <- function(x) {
   as.numeric(substr(x, 1, 4)) + (as.numeric(substr(x, 6, 7)) - 1) / 12
 }
+shade <- function(ev, col) {
+  rect(to_time(ev$start), -4, to_time(ev$end) + 1 / 12, 4,
+    col = adjustcolor(col, 0.25), border = NA
+  )
+}
 plot(spei12$fitted, ylab = "SPEI-12", xlab = "Year")
-rect(to_time(ev$start), -4, to_time(ev$end) + 1 / 12, 4,
-  col = adjustcolor("red", 0.2), border = NA
+shade(ev, "red")
+shade(ev_wet, "blue")
+abline(h = c(-1, 0, 1), lty = c(3, 1, 3))
+legend("bottomleft", c("Drought events", "Wet events"),
+  fill = adjustcolor(c("red", "blue"), 0.25), border = NA, bty = "n"
 )
-abline(h = c(0, -1), lty = c(1, 3))
 ```
 
-The argument `threshold` changes the threshold, and `type = "wet"` gives the
-wet events. `min.duration` drops events shorter than a number of months,
+The argument `threshold` changes the threshold (by default -1 for droughts
+and +1 for wet events). `min.duration` drops events shorter than a number of months,
 and `pool` merges events separated by short gaps. For example, the droughts
 of at least six months, joining those separated by one or two months:
 
