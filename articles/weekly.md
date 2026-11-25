@@ -106,25 +106,122 @@ all.equal(
 
 ## Evapotranspiration
 
-The potential evapotranspiration functions of the package
-([`thornthwaite()`](https://sbegueria.github.io/SPEI/reference/Potential-evapotranspiration.md),
+[`thornthwaite()`](https://sbegueria.github.io/SPEI/reference/Potential-evapotranspiration.md)
+works with monthly data only, and gives an error with a time series of
+another frequency.
 [`hargreaves()`](https://sbegueria.github.io/SPEI/reference/Potential-evapotranspiration.md)
 and
-[`penman()`](https://sbegueria.github.io/SPEI/reference/Potential-evapotranspiration.md))
-work with monthly data only. They give an error with a time series of
-another frequency. For the SPEI at a finer resolution there are two
-options:
-
-- use reference evapotranspiration (ETo) or PET from another source, at
-  the same resolution as the precipitation, as in the `tarazona`
-  dataset;
-- compute PET daily, for example with the FAO-56 Penman-Monteith
-  equation (Allen et al., 1998) in another package, and sum it over each
-  period with `to_periods()`.
-
-A daily version of
 [`penman()`](https://sbegueria.github.io/SPEI/reference/Potential-evapotranspiration.md)
-is a pending request for the package (issue \#6 on GitHub).
+can also compute daily reference evapotranspiration (ETo). The date of
+each day is passed in the argument `dates`. The inputs are then daily
+values, and the result is the ETo of each day in mm per day. For a
+vector or a matrix input, the result is a `zoo` series indexed by the
+dates. The daily ETo can be summed over each period, like the
+precipitation.
+
+We try it on **synthetic** daily temperatures of two years at the
+latitude of Tarazona (41.87ºN). The minimum and maximum temperatures
+follow an annual cycle, built with
+[`sin()`](https://rdrr.io/r/base/Trig.html), plus random noise:
+
+``` r
+
+set.seed(2)
+day <- seq(as.Date("2001-01-01"), as.Date("2002-12-31"), by = "day")
+doy <- as.integer(format(day, "%j"))
+cycle_t <- sin(2 * pi * (doy - 105) / 365)
+tmin_day <- 6 + 8 * cycle_t + rnorm(length(day), sd = 2)
+tmax_day <- 18 + 11 * cycle_t + rnorm(length(day), sd = 2.5)
+tmax_day <- pmax(tmax_day, tmin_day + 1)
+
+eto_day <- hargreaves(tmin_day, tmax_day,
+  lat = 41.8667, dates = day,
+  verbose = FALSE
+)
+class(eto_day)
+#> [1] "zoo"
+head(eto_day, 3)
+#> 2001-01-01 2001-01-02 2001-01-03 
+#>  0.8680823  1.0392802  0.8303642
+```
+
+The daily ETo is summed over the quarter-months and the weeks with
+`to_periods()`, as the precipitation above:
+
+``` r
+
+eto_qm <- to_periods(as.numeric(eto_day), day, quarter_month(day), 48)
+eto_wk <- to_periods(as.numeric(eto_day), day, week52(day), 52)
+round(window(eto_qm, end = c(2001, 8)), 1)
+#> Time Series:
+#> Start = c(2001, 1) 
+#> End = c(2001, 8) 
+#> Frequency = 48 
+#> [1] 6.5 5.9 6.0 6.9 8.7 7.8 7.9 9.3
+```
+
+A `zoo` series can also be aggregated with
+[`aggregate()`](https://rdrr.io/r/stats/aggregate.html). For example, to
+monthly totals:
+
+``` r
+
+eto_month <- aggregate(eto_day, zoo::as.yearmon, sum)
+round(head(eto_month), 1)
+#> Jan 2001 Feb 2001 Mar 2001 Apr 2001 May 2001 Jun 2001 
+#>     25.3     33.7     62.6     99.4    145.4    173.7
+```
+
+The three resolutions give the same annual totals:
+
+``` r
+
+rbind(
+  quarter_month = as.numeric(aggregate(eto_qm, FUN = sum)),
+  week = as.numeric(aggregate(eto_wk, FUN = sum)),
+  month = tapply(as.numeric(eto_month), format(time(eto_month), "%Y"), sum)
+)
+#>                   2001   2002
+#> quarter_month 1090.343 1087.2
+#> week          1090.343 1087.2
+#> month         1090.343 1087.2
+```
+
+The plot shows the daily ETo and the mean daily ETo of each
+quarter-month in the first year:
+
+``` r
+
+first <- format(day, "%Y") == "2001"
+eto_qm_mean <- to_periods(as.numeric(eto_day), day, quarter_month(day), 48,
+  fun = mean
+)
+# First day of each quarter-month of 2001
+qm_start <- day[first & !duplicated(quarter_month(day))]
+plot(day[first], eto_day[first],
+  type = "l", col = "grey60",
+  xlab = "Date", ylab = "ETo (mm/day)"
+)
+lines(qm_start, window(eto_qm_mean, end = c(2001, 48)),
+  type = "s", col = "red", lwd = 2
+)
+legend("topleft", c("daily", "quarter-month mean"),
+  col = c("grey60", "red"), lwd = c(1, 2), bty = "n"
+)
+```
+
+![Daily reference evapotranspiration computed with the Hargreaves
+equation from synthetic temperatures at the latitude of Tarazona in
+2001, with the mean of each quarter-month as a step line. ETo is below 1
+mm per day in winter and about 6 mm per day in
+summer.](weekly_files/figure-html/unnamed-chunk-10-1.png)
+
+[`penman()`](https://sbegueria.github.io/SPEI/reference/Potential-evapotranspiration.md)
+works in the same way with `dates`. Its daily version needs the same
+inputs as the monthly one: radiation or sunshine hours, and if possible
+the wind speed and the humidity, all as daily values. ETo or PET from
+another source, at the same resolution as the precipitation, can also be
+used, as in the `tarazona` dataset.
 
 ## The tarazona data
 
@@ -197,7 +294,7 @@ plot(spei_qm[["12"]])
 ![SPEI at a time scale of 12 quarter-months (3 months) at Tarazona from
 1961 to 2020, with positive values in blue and negative values in red,
 and the reference period 1981-2010
-shaded](weekly_files/figure-html/unnamed-chunk-9-1.png)
+shaded](weekly_files/figure-html/unnamed-chunk-14-1.png)
 
 The values of the index for the last ten years at the four scales:
 
@@ -216,7 +313,7 @@ plot(window(idx, start = c(2011, 1)),
 
 ![SPEI at 4, 12, 24 and 48 quarter-months at Tarazona from 2011 to 2020.
 The series get smoother as the time scale
-increases.](weekly_files/figure-html/unnamed-chunk-10-1.png)
+increases.](weekly_files/figure-html/unnamed-chunk-15-1.png)
 
 ## Comparison with the monthly index
 
@@ -270,7 +367,7 @@ legend("bottomleft", c("12 quarter-months", "3 months"),
 ![SPEI at 12 quarter-months and at 3 months at Tarazona in 2011 and
 2012. The monthly values coincide with every fourth quarter-month value,
 and the quarter-month series shows changes within each
-month.](weekly_files/figure-html/unnamed-chunk-13-1.png)
+month.](weekly_files/figure-html/unnamed-chunk-18-1.png)
 
 This equality holds because the quarter-months fit exactly into the
 months. Weeks do not, so a weekly index is close to the monthly one but

@@ -161,21 +161,92 @@ day is lost:</p>
 <div class="section level2">
 <h2 id="evapotranspiration">Evapotranspiration<a class="anchor" aria-label="anchor" href="#evapotranspiration"></a>
 </h2>
-<p>The potential evapotranspiration functions of the package
-(<code><a href="../reference/Potential-evapotranspiration.html">thornthwaite()</a></code>, <code><a href="../reference/Potential-evapotranspiration.html">hargreaves()</a></code> and
-<code><a href="../reference/Potential-evapotranspiration.html">penman()</a></code>) work with monthly data only. They give an error
-with a time series of another frequency. For the SPEI at a finer
-resolution there are two options:</p>
-<ul>
-<li>use reference evapotranspiration (ETo) or PET from another source,
-at the same resolution as the precipitation, as in the
-<code>tarazona</code> dataset;</li>
-<li>compute PET daily, for example with the FAO-56 Penman-Monteith
-equation (Allen et al., 1998) in another package, and sum it over each
-period with <code>to_periods()</code>.</li>
-</ul>
-<p>A daily version of <code><a href="../reference/Potential-evapotranspiration.html">penman()</a></code> is a pending request for the
-package (issue #6 on GitHub).</p>
+<p><code><a href="../reference/Potential-evapotranspiration.html">thornthwaite()</a></code> works with monthly data only, and gives
+an error with a time series of another frequency.
+<code><a href="../reference/Potential-evapotranspiration.html">hargreaves()</a></code> and <code><a href="../reference/Potential-evapotranspiration.html">penman()</a></code> can also compute
+daily reference evapotranspiration (ETo). The date of each day is passed
+in the argument <code>dates</code>. The inputs are then daily values,
+and the result is the ETo of each day in mm per day. For a vector or a
+matrix input, the result is a <code>zoo</code> series indexed by the
+dates. The daily ETo can be summed over each period, like the
+precipitation.</p>
+<p>We try it on <strong>synthetic</strong> daily temperatures of two
+years at the latitude of Tarazona (41.87ºN). The minimum and maximum
+temperatures follow an annual cycle, built with <code><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin()</a></code>, plus
+random noise:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span></span>
+<span><span class="va">day</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2001-01-01"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2002-12-31"</span><span class="op">)</span>, by <span class="op">=</span> <span class="st">"day"</span><span class="op">)</span></span>
+<span><span class="va">doy</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/format.html" class="external-link">format</a></span><span class="op">(</span><span class="va">day</span>, <span class="st">"%j"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">cycle_t</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="fl">2</span> <span class="op">*</span> <span class="va">pi</span> <span class="op">*</span> <span class="op">(</span><span class="va">doy</span> <span class="op">-</span> <span class="fl">105</span><span class="op">)</span> <span class="op">/</span> <span class="fl">365</span><span class="op">)</span></span>
+<span><span class="va">tmin_day</span> <span class="op">&lt;-</span> <span class="fl">6</span> <span class="op">+</span> <span class="fl">8</span> <span class="op">*</span> <span class="va">cycle_t</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">day</span><span class="op">)</span>, sd <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="va">tmax_day</span> <span class="op">&lt;-</span> <span class="fl">18</span> <span class="op">+</span> <span class="fl">11</span> <span class="op">*</span> <span class="va">cycle_t</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">day</span><span class="op">)</span>, sd <span class="op">=</span> <span class="fl">2.5</span><span class="op">)</span></span>
+<span><span class="va">tmax_day</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">pmax</a></span><span class="op">(</span><span class="va">tmax_day</span>, <span class="va">tmin_day</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">eto_day</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Potential-evapotranspiration.html">hargreaves</a></span><span class="op">(</span><span class="va">tmin_day</span>, <span class="va">tmax_day</span>,</span>
+<span>  lat <span class="op">=</span> <span class="fl">41.8667</span>, dates <span class="op">=</span> <span class="va">day</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">eto_day</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "zoo"</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">eto_day</span>, <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="co">#&gt; 2001-01-01 2001-01-02 2001-01-03 </span></span>
+<span><span class="co">#&gt;  0.8680823  1.0392802  0.8303642</span></span></code></pre></div>
+<p>The daily ETo is summed over the quarter-months and the weeks with
+<code>to_periods()</code>, as the precipitation above:</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">eto_qm</span> <span class="op">&lt;-</span> <span class="fu">to_periods</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">eto_day</span><span class="op">)</span>, <span class="va">day</span>, <span class="fu">quarter_month</span><span class="op">(</span><span class="va">day</span><span class="op">)</span>, <span class="fl">48</span><span class="op">)</span></span>
+<span><span class="va">eto_wk</span> <span class="op">&lt;-</span> <span class="fu">to_periods</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">eto_day</span><span class="op">)</span>, <span class="va">day</span>, <span class="fu">week52</span><span class="op">(</span><span class="va">day</span><span class="op">)</span>, <span class="fl">52</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/window.html" class="external-link">window</a></span><span class="op">(</span><span class="va">eto_qm</span>, end <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2001</span>, <span class="fl">8</span><span class="op">)</span><span class="op">)</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Time Series:</span></span>
+<span><span class="co">#&gt; Start = c(2001, 1) </span></span>
+<span><span class="co">#&gt; End = c(2001, 8) </span></span>
+<span><span class="co">#&gt; Frequency = 48 </span></span>
+<span><span class="co">#&gt; [1] 6.5 5.9 6.0 6.9 8.7 7.8 7.9 9.3</span></span></code></pre></div>
+<p>A <code>zoo</code> series can also be aggregated with
+<code><a href="https://rdrr.io/r/stats/aggregate.html" class="external-link">aggregate()</a></code>. For example, to monthly totals:</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">eto_month</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/aggregate.html" class="external-link">aggregate</a></span><span class="op">(</span><span class="va">eto_day</span>, <span class="fu">zoo</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/zoo/man/yearmon.html" class="external-link">as.yearmon</a></span>, <span class="va">sum</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">eto_month</span><span class="op">)</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Jan 2001 Feb 2001 Mar 2001 Apr 2001 May 2001 Jun 2001 </span></span>
+<span><span class="co">#&gt;     25.3     33.7     62.6     99.4    145.4    173.7</span></span></code></pre></div>
+<p>The three resolutions give the same annual totals:</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span></span>
+<span>  quarter_month <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/aggregate.html" class="external-link">aggregate</a></span><span class="op">(</span><span class="va">eto_qm</span>, FUN <span class="op">=</span> <span class="va">sum</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  week <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/aggregate.html" class="external-link">aggregate</a></span><span class="op">(</span><span class="va">eto_wk</span>, FUN <span class="op">=</span> <span class="va">sum</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  month <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/tapply.html" class="external-link">tapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">eto_month</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/format.html" class="external-link">format</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/time.html" class="external-link">time</a></span><span class="op">(</span><span class="va">eto_month</span><span class="op">)</span>, <span class="st">"%Y"</span><span class="op">)</span>, <span class="va">sum</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt;                   2001   2002</span></span>
+<span><span class="co">#&gt; quarter_month 1090.343 1087.2</span></span>
+<span><span class="co">#&gt; week          1090.343 1087.2</span></span>
+<span><span class="co">#&gt; month         1090.343 1087.2</span></span></code></pre></div>
+<p>The plot shows the daily ETo and the mean daily ETo of each
+quarter-month in the first year:</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">first</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/format.html" class="external-link">format</a></span><span class="op">(</span><span class="va">day</span>, <span class="st">"%Y"</span><span class="op">)</span> <span class="op">==</span> <span class="st">"2001"</span></span>
+<span><span class="va">eto_qm_mean</span> <span class="op">&lt;-</span> <span class="fu">to_periods</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">eto_day</span><span class="op">)</span>, <span class="va">day</span>, <span class="fu">quarter_month</span><span class="op">(</span><span class="va">day</span><span class="op">)</span>, <span class="fl">48</span>,</span>
+<span>  fun <span class="op">=</span> <span class="va">mean</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co"># First day of each quarter-month of 2001</span></span>
+<span><span class="va">qm_start</span> <span class="op">&lt;-</span> <span class="va">day</span><span class="op">[</span><span class="va">first</span> <span class="op">&amp;</span> <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/duplicated.html" class="external-link">duplicated</a></span><span class="op">(</span><span class="fu">quarter_month</span><span class="op">(</span><span class="va">day</span><span class="op">)</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">day</span><span class="op">[</span><span class="va">first</span><span class="op">]</span>, <span class="va">eto_day</span><span class="op">[</span><span class="va">first</span><span class="op">]</span>,</span>
+<span>  type <span class="op">=</span> <span class="st">"l"</span>, col <span class="op">=</span> <span class="st">"grey60"</span>,</span>
+<span>  xlab <span class="op">=</span> <span class="st">"Date"</span>, ylab <span class="op">=</span> <span class="st">"ETo (mm/day)"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">qm_start</span>, <span class="fu"><a href="https://rdrr.io/r/stats/window.html" class="external-link">window</a></span><span class="op">(</span><span class="va">eto_qm_mean</span>, end <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2001</span>, <span class="fl">48</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  type <span class="op">=</span> <span class="st">"s"</span>, col <span class="op">=</span> <span class="st">"red"</span>, lwd <span class="op">=</span> <span class="fl">2</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/legend.html" class="external-link">legend</a></span><span class="op">(</span><span class="st">"topleft"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"daily"</span>, <span class="st">"quarter-month mean"</span><span class="op">)</span>,</span>
+<span>  col <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"grey60"</span>, <span class="st">"red"</span><span class="op">)</span>, lwd <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>, bty <span class="op">=</span> <span class="st">"n"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><img src="weekly_files/figure-html/unnamed-chunk-10-1.png" class="r-plt" alt="Daily reference evapotranspiration computed with the Hargreaves equation from synthetic temperatures at the latitude of Tarazona in 2001, with the mean of each quarter-month as a step line. ETo is below 1 mm per day in winter and about 6 mm per day in summer." width="672"></p>
+<p><code><a href="../reference/Potential-evapotranspiration.html">penman()</a></code> works in the same way with <code>dates</code>.
+Its daily version needs the same inputs as the monthly one: radiation or
+sunshine hours, and if possible the wind speed and the humidity, all as
+daily values. ETo or PET from another source, at the same resolution as
+the precipitation, can also be used, as in the <code>tarazona</code>
+dataset.</p>
 </div>
 <div class="section level2">
 <h2 id="the-tarazona-data">The tarazona data<a class="anchor" aria-label="anchor" href="#the-tarazona-data"></a>
@@ -188,7 +259,7 @@ ETo (<code>ETO</code>) are totals per period, in mm, and the
 temperatures are means of the period. See <code><a href="../reference/Datasets.html">?Datasets</a></code> for the
 details, and <code><a href="../articles/scale_scan.html">vignette("scale_scan")</a></code> for the tree growth
 data of the same site.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">tarazona</span><span class="op">)</span></span>
 <span><span class="va">clim</span> <span class="op">&lt;-</span> <span class="va">tarazona</span><span class="op">$</span><span class="va">clim</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/stats/time.html" class="external-link">frequency</a></span><span class="op">(</span><span class="va">clim</span><span class="op">)</span></span>
@@ -208,7 +279,7 @@ data of the same site.</p>
 <span><span class="co">#&gt; 1961.125  2.95 11.7  0.39 14.25</span></span>
 <span><span class="co">#&gt; 1961.146  1.35 15.0  4.53 16.24</span></span></code></pre></div>
 <p>The climatic water balance is the precipitation minus the ETo:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bal</span> <span class="op">&lt;-</span> <span class="va">clim</span><span class="op">[</span>, <span class="st">"PRCP"</span><span class="op">]</span> <span class="op">-</span> <span class="va">clim</span><span class="op">[</span>, <span class="st">"ETO"</span><span class="op">]</span></span></code></pre></div>
 </div>
 <div class="section level2">
@@ -219,7 +290,7 @@ are given in periods. Here we compute the SPEI at 4, 12, 24 and 48
 quarter-months (1, 3, 6 and 12 months). The reference period is given as
 year and period, from the first period of 1981 to the last period of
 2010:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">scales</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">12</span>, <span class="fl">24</span>, <span class="fl">48</span><span class="op">)</span></span>
 <span><span class="va">spei_qm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">scales</span>, <span class="kw">function</span><span class="op">(</span><span class="va">s</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="fu"><a href="../reference/Drought-indices.html">spei</a></span><span class="op">(</span><span class="va">bal</span>, <span class="va">s</span>, ref.start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1981</span>, <span class="fl">1</span><span class="op">)</span>, ref.end <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2010</span>, <span class="fl">48</span><span class="op">)</span>,</span>
@@ -229,12 +300,12 @@ year and period, from the first period of 1981 to the last period of
 <span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">spei_qm</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">scales</span></span></code></pre></div>
 <p>The <code>plot</code> method works as with monthly data. Here, the
 SPEI at 12 quarter-months:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">spei_qm</span><span class="op">[[</span><span class="st">"12"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
-<p><img src="weekly_files/figure-html/unnamed-chunk-9-1.png" class="r-plt" alt="SPEI at a time scale of 12 quarter-months (3 months) at Tarazona from 1961 to 2020, with positive values in blue and negative values in red, and the reference period 1981-2010 shaded" width="672"></p>
+<p><img src="weekly_files/figure-html/unnamed-chunk-14-1.png" class="r-plt" alt="SPEI at a time scale of 12 quarter-months (3 months) at Tarazona from 1961 to 2020, with positive values in blue and negative values in red, and the reference period 1981-2010 shaded" width="672"></p>
 <p>The values of the index for the last ten years at the four
 scales:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">idx</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">cbind</span>, <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">spei_qm</span>, <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="va">x</span><span class="op">$</span><span class="va">fitted</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">idx</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"SPEI-"</span>, <span class="va">scales</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/window.html" class="external-link">window</a></span><span class="op">(</span><span class="va">idx</span>, start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2011</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span>,</span>
@@ -244,14 +315,14 @@ scales:</p>
 <span>    <span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>h <span class="op">=</span> <span class="fl">0</span>, col <span class="op">=</span> <span class="st">"grey50"</span><span class="op">)</span></span>
 <span>  <span class="op">}</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><img src="weekly_files/figure-html/unnamed-chunk-10-1.png" class="r-plt" alt="SPEI at 4, 12, 24 and 48 quarter-months at Tarazona from 2011 to 2020. The series get smoother as the time scale increases." width="672"></p>
+<p><img src="weekly_files/figure-html/unnamed-chunk-15-1.png" class="r-plt" alt="SPEI at 4, 12, 24 and 48 quarter-months at Tarazona from 2011 to 2020. The series get smoother as the time scale increases." width="672"></p>
 </div>
 <div class="section level2">
 <h2 id="comparison-with-the-monthly-index">Comparison with the monthly index<a class="anchor" aria-label="anchor" href="#comparison-with-the-monthly-index"></a>
 </h2>
 <p>The monthly data are the sums of each group of four
 quarter-months:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">to_monthly</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/stats/ts.html" class="external-link">ts</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">colSums</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="va">x</span>, nrow <span class="op">=</span> <span class="fl">4</span><span class="op">)</span><span class="op">)</span>, start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/start.html" class="external-link">start</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, frequency <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
@@ -263,7 +334,7 @@ quarter-months:</p>
 the same days as the SPEI at 3 months in that month. The sums are the
 same, and the distribution of that period is fitted to the same values
 as the distribution of the month. So the two indices are equal:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">last</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/time.html" class="external-link">cycle</a></span><span class="op">(</span><span class="va">bal</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/Arithmetic.html" class="external-link">%%</a></span> <span class="fl">4</span> <span class="op">==</span> <span class="fl">0</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/all.equal.html" class="external-link">all.equal</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">spei_qm</span><span class="op">[[</span><span class="st">"12"</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">fitted</span><span class="op">[</span><span class="va">last</span><span class="op">]</span><span class="op">)</span>,</span>
@@ -273,7 +344,7 @@ as the distribution of the month. So the two indices are equal:</p>
 <p>The quarter-month index adds three values between each pair of
 monthly values. The plot shows both series in 2011 and 2012, with each
 value placed at the end of its window:</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">w</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/window.html" class="external-link">window</a></span><span class="op">(</span><span class="va">spei_qm</span><span class="op">[[</span><span class="st">"12"</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">fitted</span>, start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2011</span>, <span class="fl">1</span><span class="op">)</span>, end <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2012</span>, <span class="fl">48</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/window.html" class="external-link">window</a></span><span class="op">(</span><span class="va">spei_m3</span><span class="op">$</span><span class="va">fitted</span>, start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2011</span>, <span class="fl">1</span><span class="op">)</span>, end <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2012</span>, <span class="fl">12</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/time.html" class="external-link">time</a></span><span class="op">(</span><span class="va">w</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fl">1</span> <span class="op">/</span> <span class="fl">48</span>, <span class="va">w</span>,</span>
@@ -285,7 +356,7 @@ value placed at the end of its window:</p>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/legend.html" class="external-link">legend</a></span><span class="op">(</span><span class="st">"bottomleft"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"12 quarter-months"</span>, <span class="st">"3 months"</span><span class="op">)</span>,</span>
 <span>  col <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"grey40"</span>, <span class="st">"red"</span><span class="op">)</span>, lty <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="cn">NA</span><span class="op">)</span>, pch <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="cn">NA</span>, <span class="fl">19</span><span class="op">)</span>, bty <span class="op">=</span> <span class="st">"n"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><img src="weekly_files/figure-html/unnamed-chunk-13-1.png" class="r-plt" alt="SPEI at 12 quarter-months and at 3 months at Tarazona in 2011 and 2012. The monthly values coincide with every fourth quarter-month value, and the quarter-month series shows changes within each month." width="672"></p>
+<p><img src="weekly_files/figure-html/unnamed-chunk-18-1.png" class="r-plt" alt="SPEI at 12 quarter-months and at 3 months at Tarazona in 2011 and 2012. The monthly values coincide with every fourth quarter-month value, and the quarter-month series shows changes within each month." width="672"></p>
 <p>This equality holds because the quarter-months fit exactly into the
 months. Weeks do not, so a weekly index is close to the monthly one but
 not equal to it.</p>
@@ -298,7 +369,7 @@ not equal to it.</p>
 next. With one period (about a week) the index reflects the rain of
 single events. The correlation between consecutive values (lag-1
 autocorrelation) shows how fast the index changes:</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">spei_1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Drought-indices.html">spei</a></span><span class="op">(</span><span class="va">bal</span>, <span class="fl">1</span>, ref.start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1981</span>, <span class="fl">1</span><span class="op">)</span>, ref.end <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2010</span>, <span class="fl">48</span><span class="op">)</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span><span class="op">$</span><span class="va">fitted</span></span>
@@ -338,7 +409,7 @@ an annual series with the index in each period of the year and at each
 time scale. For example, to scan the tree growth of the
 <code>tarazona</code> dataset at time scales of 4 to 96 quarter-months
 (rbai being the detrended growth of the cores):</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/Scale-scan.html">scale_scan</a></span><span class="op">(</span><span class="va">bal</span>, <span class="va">rbai</span>, scales <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">96</span>, by <span class="op">=</span> <span class="fl">4</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>See <code><a href="../articles/scale_scan.html">vignette("scale_scan")</a></code> for the complete example.</p>
 </div>
