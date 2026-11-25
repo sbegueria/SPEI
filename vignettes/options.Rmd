@@ -266,6 +266,119 @@ If they are frequent, check the reference period and the distribution:
 a longer reference period, or a different distribution, may fit the data
 better.
 
+## Evapotranspiration method
+
+The SPEI depends on the potential evapotranspiration (PET) used to compute
+the water balance. `vignette("SPEI")` compares the levels given by the PET
+methods. The choice matters even more for trends, and in particular for the
+response of the index to warming.
+
+Milly and Dunne (2016) compared the PET of the Penman-Monteith equation,
+computed from the outputs of 16 climate models, with the evapotranspiration
+that the same models simulate where the surface is not short of water.
+Penman-Monteith reproduced the present level well, but it overestimated the
+increase under warming by about a factor of two, partly because it ignores
+the closure of stomata that the models simulate under higher CO2. They proposed an "energy-only" PET, 80% of the
+available energy, PET = 0.8 (Rn − G), which predicted the change much
+better. It is available as `penman(..., method = "energy")`. It needs no
+wind data, but it uses the same radiation and humidity inputs as the other
+methods.
+
+We compute both for Wichita, with the sunshine duration for the radiation:
+
+```{r}
+pet_fao <- penman(wichita[, "TMIN"], wichita[, "TMAX"], wichita[, "AWND"],
+  tsun = wichita[, "TSUN"], lat = 37.6475, z = 402.6,
+  method = "FAO", na.rm = TRUE, verbose = FALSE
+)
+pet_eo <- penman(wichita[, "TMIN"], wichita[, "TMAX"],
+  tsun = wichita[, "TSUN"], lat = 37.6475, z = 402.6,
+  method = "energy", na.rm = TRUE, verbose = FALSE
+)
+# Use the same months for both (the FAO method also needs wind data)
+pet_eo[is.na(pet_fao)] <- NA
+round(12 * c(FAO = mean(pet_fao, na.rm = TRUE),
+  energy = mean(pet_eo, na.rm = TRUE)))
+```
+
+The energy-only PET is about a quarter lower than the FAO reference
+evapotranspiration in this dry, windy climate, where the aerodynamic term of
+Penman-Monteith is large. Note that the net radiation computed by `penman()`
+is that of a reference grass surface, not the land surface simulated by a
+climate model, so this is an approximation of the method of Milly and Dunne.
+
+The difference matters most under warming. A simple sensitivity test adds a
+uniform warming to the temperatures and keeps everything else unchanged
+(precipitation, sunshine and wind; the humidity is estimated from the
+minimum temperature, so the relative humidity is roughly kept):
+
+```{r}
+pet_warm <- function(dT, method) {
+  suppressWarnings(penman(wichita[, "TMIN"] + dT, wichita[, "TMAX"] + dT,
+    if (method == "FAO") wichita[, "AWND"],
+    tsun = wichita[, "TSUN"], lat = 37.6475, z = 402.6,
+    method = method, na.rm = TRUE, verbose = FALSE
+  ))
+}
+change <- sapply(c(1, 2, 4), function(dT) {
+  c(
+    FAO = mean(pet_warm(dT, "FAO") / pet_fao, na.rm = TRUE),
+    energy = mean(pet_warm(dT, "energy")[!is.na(pet_fao)] /
+      pet_eo[!is.na(pet_fao)], na.rm = TRUE)
+  )
+})
+colnames(change) <- c("+1 ºC", "+2 ºC", "+4 ºC")
+round(100 * (change - 1), 1) # change of PET, %
+```
+
+The FAO PET rises by about `r round(100 * (change["FAO", 1] - 1))`% per
+degree, the energy-only PET by about
+`r round(100 * (change["energy", 1] - 1))`%. To see the effect on the
+index, we fit the SPEI-12 to the present climate and apply the same
+parameters (see 'Reusing the fitted parameters') to the water balance with
+4 ºC of warming:
+
+```{r, fig.alt = "SPEI-12 of Wichita computed with the FAO and the energy-only PET, for the present climate and with 4 degrees of warming applied with the parameters of the present climate. With the FAO PET the warmed series is shifted much further towards drought."}
+warm_spei <- function(method, pet0) {
+  s0 <- spei(prcp - pet0, 12, na.rm = TRUE, verbose = FALSE)
+  s4 <- spei(prcp - pet_warm(4, method), 12,
+    na.rm = TRUE, params = s0$coefficients, verbose = FALSE
+  )
+  list(present = s0$fitted, warm = s4$fitted)
+}
+w_fao <- warm_spei("FAO", pet_fao)
+w_eo <- warm_spei("energy", pet_eo)
+res <- sapply(list(FAO = w_fao, energy = w_eo), function(w) {
+  c(
+    mean_shift = mean(w$warm - w$present, na.rm = TRUE),
+    drought_present = mean(w$present <= -1, na.rm = TRUE),
+    drought_warm = mean(w$warm <= -1, na.rm = TRUE)
+  )
+})
+round(res, 2)
+par(mfrow = c(2, 1), mar = c(3, 4, 2, 1))
+for (m in c("FAO", "energy")) {
+  w <- if (m == "FAO") w_fao else w_eo
+  plot(w$present, ylim = c(-4, 3), ylab = "SPEI-12",
+    main = paste0(m, " PET: present (black) and +4 ºC (red)"))
+  lines(w$warm, col = "red")
+  abline(h = c(0, -1), lty = c(1, 3))
+}
+```
+
+With the FAO PET, 4 ºC of warming alone, with no change in precipitation,
+shifts the SPEI-12 by about `r round(mean(w_fao$warm - w_fao$present,
+na.rm = TRUE), 1)` and makes the share of months in moderate or worse
+drought rise from `r round(100 * mean(w_fao$present <= -1, na.rm = TRUE))`%
+to `r round(100 * mean(w_fao$warm <= -1, na.rm = TRUE))`%. With the
+energy-only PET the shift is
+`r round(mean(w_eo$warm - w_eo$present, na.rm = TRUE), 1)`. This test is
+deliberately simple: real warming also changes humidity, radiation, wind and
+precipitation, and the vegetation response is not represented by either
+method. But it shows that trends and projections of the SPEI under warming
+depend strongly on the PET method, which should be chosen and reported with
+care. Comparing the results of both methods is a useful check.
+
 ## References
 
 Guttman, N.B. (1999). Accepting the Standardized Precipitation Index: a
@@ -277,3 +390,7 @@ McKee, T.B., Doesken, N.J., Kleist, J. (1993). The relationship of drought
 frequency and duration to time scales. In *Proceedings of the 8th Conference
 on Applied Climatology*, 17–22 January 1993, Anaheim, California. American
 Meteorological Society, Boston, 179–184.
+
+Milly, P.C.D., Dunne, K.A. (2016). Potential evapotranspiration and
+continental drying. *Nature Climate Change*, 6, 946–949.
+<https://doi.org/10.1038/nclimate3046>

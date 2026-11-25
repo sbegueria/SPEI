@@ -72,7 +72,9 @@
 #' @param crop   optional, character string, type of reference crop. Either
 #' one of 'short' (default) or 'tall'.
 #' @param method   optional, character string, Penman-Monteith calculation
-#' method. Either one of 'ICID' (default), 'FAO', or 'ASCE'.
+#' method. Either one of 'ICID' (default), 'FAO', or 'ASCE'; or 'energy' for
+#' the energy-only potential evapotranspiration of Milly and Dunne (2016),
+#' 0.8 (Rn - G), which does not use the wind speed (see Details).
 #' @param verbose   optional, logical, report the computation options during
 #' calculation. Either 'TRUE' (default) or 'FALSE'. The report is issued as
 #' a message, so it can also be silenced with \code{suppressMessages()}.
@@ -220,6 +222,38 @@
 #' are not FAO procedures. The tall reference crop (\code{crop = 'tall'})
 #' follows ASCE-EWRI (Walter et al., 2002; ASCE-EWRI, 2005).
 #'
+#' \strong{Energy-only potential evapotranspiration.} With
+#' \code{method = 'energy'}, \code{penman} computes the energy-only potential
+#' evapotranspiration proposed by Milly and Dunne (2016), PET = 0.8 (Rn - G),
+#' with the available energy Rn - G (MJ m-2 d-1) converted to an equivalent
+#' depth of water with the latent heat of vaporization of their equation 2,
+#' which depends on the mean air temperature T (ºC): Lv = 2.501 - 0.002361 T
+#' MJ kg-1, so PET = 0.8 (Rn - G) / Lv mm d-1. Milly and Dunne (2016) do not
+#' say how negative values are treated; as with the other methods, they are
+#' set to 0 here, and monthly values are
+#' multiplied by the number of days in the month. Milly and Dunne (2016)
+#' found that the Penman-Monteith equation, driven by the projected
+#' increase of the vapour pressure deficit, overestimates the increase of
+#' the evaporative demand under warming (and thus the drying of the
+#' continents) with respect to the evapotranspiration of non-water-stressed
+#' vegetation simulated by climate models, which was much better described
+#' by a fixed fraction of the available energy. The energy-only estimate is
+#' therefore much less sensitive to warming than \code{penman} with the
+#' other methods. Rn and G are computed exactly as for the other methods:
+#' Rn is the net radiation of the reference grass surface (albedo 0.23, net
+#' longwave radiation from \code{Tmin}, \code{Tmax}, the actual vapour
+#' pressure and Rs/Rso), with any of the routes for the solar radiation
+#' (\code{Rs}, \code{tsun}, \code{CC} or the temperature range with
+#' \code{kRs}) and for the actual vapour pressure (\code{ed}, \code{Tdew},
+#' \code{RH} as in FAO-56 eq. 19, or \code{Tmin} - \code{aT}); and G is
+#' computed from the monthly mean temperatures (FAO-56 eq. 43) or set to 0
+#' with daily data. Milly and Dunne (2016) used instead the net radiation
+#' and ground heat flux of the actual land surface simulated by the climate
+#' models, so the result is an approximation of their method. The wind
+#' speed, the atmospheric pressure, the crop and the CO2 concentration are
+#' not used: \code{U2}, \code{CO2} and \code{crop = 'tall'} are ignored
+#' with a warning, and \code{P} and \code{P0} are ignored.
+#'
 #' The function will produce an error message if a valid combination of input
 #' parameters is not provided.
 #' If \code{verbose} is `TRUE` (the default value), a message will be produced
@@ -331,6 +365,10 @@
 #' Evapotranspiration July 9, 2002, EWRI–Am. Soc. Civil Engr., Reston, VA,
 #' 57 pp.
 #'
+#' Milly, P.C.D., Dunne, K.A., 2016. Potential evapotranspiration and
+#' continental drying. \emph{Nature Climate Change} \bold{6}: 946–949.
+#' DOI:10.1038/nclimate3046.
+#'
 #' Yang, Y., Roderick, M.L., Zhang, S. McVicar, T., Donohue, R.J., 2019.
 #' Hydrologic implications of vegetation response to elevated CO2 in climate
 #' projections. \emph{Nature Climate Change} \bold{9}: 44–48.
@@ -434,6 +472,14 @@
 #'   na.rm = TRUE, method = "FAO"
 #' )
 #' plot(ts(cbind(pen_icid, pen_asce, pen_fao), fr = 12))
+#'
+#' # Energy-only potential evapotranspiration (Milly and Dunne, 2016); the
+#' # wind speed is not needed
+#' pen_energy <- penman(TMIN, TMAX,
+#'   tsun = TSUN, lat = 37.6475, z = 402.6,
+#'   na.rm = TRUE, method = "energy"
+#' )
+#' plot(ts(cbind(pen_fao, pen_energy), fr = 12))
 #'
 #' # Different CO2 concentrations
 #'
