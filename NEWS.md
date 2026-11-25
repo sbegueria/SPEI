@@ -44,6 +44,37 @@
   monthly only and gives an error with `dates`. Without `dates` (the default) the
   results are the same as before.
 
+* `<penman>` implements the Penman-Monteith temperature approach (PMT) of
+  the revised FAO-56 (Pereira et al., 2025, FAO Irrigation and Drainage
+  Paper 56 Rev.1, <https://doi.org/10.4060/cd6621en>), recommended over the
+  Hargreaves-Samani equation when only maximum and minimum temperatures are
+  available (#93). When none of `Rs`, `tsun` or `CC` is given (or they
+  contain only `NA`), the incoming solar radiation is estimated from the
+  temperature range, Rs = kRs sqrt(Tmax - Tmin) Ra (eq. 3.52), limited to
+  the clear-sky radiation Rso; this used to be an error. The new argument
+  `kRs` (default 0.16 for interior locations; 0.19 for coastal locations)
+  takes one value or one value per site, and is ignored with a warning if
+  radiation data are given. The new argument `aT` (default 0) gives the
+  difference between `Tmin` and the dewpoint temperature, Tdew = Tmin - aT
+  (eqs. 2.6-2.7), when the actual vapour pressure is estimated from `Tmin`;
+  the revision suggests 0 in humid regions and up to 4-6 ºC in hyper-arid
+  regions. With the default `aT = 0` the results are the same as before.
+  `tsun` without `lat` now gives a specific error. The documentation
+  describes what is new in the revision: the FAO Penman-Monteith equation
+  is unchanged from the 1998 edition, and the cloud cover (`CC`) route and
+  the CO2 correction are not FAO procedures.
+
+## Changes in results
+
+* `<penman>`: wind speeds `U2` below 0.5 m s-1 are set to 0.5 m s-1, as
+  recommended by the revised FAO-56 (Pereira et al., 2025, p. 105) to
+  account for the exchange of vapour by buoyancy under calm conditions.
+  This applies to all three methods (`ICID`, `FAO` and `ASCE`) and changes
+  the result only where `U2 < 0.5`; a message reports how many values were
+  changed. The `wichita` and `cabinda` examples and the regression
+  baselines are not affected (their lowest monthly wind speeds are 3.49 and
+  0.80 m s-1).
+
 # SPEI 1.9.0
 
 ## Changes in results with respect to 1.8.1

@@ -20,7 +20,7 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
                    tsun = NULL, CC = NULL, ed = NULL, Tdew = NULL, RH = NULL,
                    P = NULL, P0 = NULL, CO2 = NULL, z = NULL, crop = "short",
                    na.rm = FALSE, method = "ICID", verbose = TRUE,
-                   dates = NULL) {
+                   dates = NULL, kRs = NULL, aT = 0) {
   ### Argument check - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
   # Determine which combinations of inputs were passed and check their
@@ -33,9 +33,28 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
   # A list of computation options
   using <- list(
     U2 = FALSE, Ra = FALSE, lat = FALSE, Rs = FALSE, tsun = FALSE,
-    CC = FALSE, ed = FALSE, Tdew = FALSE, Tmin = FALSE, RH = FALSE,
-    P = FALSE, P0 = FALSE, CO2 = FALSE, z = FALSE, na.rm = FALSE
+    CC = FALSE, kRs = FALSE, ed = FALSE, Tdew = FALSE, Tmin = FALSE,
+    RH = FALSE, P = FALSE, P0 = FALSE, CO2 = FALSE, z = FALSE, na.rm = FALSE
   )
+
+  # Radiation inputs that are NULL or contain only missing values are
+  # treated as not provided
+  given <- function(x) !is.null(x) && !all(is.na(x))
+  # Short description of a scalar or per-site parameter, for the messages
+  describe <- function(x) {
+    x <- unique(as.vector(x))
+    if (length(x) > 3) {
+      return("one value per site")
+    }
+    paste(format(x, digits = 3), collapse = ", ")
+  }
+  for (v in c("Rs", "tsun", "CC")) {
+    x <- get(v)
+    if (!is.null(x) && !given(x)) {
+      warn$push(paste0("`", v, "` contains only NA values and is ignored."))
+      assign(v, NULL)
+    }
+  }
 
   # Check optional inputs
   if (!is.null(U2)) {
@@ -64,8 +83,31 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
   } else if (!is.null(CC)) {
     using$CC <- TRUE
     warn$push("Using fraction cloud cover (`CC`) to estimate incoming solar radiation.")
+  } else if (!is.null(tsun)) {
+    check$push("Sunshine duration (`tsun`) can only be used together with the latitude (`lat`).")
   } else {
-    check$push("One of `Rs`, the pair `tsun` and `lat`, or `CC` must be provided.")
+    # Temperature-only Penman-Monteith (PMT; FAO-56 Rev.1, eq. 3.52)
+    using$kRs <- TRUE
+    if (is.null(kRs)) {
+      kRs <- 0.16
+    }
+    warn$push(paste0(
+      "No radiation data (`Rs`, `tsun` or `CC`) provided, so estimating ",
+      "incoming solar radiation from the temperature range with `kRs` = ",
+      describe(kRs),
+      " (FAO-56 Rev.1 eq. 3.52)."
+    ))
+  }
+  if (!using$kRs && !is.null(kRs)) {
+    warning(
+      "`kRs` is ignored because radiation data (`Rs`, `tsun` or `CC`) ",
+      "were provided.",
+      call. = FALSE
+    )
+  }
+  if (using$kRs && (!is.numeric(kRs) || anyNA(kRs) ||
+    any(kRs < 0.1 | kRs > 0.35))) {
+    check$push("Argument `kRs` must be numeric, without NA, between 0.1 and 0.35.")
   }
 
   if (!is.null(ed)) {
@@ -79,9 +121,22 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
     warn$push("Using relative humidity (`RH`) to estimate actual vapour pressure.")
   } else if (!is.null(Tmin)) {
     using$Tmin <- TRUE
-    warn$push("Using minimum temperature (`Tmin`) to estimate dewpoint temperature and actual vapour pressure.")
+    warn$push(paste0(
+      "Using minimum temperature (`Tmin`) to estimate dewpoint temperature ",
+      "and actual vapour pressure (Tdew = Tmin - aT, with `aT` = ",
+      describe(aT), ")."
+    ))
   } else {
     check$push("One of `ed`, `Tdew`, `RH` or `Tmin` must be provided.")
+  }
+  if (!is.numeric(aT) || anyNA(aT) || any(aT < -5 | aT > 10)) {
+    check$push("Argument `aT` must be numeric, without NA, between -5 and 10.")
+  } else if (!using$Tmin && any(aT != 0)) {
+    warning(
+      "`aT` is ignored because humidity data (`ed`, `Tdew` or `RH`) were ",
+      "provided.",
+      call. = FALSE
+    )
   }
 
   if (is.null(z)) {
@@ -270,12 +325,26 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
   if (using$z && sum(lengths(z)) != n_sites) {
     check$push("`z` has incorrect length.")
   }
+  if (using$kRs && !length(kRs) %in% c(1, n_sites)) {
+    check$push("`kRs` must have length 1 or one value per site.")
+  }
+  if (using$Tmin && !length(aT) %in% c(1, n_sites)) {
+    check$push("`aT` must have length 1 or one value per site.")
+  }
 
   # Create uniformly dimensioned arrays from input
   Tmin <- array(data.matrix(Tmin), int_dims)
   Tmax <- array(data.matrix(Tmax), int_dims)
   if (using$U2) {
     U2 <- array(data.matrix(U2), int_dims)
+    # Lower limit of 0.5 m s-1 (FAO-56 Rev.1, p. 105)
+    n_calm <- sum(U2 < 0.5, na.rm = TRUE)
+    if (n_calm > 0) {
+      warn$push(paste0(
+        n_calm, " values of `U2` below 0.5 m s-1 were set to 0.5 m s-1."
+      ))
+      U2 <- pmax(U2, 0.5)
+    }
   } else {
     U2 <- array(2, int_dims)
   }
@@ -288,6 +357,13 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
   }
   if (using$Rs) {
     Rs <- array(data.matrix(Rs), int_dims)
+  }
+  # per-site parameters: copy and permute into correct dimensions
+  site_array <- function(x) {
+    aperm(
+      array(rep_len(as.vector(x), n_sites), int_dims[c(2, 3, 1)]),
+      c(3, 1, 2)
+    )
   }
   if (using$tsun) {
     tsun <- array(data.matrix(tsun), int_dims)
@@ -338,6 +414,14 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
 
 
   ### Computation of ETo - - - - - - - - - - - - - - - - - - - - - - - - -
+
+  # Per-site parameters as arrays
+  if (using$kRs) {
+    kRs <- site_array(kRs)
+  }
+  if (using$Tmin) {
+    aT <- site_array(aT)
+  }
 
   # Mean temperature
   Tmean <- (Tmin + Tmax) / 2
@@ -409,10 +493,10 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
       ed <- ea * (RH / 100)
     }
   } else if (using$Tmin) {
-    # (ICID, eq. 1.19, p. 69)
-    ed <- etmn
-    # for arid climates, FAO-56 recommends ed = etmn_2
-    # etmn_2 <- 0.611*exp((17.27*(Tmin-2))/(Tmin - 2 + 237.3))
+    # (ICID, eq. 1.19, p. 69; FAO-56 Rev.1, eqs. 2.6-2.7): dewpoint
+    # temperature Tdew = Tmin - aT, with aT = 0 by default
+    Tdew <- Tmin - aT
+    ed <- 0.611 * exp((17.27 * Tdew) / (Tdew + 237.3))
   } else {
     stop(paste(
       "An error occurred while computing the actual vapour",
@@ -421,7 +505,7 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
   }
 
   # Sunset hour angle (needed if no radiation data is available)
-  if (!using$Ra | (!using$Rs & using$tsun)) {
+  if (!using$Ra | using$tsun) {
     # Note: For the winter months and latitudes higher than 55º the following
     # equations have limited validity (Allen et al., 1994).
     # J: number of day in the year (eq. 1.27); mid-month day for monthly
@@ -465,14 +549,19 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
       # Based on cloud cover
       nN <- (100 - CC) / 100
     }
-    # (eq. 1.37)
-    as <- 0.25
-    bs <- 0.5
-    Rs <- (as + bs * (nN)) * Ra
   }
   # Rso: clear-sky solar radiation (eq. 1.40)
   # Note: mostly valid for z<6000 m and low air turbidity
   Rso <- (0.75 + 2e-5 * z) * Ra
+  if (using$tsun || using$CC) {
+    # (eq. 1.37)
+    as <- 0.25
+    bs <- 0.5
+    Rs <- (as + bs * (nN)) * Ra
+  } else if (using$kRs) {
+    # Temperature range (FAO-56 Rev.1, eq. 3.52), limited to Rso
+    Rs <- pmin(kRs * sqrt(pmax(Tmax - Tmin, 0)) * Ra, Rso)
+  }
   # Empirical constants
   ac <- 1.35
   bc <- -0.35

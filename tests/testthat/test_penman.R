@@ -34,17 +34,22 @@ test_that("No Ra or lat provided", {
   )
 })
 
-test_that("No Rs nor tsun provided", {
-  expect_error(
+test_that("No Rs, tsun nor CC provided: temperature-only method (PMT)", {
+  # Formerly an error; now Rs is estimated from the temperature range
+  # (FAO-56 Rev.1 eq. 3.52). See test_penman_pmt.R.
+  expect_message(
     penman(TMIN, TMAX, AWND, lat = 37.6475, z = 402.6, na.rm = TRUE),
-    "One of `Rs`, the pair `tsun` and `lat`, or `CC` must be provided."
+    "estimating incoming solar radiation from the temperature range"
   )
 })
 
-test_that("No Rs nor CC provided", {
+test_that("tsun without lat is an error", {
   expect_error(
-    penman(TMIN, TMAX, AWND, lat = 37.6475, z = 402.6, na.rm = TRUE),
-    "One of `Rs`, the pair `tsun` and `lat`, or `CC` must be provided."
+    penman(TMIN, TMAX, AWND,
+      Ra = rep(30, length(TMIN)), tsun = TSUN, z = 402.6,
+      na.rm = TRUE
+    ),
+    "Sunshine duration \\(`tsun`\\) can only be used together with the latitude"
   )
 })
 

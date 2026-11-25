@@ -15,7 +15,7 @@ verbose=TRUE, dates = NULL)
 penman(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL, tsun = NULL,
        CC = NULL, ed = NULL, Tdew = NULL, RH = NULL, P = NULL, P0 = NULL,
        CO2 = NULL, z = NULL, crop='short', na.rm = FALSE, method='ICID',
-       verbose=TRUE, dates = NULL)
+       verbose=TRUE, dates = NULL, kRs = NULL, aT = 0)
 
 penman(
   Tmin,
@@ -37,7 +37,9 @@ penman(
   na.rm = FALSE,
   method = "ICID",
   verbose = TRUE,
-  dates = NULL
+  dates = NULL,
+  kRs = NULL,
+  aT = 0
 )
 
 thornthwaite(Tave, lat, na.rm = FALSE, verbose = TRUE)
@@ -79,7 +81,8 @@ are monthly. See Details.}
 array of monthly mean daily wind speeds at 2 m height, m s-1. No height
 conversion is applied, so wind speeds measured at other heights must be
 converted to 2 m by the user (e.g., FAO-56 eq. 47). If not provided, a
-constant value of 2 m s-1 is used.}
+constant value of 2 m s-1 is used. Values below 0.5 m s-1 are set to
+0.5 m s-1 (Pereira et al., 2025, p. 105).}
 
 \item{Rs}{optional, a numeric vector, tsvector, matrix, tsmatrix, or 3-d
 array of monthly mean daily incoming solar radiation, MJ m-2 d-1.}
@@ -123,6 +126,23 @@ one of 'short' (default) or 'tall'.}
 
 \item{method}{optional, character string, Penman-Monteith calculation
 method. Either one of 'ICID' (default), 'FAO', or 'ASCE'.}
+
+\item{kRs}{optional, a single numeric value, or one value per site (a
+vector, or a matrix for 3-d array input), with the radiation adjustment
+coefficient of the temperature-only method (Pereira et al., 2025, eq.
+3.52), ºC^-0.5. Only used by \code{penman} when no radiation data
+(\code{Rs}, \code{tsun} or \code{CC}) are given; otherwise it is ignored
+with a warning. It must be between 0.1 and 0.35. If \code{NULL} (the
+default), 0.16 is used. See Details.}
+
+\item{aT}{optional, a single numeric value, or one value per site (a
+vector, or a matrix for 3-d array input), with the difference between the
+minimum temperature and the dewpoint temperature, ºC (Pereira et al.,
+2025, eq. 2.6). Only used by \code{penman} when the actual vapour
+pressure is estimated from \code{Tmin} (no \code{ed}, \code{Tdew} or
+\code{RH} given); otherwise a non-zero value is ignored with a warning.
+It must be between -5 and 10. The default, 0, assumes that the
+dewpoint temperature equals the minimum temperature. See Details.}
 
 \item{Tave}{a numeric vector, tsvector, matrix, tsmatrix, or 3-d array of
 monthly mean temperatures, ºC.}
@@ -208,11 +228,14 @@ by setting the \code{crop} parameter to 'tall'.
 The method requires data on the incoming solar radiation, \code{Rs};
 since this is seldom available, the code will estimate it from data on the
 bright sunshine duration \code{tsun}, or alternatively from data on the
-percent cloud cover \code{CC}. Similarly, if data on the actual vapour
-pressure \code{ed} are not available, it is possible to estimate it from
-the dew point temperature \code{Tdew}, from the relative humidity \code{RH}
-or even from the minimum temperature \code{Tmin} (sorted from least to most
-uncertain method). Similarly, the atmospheric surface pressure \code{P}
+percent cloud cover \code{CC}. If none of \code{Rs}, \code{tsun} or
+\code{CC} is given (or they contain only missing values), \code{Rs} is
+estimated from the temperature range (see below). Similarly, if data on
+the actual vapour pressure \code{ed} are not available, it is possible to
+estimate it from the dew point temperature \code{Tdew}, from the relative
+humidity \code{RH} or even from the minimum temperature \code{Tmin}
+(sorted from least to most uncertain method), as the saturation vapour
+pressure at Tdew = Tmin - \code{aT}. Similarly, the atmospheric surface pressure \code{P}
 required for computing the psychrometric constant can be calculated from the
 atmospheric pressure at sea level \code{P0} and the elevation \code{z},
 or else from the elevation \code{z} assuming a sea level pressure of
@@ -222,7 +245,10 @@ compute the clear-sky solar radiation, Rso = (0.75 + 2e-5 z) Ra. The
 ratio Rs/Rso used in the net longwave radiation term is limited to 1.
 Wind speed \code{U2} must refer to 2 m height, as no height conversion is
 applied. If no wind speed data \code{U2} are available, a constant value
-of 2 m s-1 is used.
+of 2 m s-1 is used. Wind speeds below 0.5 m s-1 are set to 0.5 m s-1,
+with all three methods, following Pereira et al. (2025, p. 105): under
+calm conditions the buoyancy of warm air still promotes the exchange of
+vapour at the surface.
 Custom CO2 atmospheric concentration \code{CO2} can also be provided,
 following Yang et al. (2019): the term 0.00024 (CO2 - 300) is added to the
 wind coefficient of the denominator (0.34 for the short crop, 0.38 for the
@@ -234,6 +260,42 @@ in mean temperature between the previous and the following months
 last time steps. \code{penman} works with series of any length; with a
 single time step G is set to 0. With daily data (\code{dates}), G is
 always 0.
+
+\strong{FAO-56 revision 1 and the temperature-only method.} The revision
+of FAO-56 (Pereira et al., 2025) keeps the FAO Penman-Monteith equation
+and its components unchanged from Allen et al. (1998). It recommends the
+Penman-Monteith temperature approach (PMT) over the Hargreaves-Samani
+equation (\code{hargreaves}) when only maximum and minimum temperatures
+are available, because the Penman-Monteith equation keeps the physical
+relations between the weather variables. In PMT the missing variables are
+estimated as follows, and \code{penman} does so when only \code{Tmin} and
+\code{Tmax} are given:
+\itemize{
+  \item Solar radiation: Rs = kRs sqrt(Tmax - Tmin) Ra (Pereira et al.,
+  2025, eq. 3.52), limited to Rso. The coefficient \code{kRs} was
+  originally 0.16 for interior locations and 0.19 for coastal locations
+  (Hargreaves and Samani, as cited by Pereira et al., 2025). Pereira et
+  al. (2025, eqs. 3.53 and 3.54) also give regressions of kRs on the
+  long-term means of Tmax - Tmin, wind speed and relative humidity, for
+  all climates or by aridity class;
+  these are not implemented, but their result can be passed as
+  \code{kRs}. The default is 0.16.
+  \item Humidity: Tdew = Tmin - aT (Pereira et al., 2025, eqs. 2.6 and
+  2.7), with aT depending on the aridity of the region (UNEP aridity
+  index, AI): 4-6 ºC in hyper-arid regions (AI < 0.05), 2-3 ºC in arid
+  regions (0.05-0.20), 1-2 ºC in semiarid regions (0.20-0.50), 0-1 ºC in
+  dry sub-humid regions (0.50-0.65) and 0 ºC in moist sub-humid and humid
+  regions (AI >= 0.65). The value 6 ºC is only for very arid sites. The
+  revision also allows aT calibrated for each calendar month with
+  regional data, which can be negative in winter. \code{aT} takes a
+  single value or one value per site; monthly values can be applied by
+  passing \code{Tdew = Tmin - aT} instead.
+  \item Wind speed: the regional mean, or 2 m s-1 if it is not known
+  (the default of \code{U2}).
+}
+The cloud cover route (\code{CC}) and the CO2 correction (\code{CO2})
+are not FAO procedures. The tall reference crop (\code{crop = 'tall'})
+follows ASCE-EWRI (Walter et al., 2002; ASCE-EWRI, 2005).
 
 The function will produce an error message if a valid combination of input
 parameters is not provided.
@@ -309,11 +371,16 @@ pen2 <- penman(TMIN, TMAX, AWND, CC = ACSH, lat = 37.6475, z = 402.6, na.rm = TR
 # Penman, with constant wind
 pen3 <- penman(TMIN, TMAX, tsun = TSUN, lat = 37.6475, z = 402.6, na.rm = TRUE)
 
+# Penman with temperature only (PMT): Rs from the temperature range,
+# constant wind, ed from Tmin with aT = 1 (e.g., a dry sub-humid region)
+pen4 <- penman(TMIN, TMAX, lat = 37.6475, z = 402.6, kRs = 0.16, aT = 1,
+  na.rm = TRUE)
+
 # Plot them together
-plot(ts(cbind(tho, har, pen, pen2, pen3), fr = 12))
+plot(ts(cbind(tho, har, pen, pen2, pen3, pen4), fr = 12))
 
 # Compare between methods
-pairs(cbind(tho, har, pen, pen2, pen3))
+pairs(cbind(tho, har, pen, pen2, pen3, pen4))
 
 # Input data as a time series vector; note that only the first parameter
 # needs to be a `ts` object.
@@ -455,6 +522,16 @@ International Commission on Irrigation and Drainage}, 35–92.
 Allen R.G., Pereira L.S., Raes D., Smith, M., 1998. \emph{Crop
 evapotranspiration - Guidelines for computing crop water requirements - FAO
 Irrigation and drainage paper 56}. FAO, Rome. ISBN 92-5-104219-5.
+
+Pereira L.S., Allen R.G., Paredes P., López-Urrea R., Raes D., Smith M.,
+Kilic A., Salman M., 2025. \emph{Crop evapotranspiration - Guidelines for
+computing crop water requirements - FAO Irrigation and Drainage Paper 56
+Rev. 1}. FAO, Rome. DOI:10.4060/cd6621en.
+
+ASCE-EWRI, 2005. \emph{The ASCE standardized reference
+evapotranspiration equation.} Report of the Task Committee on
+Standardization of Reference Evapotranspiration, R.G. Allen et al.
+(eds.), American Society of Civil Engineers, Reston, VA.
 
 Walter I.A. and 14 co-authors, 2002. \emph{The ASCE standardized reference
 evapotranspiration equation.} Rep. Task Com. on Standardized Reference
