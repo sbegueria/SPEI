@@ -121,8 +121,9 @@ spi1 <- sapply(c("Gamma", "PearsonIII", "log-Logistic"),
 round(spi1[prcp == 0, ], 2)
 ```
 
-The distributions can also differ in the tails. Being more flexible, the
-PearsonIII distribution can also be bounded below, and here it returns `-Inf`
+The distributions can also differ in the tails. With positive skew, as is usual
+for precipitation, the PearsonIII distribution is bounded below, and here it
+returns `-Inf`
 for three months whose precipitation falls below that bound:
 
 ```{r}
