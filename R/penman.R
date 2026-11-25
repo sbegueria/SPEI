@@ -56,8 +56,32 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
     }
   }
 
+  # Energy-only potential evapotranspiration (Milly and Dunne, 2016): only
+  # the net radiation and the soil heat flux are used
+  energy <- identical(method, "energy")
+
   # Check optional inputs
-  if (!is.null(U2)) {
+  if (energy) {
+    if (!is.null(U2)) {
+      warning("`U2` is ignored by the energy-only method (`method = 'energy'`).",
+        call. = FALSE
+      )
+      U2 <- NULL
+    }
+    if (!is.null(CO2)) {
+      warning("`CO2` is ignored by the energy-only method (`method = 'energy'`).",
+        call. = FALSE
+      )
+      CO2 <- NULL
+    }
+    if (identical(crop, "tall")) {
+      warning("`crop` is ignored by the energy-only method (`method = 'energy'`).",
+        call. = FALSE
+      )
+      crop <- "short"
+    }
+    warn$push("Wind speed (`U2`) is not used by the energy-only method.")
+  } else if (!is.null(U2)) {
     using$U2 <- TRUE
     warn$push("Using user-provided wind speed at 2 m height (`U2`) data.")
   } else {
@@ -148,7 +172,10 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
   } else {
     using$z <- TRUE
   }
-  if (!is.null(P)) {
+  if (energy) {
+    # the atmospheric pressure is not used
+    P <- P0 <- NULL
+  } else if (!is.null(P)) {
     using$P <- TRUE
     warn$push("Using user-provided atmospheric surface pressure (`P`) data.")
   } else if (!is.null(P0)) {
@@ -163,9 +190,11 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
     warn$push("Using custom CO2 concentration.")
   }
 
-  if (crop == "short") {
+  if (energy && identical(crop, "short")) {
+    # the crop is not used
+  } else if (identical(crop, "short")) {
     warn$push("Computing for a short crop.")
-  } else if (crop == "tall") {
+  } else if (identical(crop, "tall")) {
     warn$push("Computing for a tall crop.")
   } else {
     check$push("Argument `crop` must be one of `short` or `tall`.")
@@ -406,8 +435,13 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
 
   # Method used
   if (!is.character(method) || length(method) != 1 ||
-    !method %in% c("ICID", "ASCE", "FAO")) {
-    check$push("Argument `method` must be one of `ICID`, `ASCE` or `FAO`.")
+    !method %in% c("ICID", "ASCE", "FAO", "energy")) {
+    check$push("Argument `method` must be one of `ICID`, `ASCE`, `FAO` or `energy`.")
+  } else if (energy) {
+    warn$push(paste(
+      "Calculation method is energy (energy-only potential",
+      "evapotranspiration, 0.8 (Rn - G), Milly and Dunne, 2016)."
+    ))
   } else {
     warn$push(paste0("Calculation method is ", method, "."))
   }
@@ -491,7 +525,7 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
     # (ICID, eq. 1.12, p. 67)
     ed <- 0.611 * exp((17.27 * Tdew) / (Tdew + 237.3))
   } else if (using$RH) {
-    if (method == "FAO") {
+    if (method == "FAO" || energy) {
       # (FAO-56, eq 19, p.39)
       ed <- ea * (RH / 100)
     } else if (method == "ICID") {
@@ -607,7 +641,12 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
   # U2 <- U2 * 4.85203/log((zz-0.08)/0.015)
 
   # Daily ET0 (eq. 2.18)
-  if (crop == "short") {
+  if (energy) {
+    # Energy-only potential evapotranspiration (Milly and Dunne, 2016):
+    # 0.8 (Rn - G), converted from MJ m-2 d-1 to mm d-1 with a latent heat
+    # of vaporization of 2.45 MJ kg-1 (as the factor 0.408 of FAO-56)
+    ET0 <- 0.8 * (Rn - G) / 2.45
+  } else if (crop == "short") {
     c1 <- 900
     c2 <- 0.34 # short reference crop (e.g. clipped grass, 0.12 m)
   } else if (crop == "tall") {
@@ -619,7 +658,9 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
       "sunshine fraction Please report this error."
     ))
   }
-  if (!using$CO2) {
+  if (energy) {
+    # computed above
+  } else if (!using$CO2) {
     ET0 <- (0.408 * Delta * (Rn - G) + gamma * (c1 / (Tmean + 273)) * U2 *
       (ea - ed)) / (Delta + gamma * (1 + c2 * U2))
   } else {

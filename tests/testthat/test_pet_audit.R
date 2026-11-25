@@ -173,7 +173,7 @@ test_that("penman() rejects an unknown `method` (P12)", {
       Rs = rep(15, 12), RH = rep(60, 12), lat = 40, z = 100,
       method = "fao", verbose = FALSE
     ),
-    "Argument `method` must be one of `ICID`, `ASCE` or `FAO`."
+    "Argument `method` must be one of `ICID`, `ASCE`, `FAO` or `energy`."
   )
 })
 
