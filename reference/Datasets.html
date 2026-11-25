@@ -9,7 +9,11 @@ cabinda: one year of data for computing Penman-Monteith ET0 from
 Allen et al. (1998);
 cruts4: 120 years of monthly climatic water balance (precipitation
 minus reference evapotranspiration) data at six grid points from
-CRU TS 4.05."><meta property="og:description" content="Data used in the examples of the SPEI package:
+CRU TS 4.05;
+tarazona: annual basal area increment of 18 cores of Aleppo pine
+(Pinus halepensis) at Tarazona (Spain) from 1959 to 2017, and
+climate at the same site with 48 periods per year (four per month) from
+1961 to 2020."><meta property="og:description" content="Data used in the examples of the SPEI package:
 wichita dataset: monthly climate in Wichita (Kansas, lat=37.6475,
 elevation=402.6 m a.s.l.) from January 1980 to October 2011;
 balance dataset: monthly climatic water balance (precipitation
@@ -19,7 +23,11 @@ cabinda: one year of data for computing Penman-Monteith ET0 from
 Allen et al. (1998);
 cruts4: 120 years of monthly climatic water balance (precipitation
 minus reference evapotranspiration) data at six grid points from
-CRU TS 4.05."><meta property="og:image" content="https://sbegueria.github.io/SPEI/logo.png"></head><body>
+CRU TS 4.05;
+tarazona: annual basal area increment of 18 cores of Aleppo pine
+(Pinus halepensis) at Tarazona (Spain) from 1959 to 2017, and
+climate at the same site with 48 periods per year (four per month) from
+1961 to 2020."><meta property="og:image" content="https://sbegueria.github.io/SPEI/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -41,6 +49,7 @@ CRU TS 4.05."><meta property="og:image" content="https://sbegueria.github.io/SPE
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/options.html">Choosing the options</a></li>
     <li><a class="dropdown-item" href="../articles/gridded.html">Many sites and gridded data</a></li>
+    <li><a class="dropdown-item" href="../articles/weekly.html">Weekly and other non-monthly time series</a></li>
     <li><a class="dropdown-item" href="../articles/scale_scan.html">Relating the index to annual series: finding the best time scale</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -70,7 +79,11 @@ since January 1900 (1296 months);
 Allen et al. (1998);
 <code>cruts4</code>: 120 years of monthly climatic water balance (precipitation
 minus reference evapotranspiration) data at six grid points from
-CRU TS 4.05.</p>
+CRU TS 4.05;
+<code>tarazona</code>: annual basal area increment of 18 cores of Aleppo pine
+(<em>Pinus halepensis</em>) at Tarazona (Spain) from 1959 to 2017, and
+climate at the same site with 48 periods per year (four per month) from
+1961 to 2020.</p>
     </div>
 
     <div class="section level2">
@@ -78,7 +91,8 @@ CRU TS 4.05.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">wichita</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">balance</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">cabinda</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">cruts4</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">cruts4</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">tarazona</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -152,7 +166,41 @@ points from CRU TS 4.05 data set. The array has dimensions [time=1440,
 longitude=2, latitude=3], with time starting in January 1900. Longitudes
 are (0.25, 0.75), and latitudes (42.25, 42.75, 43.25), corresponding to the
 Central Pyrenees between Spain and France.</p>
-    </div>
+<p><code>tarazona</code> dataset: a list with three elements, with data from the
+unthinned (control) plot of an Aleppo pine (<em>Pinus halepensis</em>)
+plantation at Tarazona (Zaragoza, Spain; lat=41.8667, lon=-1.8333,
+elevation=785 m a.s.l.):</p><dl><dt>site</dt>
+<dd><p>a list with the site metadata: <code>name</code>,
+  <code>lat</code>, <code>lon</code>, <code>elevation</code> (m a.s.l.), <code>species</code>,
+  <code>plot</code> (the plot code, TAPHD), <code>treatment</code> (control,
+  i.e. unthinned) and <code>thinning.year</code> (1998, the year in which the
+  neighbouring plots of the experiment were thinned; the control plot was
+  not thinned).</p></dd>
+
+  <dt>bai</dt>
+<dd><p>a data frame with the annual basal area increment (BAI,
+  in cm2 per year) of the control plot. The first column, <code>year</code>,
+  has the years (1959 to 2017), and the other 18 columns the BAI of each
+  core, <code>NA</code> outside the years covered by the core. The cores come
+  from 11 trees. The column names are the plot code, the tree number
+  and the core letter, e.g. <code>TAPHD06A</code> and <code>TAPHD06B</code> are two
+  cores of tree TAPHD06. BAI has an age and size trend, which must be
+  removed before relating it to climate (see
+  <code><a href="../articles/scale_scan.html">vignette("scale_scan")</a></code>).</p></dd>
+
+  <dt>clim</dt>
+<dd><p>a multivariate time series (<code>ts</code>) with frequency 48
+  (four periods per month), from the first period of January 1961 to the
+  last period of December 2020 (2880 periods). The periods of each month
+  start on days 1, 9, 16 and 23, so they span days 1-8, 9-15, 16-22, and
+  23 to the end of the month. The columns are <code>PRCP</code>, precipitation
+  in mm per period; <code>ETO</code>, FAO-56 Penman-Monteith reference
+  evapotranspiration in mm per period; <code>TMIN</code> and <code>TMAX</code>, mean
+  daily minimum and maximum temperature in the period, in ºC. Values are
+  rounded to two decimals.</p></dd>
+
+
+</dl></div>
     <div class="section level2">
     <h2 id="source">Source<a class="anchor" aria-label="anchor" href="#source"></a></h2>
     <p>The <code>wichita</code> data were obtained from the Global Historical Climatology
@@ -163,7 +211,20 @@ Data for the <code>cabinda</code> dataset were taken from Allen et al. (1998),
 page 69, figure 18.
 The <code>cruts4</code> data were obtained from the CRU (Climatic Research Unit,
 University of East Anglia <a href="https://crudata.uea.ac.uk/" class="external-link">https://crudata.uea.ac.uk/</a>) TS V4.05
-data set.</p>
+data set.
+The basal area increment in the <code>tarazona</code> dataset comes from
+Manrique-Alba et al. (2020), and is part of the dataset: Manrique-Alba,
+À., Molina, A.J., Beguería, S., Camarero, J.J., et al. (2025). Basal Area
+Increment and Climate Data from Long-Term Silviculture Monitoring Sites in
+Spain (SilvAdapt.net) [Dataset]. DIGITAL.CSIC,
+<a href="https://doi.org/10.20350/digitalcsic/17165" class="external-link">doi:10.20350/digitalcsic/17165</a>
+. The same data were used in
+Manrique-Alba et al. (2025). The climate data were extracted from the
+gridded dataset of the Spanish drought monitor
+(<a href="https://monitordesequia.csic.es" class="external-link">https://monitordesequia.csic.es</a>, Vicente-Serrano et al., 2017).
+The <code>tarazona</code> data are distributed with the package, under its
+licence (GPL (&gt;= 2)), by the data authors. The script used to build the
+dataset is <code>data-raw/tarazona.R</code> in the package source repository.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -178,6 +239,21 @@ DOI: 10.1175/2009JCLI2909.1.</p>
 <p>R.G. Allen, L.S. Pereira, D. Raes, M. Smith. 1998. <em>Crop
 evapotranspiration - Guidelines for computing crop water requirements - FAO
 Irrigation and drainage  paper 56</em>. FAO, Rome. ISBN 92-5-104219-5.</p>
+<p>À. Manrique-Alba, S. Beguería, A.J. Molina, M. González-Sanchis, M.
+Tomàs-Burguera, A.D. del Campo, M. Colangelo, J.J. Camarero. 2020.
+Long-term thinning effects on tree growth, drought response and water use
+efficiency at two Aleppo pine plantations in Spain. <em>Science of the
+Total Environment</em> <b>728</b>: 138536,
+DOI: 10.1016/j.scitotenv.2020.138536.</p>
+<p>À. Manrique-Alba, S. Beguería, J.J. Camarero, A.J. Molina, et al. 2025.
+Adaptive responses to thinning: growth and sensitivity to hydric and
+thermal stress in four widely planted pine species. <em>Agricultural
+and Forest Meteorology</em> <b>373</b>: 110777,
+DOI: 10.1016/j.agrformet.2025.110777.</p>
+<p>S.M. Vicente-Serrano, M. Tomas-Burguera, S. Beguería, F. Reig, B.
+Latorre, M. Peña-Gallardo, M.Y. Luna, A. Morata, J.C. González-Hidalgo.
+2017. A high resolution dataset of drought indices for Spain. <em>Data</em>
+<b>2</b>(3): 22, DOI: 10.3390/data2030022.</p>
     </div>
     <div class="section level2">
     <h2 id="author">Author<a class="anchor" aria-label="anchor" href="#author"></a></h2>
@@ -241,6 +317,42 @@ Irrigation and drainage  paper 56</em>. FAO, Rome. ISBN 92-5-104219-5.</p>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">cruts4</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> -265.600  -33.200    4.900    7.755   49.225  188.300 </span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">tarazona</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">tarazona</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> List of 3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  $ site:List of 8</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ name         : chr "Tarazona"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ lat          : num 41.9</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ lon          : num -1.83</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ elevation    : num 785</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ species      : chr "Pinus halepensis"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ plot         : chr "TAPHD"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ treatment    : chr "control (unthinned)"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ thinning.year: num 1998</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  $ bai :'data.frame':	59 obs. of  19 variables:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ year    : int [1:59] 1959 1960 1961 1962 1963 1964 1965 1966 1967 1968 ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ TAPHD06A: num [1:59] NA NA NA NA NA ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ TAPHD06B: num [1:59] NA NA NA NA NA ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ TAPHD10A: num [1:59] NA NA NA NA NA ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ TAPHD10B: num [1:59] NA NA NA NA NA ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ TAPHD15A: num [1:59] NA NA NA NA NA ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ TAPHD15B: num [1:59] NA NA NA NA NA ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ TAPHD25A: num [1:59] NA NA NA NA NA ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ TAPHD31A: num [1:59] NA NA NA NA NA ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ TAPHD31B: num [1:59] NA NA NA NA NA ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ TAPHD35A: num [1:59] NA NA NA NA NA ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ TAPHD45A: num [1:59] NA NA NA NA NA ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ TAPHD53A: num [1:59] NA NA NA NA NA ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ TAPHD53B: num [1:59] NA NA NA NA NA ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ TAPHD55A: num [1:59] NA NA NA NA NA ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ TAPHD55B: num [1:59] NA NA NA NA NA ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ TAPHD59A: num [1:59] 0.207 0.505 1.239 2.329 3.906 ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ TAPHD79A: num [1:59] NA NA NA NA NA ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ TAPHD79B: num [1:59] NA NA NA NA NA ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  $ clim: Time-Series [1:2880, 1:4] from 1961 to 2021: 15.1 4.16 16.51 9.75 1.35 ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..- attr(*, "dimnames")=List of 2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   .. ..$ : NULL</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   .. ..$ : chr [1:4] "PRCP" "ETO" "TMIN" "TMAX"</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

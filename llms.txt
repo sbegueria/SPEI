@@ -222,7 +222,8 @@ option) any later version.
 - [`wichita`](https://sbegueria.github.io/SPEI/reference/Datasets.md)
   [`balance`](https://sbegueria.github.io/SPEI/reference/Datasets.md)
   [`cabinda`](https://sbegueria.github.io/SPEI/reference/Datasets.md)
-  [`cruts4`](https://sbegueria.github.io/SPEI/reference/Datasets.md) :
+  [`cruts4`](https://sbegueria.github.io/SPEI/reference/Datasets.md)
+  [`tarazona`](https://sbegueria.github.io/SPEI/reference/Datasets.md) :
   Data sets for illustrating the functions in the SPEI package
 
 ## Package
@@ -240,5 +241,7 @@ option) any later version.
   options](https://sbegueria.github.io/SPEI/articles/options.md):
 - [Many sites and gridded
   data](https://sbegueria.github.io/SPEI/articles/gridded.md):
+- [Weekly and other non-monthly time
+  series](https://sbegueria.github.io/SPEI/articles/weekly.md):
 - [Relating the index to annual series: finding the best time
   scale](https://sbegueria.github.io/SPEI/articles/scale_scan.md):

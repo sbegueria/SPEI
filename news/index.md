@@ -21,6 +21,23 @@
   [`vignette("scale_scan")`](https://sbegueria.github.io/SPEI/articles/scale_scan.md),
   shows how to use them.
 
+- New dataset `tarazona`: annual basal area increment of 18 cores of
+  Aleppo pine (*Pinus halepensis*) in the unthinned plot of a plantation
+  at Tarazona (Spain), 1959-2017, and the climate of the site
+  (precipitation, reference evapotranspiration, minimum and maximum
+  temperature) with 48 periods per year (quarter-months), 1961-2020,
+  from the Spanish drought monitor. It is used in
+  [`vignette("scale_scan")`](https://sbegueria.github.io/SPEI/articles/scale_scan.md).
+  See
+  [`?Datasets`](https://sbegueria.github.io/SPEI/reference/Datasets.md).
+
+- New vignette,
+  [`vignette("weekly")`](https://sbegueria.github.io/SPEI/articles/weekly.md),
+  on computing the indices with weekly and other non-monthly time
+  series: building quarter-month and 52-week series from daily data,
+  evapotranspiration at those resolutions, the reference period, and the
+  comparison with the monthly index, using the `tarazona` dataset.
+
 ## SPEI 1.9.0
 
 CRAN release: 2026-11-23

@@ -6,5 +6,7 @@
   options](https://sbegueria.github.io/SPEI/articles/options.md):
 - [Many sites and gridded
   data](https://sbegueria.github.io/SPEI/articles/gridded.md):
+- [Weekly and other non-monthly time
+  series](https://sbegueria.github.io/SPEI/articles/weekly.md):
 - [Relating the index to annual series: finding the best time
   scale](https://sbegueria.github.io/SPEI/articles/scale_scan.md):

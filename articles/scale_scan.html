@@ -40,6 +40,7 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/options.html">Choosing the options</a></li>
     <li><a class="dropdown-item" href="../articles/gridded.html">Many sites and gridded data</a></li>
+    <li><a class="dropdown-item" href="../articles/weekly.html">Weekly and other non-monthly time series</a></li>
     <li><a class="dropdown-item" href="../articles/scale_scan.html">Relating the index to annual series: finding the best time scale</a></li>
   </ul>
 </li>
@@ -95,96 +96,157 @@ the time scales at which vegetation responds to drought across the
 world’s biomes (Vicente-Serrano et al., 2013), and to study how thinning
 changes the sensitivity of tree growth to hydric and thermal stress in
 four widely planted pine species (Manrique-Alba et al., 2025).</p>
+<div class="section level2">
+<h2 id="the-data">The data<a class="anchor" aria-label="anchor" href="#the-data"></a>
+</h2>
+<p>The <code>tarazona</code> dataset has the growth of Aleppo pines
+(<em>Pinus halepensis</em>) in a plantation at Tarazona, in the Ebro
+valley (Spain, 785 m a.s.l.), and the climate of the site. The trees are
+in the control plot of a thinning experiment, which was not thinned
+(Manrique-Alba et al., 2020). Growth is measured as the basal area
+increment (BAI, in cm² per year) of 18 cores from 11 trees, from 1959 to
+2017. The climate comes from the gridded dataset of the Spanish drought
+monitor (Vicente-Serrano et al., 2017), and has 48 periods per year
+(four per month) from 1961 to 2020. See <code><a href="../reference/Datasets.html">?Datasets</a></code> for the
+details.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://spei.csic.es" class="external-link">SPEI</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">wichita</span><span class="op">)</span></span>
-<span><span class="va">wichita</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/ts.html" class="external-link">ts</a></span><span class="op">(</span><span class="va">wichita</span><span class="op">[</span>, <span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span><span class="op">]</span>, start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1980</span>, <span class="fl">1</span><span class="op">)</span>, frequency <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span>
-<span><span class="va">bal</span> <span class="op">&lt;-</span> <span class="va">wichita</span><span class="op">[</span>, <span class="st">"PRCP"</span><span class="op">]</span> <span class="op">-</span> <span class="fu"><a href="../reference/Potential-evapotranspiration.html">hargreaves</a></span><span class="op">(</span><span class="va">wichita</span><span class="op">[</span>, <span class="st">"TMIN"</span><span class="op">]</span>, <span class="va">wichita</span><span class="op">[</span>, <span class="st">"TMAX"</span><span class="op">]</span>,</span>
-<span>  lat <span class="op">=</span> <span class="fl">37.6475</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p>The package has no annual series to correlate with the
-<code>wichita</code> climate. All the annual series in this vignette are
-<strong>synthetic</strong>. They are built from the water balance of
-Wichita plus random noise, so that we know which window they respond to.
-A small helper adds up the water balance of some months for each year,
-and standardizes it:</p>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">tarazona</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">tarazona</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "site" "bai"  "clim"</span></span>
+<span><span class="va">bai</span> <span class="op">&lt;-</span> <span class="va">tarazona</span><span class="op">$</span><span class="va">bai</span></span>
+<span><span class="va">clim</span> <span class="op">&lt;-</span> <span class="va">tarazona</span><span class="op">$</span><span class="va">clim</span></span></code></pre></div>
+<p>Most of this vignette uses monthly data. The precipitation and the
+reference evapotranspiration (ETo) are totals per period, so the monthly
+values are the sums of each group of four periods. The water balance is
+the precipitation minus the ETo:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">years</span> <span class="op">&lt;-</span> <span class="fl">1980</span><span class="op">:</span><span class="fl">2011</span></span>
-<span></span>
-<span><span class="co"># Standardized sum of `x` over `months`, for each year in `years`;</span></span>
-<span><span class="co"># `back = 1` takes the months of the previous year.</span></span>
-<span><span class="va">season</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">months</span>, <span class="va">back</span> <span class="op">=</span> <span class="fl">0</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">sel</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/time.html" class="external-link">cycle</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">months</span></span>
-<span>  <span class="va">v</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tapply.html" class="external-link">tapply</a></span><span class="op">(</span><span class="va">x</span><span class="op">[</span><span class="va">sel</span><span class="op">]</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">floor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/time.html" class="external-link">time</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="va">sel</span><span class="op">]</span>, <span class="va">sum</span><span class="op">)</span></span>
-<span>  <span class="va">v</span> <span class="op">&lt;-</span> <span class="va">v</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">years</span> <span class="op">-</span> <span class="va">back</span><span class="op">)</span><span class="op">]</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="op">(</span><span class="va">v</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">v</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/stats/sd.html" class="external-link">sd</a></span><span class="op">(</span><span class="va">v</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="op">}</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">to_monthly</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/ts.html" class="external-link">ts</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">colSums</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="va">x</span>, nrow <span class="op">=</span> <span class="fl">4</span><span class="op">)</span><span class="op">)</span>, start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1961</span>, <span class="fl">1</span><span class="op">)</span>, frequency <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span><span class="va">bal</span> <span class="op">&lt;-</span> <span class="fu">to_monthly</span><span class="op">(</span><span class="va">clim</span><span class="op">[</span>, <span class="st">"PRCP"</span><span class="op">]</span><span class="op">)</span> <span class="op">-</span> <span class="fu">to_monthly</span><span class="op">(</span><span class="va">clim</span><span class="op">[</span>, <span class="st">"ETO"</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
+<p>The original 48-period data are used at the end of this vignette (see
+‘Other frequencies’) and in <code><a href="../articles/weekly.html">vignette("weekly")</a></code>.</p>
+</div>
 <div class="section level2">
 <h2 id="the-annual-series">The annual series<a class="anchor" aria-label="anchor" href="#the-annual-series"></a>
 </h2>
 <p>The annual series must contain only the signal that we want to relate
 to drought. Other sources of variation over time should be removed
 first. Crop yields usually grow over the years because of better
-varieties and management. Tree rings get narrower as the tree grows
-older. These trends are not related to drought, but they add variance to
-the series, and they can create spurious correlations with any index
-that also has a trend.</p>
-<p>Our first synthetic series is a crop yield. It grows by 0.05 t/ha per
-year, and it responds to the water balance of May to July (three months
-ending in July):</p>
+varieties and management. Tree-ring widths get narrower as the tree
+grows. The BAI of a young tree grows with its size, and then levels off
+or declines. These trends are not related to drought, but they add
+variance to the series, and they can create spurious correlations with
+any index that also has a trend.</p>
+<p>The BAI of the cores shows these trends, and large differences in
+growth rate between cores:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span></span>
-<span><span class="va">yield</span> <span class="op">&lt;-</span> <span class="fl">3</span> <span class="op">+</span> <span class="fl">0.05</span> <span class="op">*</span> <span class="op">(</span><span class="va">years</span> <span class="op">-</span> <span class="fl">1980</span><span class="op">)</span> <span class="op">+</span> <span class="fl">0.4</span> <span class="op">*</span> <span class="fu">season</span><span class="op">(</span><span class="va">bal</span>, <span class="fl">5</span><span class="op">:</span><span class="fl">7</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">years</span><span class="op">)</span>, sd <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span>
-<span><span class="va">yield</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/ts.html" class="external-link">ts</a></span><span class="op">(</span><span class="va">yield</span>, start <span class="op">=</span> <span class="fl">1980</span>, frequency <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/matplot.html" class="external-link">matplot</a></span><span class="op">(</span><span class="va">bai</span><span class="op">$</span><span class="va">year</span>, <span class="va">bai</span><span class="op">[</span>, <span class="op">-</span><span class="fl">1</span><span class="op">]</span>,</span>
+<span>  type <span class="op">=</span> <span class="st">"l"</span>, lty <span class="op">=</span> <span class="fl">1</span>, col <span class="op">=</span> <span class="st">"grey40"</span>,</span>
+<span>  xlab <span class="op">=</span> <span class="st">"Year"</span>, ylab <span class="op">=</span> <span class="st">"BAI (cm2/year)"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><img src="scale_scan_files/figure-html/unnamed-chunk-3-1.png" class="r-plt" alt="Basal area increment of the 18 cores of the Tarazona control plot from 1959 to 2017. Growth rises during the first years of each core, and the cores differ in their level of growth." width="672"></p>
+<p>In dendrochronology the trend is removed from each series before the
+series are averaged. The cores start in different years, so removing the
+trend after averaging would mix the trends of cores of different ages.
+Here we log-transform each core and subtract a smoothing spline with
+four degrees of freedom. The log makes the variance of the series more
+similar between cores and over time, and the difference of logs is the
+log of the ratio between the BAI and its trend. Each core becomes a
+series of relative growth around zero:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">yield</span>, ylab <span class="op">=</span> <span class="st">"Yield (t/ha)"</span>, xlab <span class="op">=</span> <span class="st">"Year"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="scale_scan_files/figure-html/unnamed-chunk-4-1.png" class="r-plt" alt="Synthetic crop yield from 1980 to 2011, with an increasing trend" width="672"></p>
+<code class="sourceCode R"><span><span class="co"># log(BAI) minus a smoothing spline fitted to log(BAI), for one core</span></span>
+<span><span class="va">detrend_core</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">year</span>, <span class="va">df</span> <span class="op">=</span> <span class="fl">4</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">ok</span> <span class="op">&lt;-</span> <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
+<span>  <span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/smooth.spline.html" class="external-link">smooth.spline</a></span><span class="op">(</span><span class="va">year</span><span class="op">[</span><span class="va">ok</span><span class="op">]</span>, <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">x</span><span class="op">[</span><span class="va">ok</span><span class="op">]</span><span class="op">)</span>, df <span class="op">=</span> <span class="va">df</span><span class="op">)</span></span>
+<span>  <span class="va">x</span><span class="op">[</span><span class="va">ok</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">x</span><span class="op">[</span><span class="va">ok</span><span class="op">]</span><span class="op">)</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">fit</span>, <span class="va">year</span><span class="op">[</span><span class="va">ok</span><span class="op">]</span><span class="op">)</span><span class="op">$</span><span class="va">y</span></span>
+<span>  <span class="va">x</span></span>
+<span><span class="op">}</span></span>
+<span><span class="va">rbai</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="va">bai</span><span class="op">[</span>, <span class="op">-</span><span class="fl">1</span><span class="op">]</span>, <span class="va">detrend_core</span>, year <span class="op">=</span> <span class="va">bai</span><span class="op">$</span><span class="va">year</span><span class="op">)</span></span>
+<span><span class="va">rbai</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/ts.html" class="external-link">ts</a></span><span class="op">(</span><span class="va">rbai</span>, start <span class="op">=</span> <span class="va">bai</span><span class="op">$</span><span class="va">year</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, frequency <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
+<p>A flexible spline also removes part of the slow variation that is due
+to climate, such as a dry decade. Stiffer curves keep more of it. Other
+methods (e.g. negative exponential curves, or the ones in the
+<code>dplR</code> package) can be used in the same way. Whatever the
+method, detrend the series before calling <code><a href="../reference/Scale-scan.html">scale_scan()</a></code>. The
+argument <code>detrend = TRUE</code> only removes a linear trend from
+the averaged series, which is enough for simpler cases such as a crop
+yield that grows steadily over the years.</p>
+<p>The average of the detrended cores in each year is the chronology of
+the site:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">chron</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/ts.html" class="external-link">ts</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">rowMeans</a></span><span class="op">(</span><span class="va">rbai</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, start <span class="op">=</span> <span class="va">bai</span><span class="op">$</span><span class="va">year</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">chron</span>, xlab <span class="op">=</span> <span class="st">"Year"</span>, ylab <span class="op">=</span> <span class="st">"Detrended BAI (log ratio)"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>h <span class="op">=</span> <span class="fl">0</span>, lty <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
+<p><img src="scale_scan_files/figure-html/unnamed-chunk-5-1.png" class="r-plt" alt="Mean of the detrended BAI of the 18 cores (the site chronology) from 1959 to 2017, fluctuating around zero with strong drops in some years" width="672"></p>
+<p>The number of cores per year is low at the start. Until 1963 the
+chronology rests on a single core, and its variability in those years is
+larger than later on. All 18 cores are present from 1967. A mean of very
+few series is not representative of the site, so we restrict the
+analysis to the years with at least 10 cores, from 1965 on:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">first</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">bai</span><span class="op">$</span><span class="va">year</span><span class="op">[</span><span class="va">depth</span> <span class="op">&gt;=</span> <span class="fl">10</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="va">rbai</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/window.html" class="external-link">window</a></span><span class="op">(</span><span class="va">rbai</span>, start <span class="op">=</span> <span class="va">first</span><span class="op">)</span></span>
+<span><span class="va">chron</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/window.html" class="external-link">window</a></span><span class="op">(</span><span class="va">chron</span>, start <span class="op">=</span> <span class="va">first</span><span class="op">)</span></span></code></pre></div>
 <p>The annual series is a time series with frequency 1, or a data frame
-with the years in the first column and the values in the second.</p>
+with the years in the first column and the values in the other
+columns.</p>
 </div>
 <div class="section level2">
 <h2 id="running-the-scan">Running the scan<a class="anchor" aria-label="anchor" href="#running-the-scan"></a>
 </h2>
 <p><code><a href="../reference/Scale-scan.html">scale_scan()</a></code> takes the water balance, computes the SPEI
 at the time scales in <code>scales</code>, and correlates the annual
-series with the index in each month and at each time scale:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">sc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Scale-scan.html">scale_scan</a></span><span class="op">(</span><span class="va">bal</span>, <span class="va">yield</span>, scales <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">24</span><span class="op">)</span></span>
+series with the index in each month and at each time scale. Here the
+annual series has one column per core. All the values of each year are
+averaged (see ‘Several annual series’):</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">sc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Scale-scan.html">scale_scan</a></span><span class="op">(</span><span class="va">bal</span>, <span class="va">rbai</span>, scales <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">24</span><span class="op">)</span></span>
 <span><span class="va">sc</span></span>
 <span><span class="co">#&gt; Correlation scan of an annual series with the SPEI</span></span>
 <span><span class="co">#&gt;   Positions in the year: 12 (months)</span></span>
 <span><span class="co">#&gt;   Time scales: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24</span></span>
-<span><span class="co">#&gt;   Years of the annual series: 1980-2011</span></span>
+<span><span class="co">#&gt;   Years of the annual series: 1965-2017</span></span>
+<span><span class="co">#&gt;   Values averaged per year: 11 to 18</span></span>
 <span><span class="co">#&gt;   Correlation: pearson; p-value adjustment: holm; alpha = 0.05</span></span>
-<span><span class="co">#&gt;   Significant cells: 0 of 288</span></span>
+<span><span class="co">#&gt;   Significant cells: 165 of 288</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Best windows:</span></span>
-<span><span class="co">#&gt;      sign lag cycle label scale  r  p p.adj  n</span></span>
-<span><span class="co">#&gt;  positive  NA    NA  &lt;NA&gt;    NA NA NA    NA NA</span></span>
-<span><span class="co">#&gt;  negative  NA    NA  &lt;NA&gt;    NA NA NA    NA NA</span></span></code></pre></div>
-<p>No window is significant. The trend in the yield hides the climate
-signal. With <code>detrend = TRUE</code> a linear trend is removed from
-the annual series before computing the correlations:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">sc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Scale-scan.html">scale_scan</a></span><span class="op">(</span><span class="va">bal</span>, <span class="va">yield</span>, scales <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">24</span>, detrend <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="va">sc</span></span>
-<span><span class="co">#&gt; Correlation scan of an annual series with the SPEI</span></span>
-<span><span class="co">#&gt;   Positions in the year: 12 (months)</span></span>
-<span><span class="co">#&gt;   Time scales: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24</span></span>
-<span><span class="co">#&gt;   Years of the annual series: 1980-2011 (detrended)</span></span>
-<span><span class="co">#&gt;   Correlation: pearson; p-value adjustment: holm; alpha = 0.05</span></span>
-<span><span class="co">#&gt;   Significant cells: 1 of 288</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Best windows:</span></span>
-<span><span class="co">#&gt;      sign lag cycle label scale     r        p  p.adj  n</span></span>
-<span><span class="co">#&gt;  positive   0     7   Jul     3 0.646 6.43e-05 0.0185 32</span></span>
-<span><span class="co">#&gt;  negative  NA    NA  &lt;NA&gt;    NA    NA       NA     NA NA</span></span></code></pre></div>
-<p>The linear detrending is enough here, because the synthetic trend is
-linear. Real series often need other methods, such as splines for
-tree-ring widths. In that case detrend the series before calling
-<code><a href="../reference/Scale-scan.html">scale_scan()</a></code>, and leave <code>detrend = FALSE</code>.</p>
+<span><span class="co">#&gt;      sign lag cycle label scale     r        p    p.adj  n</span></span>
+<span><span class="co">#&gt;  positive   0     8   Aug     8 0.798 8.19e-13 2.36e-10 53</span></span>
+<span><span class="co">#&gt;  negative  NA    NA  &lt;NA&gt;    NA    NA       NA       NA NA</span></span></code></pre></div>
+<p>The best window is August at a time scale of 8 months, i.e. the water
+balance from January to August. Its correlation with the chronology is r
+= 0.8 over 53 years. There is no significant negative window. Growth is
+larger in the years in which this part of the year is wetter than
+usual.</p>
+<p>Each window is defined by a month and a time scale. The SPEI of a
+month at a time scale of <code>s</code> months summarizes the water
+balance accumulated over the <code>s</code> months that end in that
+month. So the SPEI of August at 8 months measures whether the period
+from January to August of each year was wetter or drier than usual, and
+its value is known at the end of August. For the tree, the result means
+that the width of each ring depends on the water accumulated from the
+start of the year to the end of the summer, which includes the soil
+water recharged in winter and the water available during the growing
+season. In the same month, shorter or longer windows correlate less: r =
+0.36 for that month alone (time scale 1) and r = 0.77 for the whole year
+to August (time scale 12).</p>
+<p>For comparison, the average of the raw BAI with a linear trend
+removed (<code>detrend = TRUE</code>) gives:</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">raw</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/window.html" class="external-link">window</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/ts.html" class="external-link">ts</a></span><span class="op">(</span><span class="va">bai</span><span class="op">[</span>, <span class="op">-</span><span class="fl">1</span><span class="op">]</span>, start <span class="op">=</span> <span class="va">bai</span><span class="op">$</span><span class="va">year</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span>, start <span class="op">=</span> <span class="va">first</span><span class="op">)</span></span>
+<span><span class="va">sc_raw</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Scale-scan.html">scale_scan</a></span><span class="op">(</span><span class="va">bal</span>, <span class="va">raw</span>, scales <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">24</span>, detrend <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">sc_raw</span><span class="op">$</span><span class="va">best</span><span class="op">[</span><span class="fl">1</span>, <span class="op">]</span></span>
+<span><span class="co">#&gt;       sign lag cycle label scale        r            p        p.adj  n</span></span>
+<span><span class="co">#&gt; 1 positive   0     8   Aug     9 0.745223 1.554838e-10 4.477933e-08 53</span></span></code></pre></div>
+<p>The window is very similar (August, 9 months), with a slightly lower
+correlation (r = 0.75). Here the simple approach gives almost the same
+result, because most cores are mature and the year-to-year variation is
+large. This will not hold in general, for example with young trees or
+with cores of very different ages.</p>
 </div>
 <div class="section level2">
 <h2 id="reading-the-heatmap">Reading the heatmap<a class="anchor" aria-label="anchor" href="#reading-the-heatmap"></a>
@@ -192,56 +254,70 @@ tree-ring widths. In that case detrend the series before calling
 <p>The <code>plot</code> method draws the correlations as a heatmap. The
 months are on the horizontal axis and the time scales on the vertical
 axis. The dots mark the cells that are significant after adjusting for
-multiple testing, and the black outlines show the best windows:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+multiple testing, and the black outline shows the best window:</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">sc</span><span class="op">)</span></span></code></pre></div>
-<p><img src="scale_scan_files/figure-html/unnamed-chunk-7-1.png" class="r-plt" alt="Heatmap of the correlation between the detrended yield and the SPEI by month and time scale. The highest correlations are in July at short time scales." width="672"></p>
-<p>The strongest correlations are around July at short time scales, as
-expected. They fade at longer time scales, which add months that do not
-affect the yield. With <code>sig = "mask"</code> the non-significant
-cells are left blank.</p>
+<p><img src="scale_scan_files/figure-html/unnamed-chunk-10-1.png" class="r-plt" alt="Heatmap of the correlation between the Tarazona BAI chronology and the SPEI by month and time scale. The highest correlations are from June to September at time scales of about 6 to 12 months." width="672"></p>
+<p>The correlations are highest from June to September, at time scales
+of about 6 to 12 months. In other words, growth depends on the water
+balance accumulated from the previous autumn or winter to the end of the
+summer. With <code>sig = "mask"</code> the non-significant cells are
+left blank.</p>
+<p>By default the colours are proportional to the squared correlation,
+with its sign (<code>colour = "r2"</code>). This spreads the colours
+over the high correlations, which are the ones of interest, while the
+legend still shows the correlation. With <code>colour = "r"</code> the
+colours are proportional to the correlation itself:</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">sc</span>, colour <span class="op">=</span> <span class="st">"r"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="scale_scan_files/figure-html/unnamed-chunk-11-1.png" class="r-plt" alt="The same heatmap with colours proportional to the correlation instead of the squared correlation; the differences among the high correlations are less visible." width="672"></p>
 <p>The results are kept in the object. <code>sc$cor</code> holds the
 correlations, with one row per month and one column per time scale.
 <code>sc$p</code> and <code>sc$p.adj</code> hold the p-values before and
 after the adjustment, and <code>sc$n</code> the number of years used in
 each cell.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">sc</span><span class="op">$</span><span class="va">cor</span><span class="op">[</span><span class="fl">5</span><span class="op">:</span><span class="fl">9</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">6</span><span class="op">]</span>, <span class="fl">2</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">sc</span><span class="op">$</span><span class="va">cor</span><span class="op">[</span><span class="fl">6</span><span class="op">:</span><span class="fl">9</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">3</span>, <span class="fl">6</span>, <span class="fl">8</span>, <span class="fl">12</span><span class="op">)</span><span class="op">]</span>, <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="co">#&gt;         scale</span></span>
-<span><span class="co">#&gt; position     1    2    3    4    5    6</span></span>
-<span><span class="co">#&gt;      May  0.58 0.54 0.37 0.31 0.24 0.28</span></span>
-<span><span class="co">#&gt;      Jun  0.47 0.62 0.59 0.50 0.46 0.41</span></span>
-<span><span class="co">#&gt;      Jul  0.36 0.50 0.65 0.61 0.56 0.52</span></span>
-<span><span class="co">#&gt;      Aug -0.12 0.11 0.31 0.47 0.45 0.44</span></span>
-<span><span class="co">#&gt;      Sep  0.21 0.08 0.26 0.40 0.51 0.49</span></span></code></pre></div>
+<span><span class="co">#&gt; position     1    3    6    8   12</span></span>
+<span><span class="co">#&gt;      Jun  0.58 0.62 0.71 0.71 0.68</span></span>
+<span><span class="co">#&gt;      Jul  0.43 0.69 0.74 0.77 0.74</span></span>
+<span><span class="co">#&gt;      Aug  0.36 0.64 0.76 0.80 0.77</span></span>
+<span><span class="co">#&gt;      Sep -0.01 0.37 0.69 0.72 0.77</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="the-best-windows-and-multiple-testing">The best windows and multiple testing<a class="anchor" aria-label="anchor" href="#the-best-windows-and-multiple-testing"></a>
 </h2>
 <p>The best windows are the cells with the highest and the lowest
 correlation, among those that are significant:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sc</span><span class="op">$</span><span class="va">best</span></span>
-<span><span class="co">#&gt;       sign lag cycle label scale         r           p      p.adj  n</span></span>
-<span><span class="co">#&gt; 1 positive   0     7   Jul     3 0.6463505 6.43329e-05 0.01852788 32</span></span>
-<span><span class="co">#&gt; 2 negative  NA    NA  &lt;NA&gt;    NA        NA          NA         NA NA</span></span></code></pre></div>
+<span><span class="co">#&gt;       sign lag cycle label scale         r            p        p.adj  n</span></span>
+<span><span class="co">#&gt; 1 positive   0     8   Aug     8 0.7981936 8.194739e-13 2.360085e-10 53</span></span>
+<span><span class="co">#&gt; 2 negative  NA    NA  &lt;NA&gt;    NA        NA           NA           NA NA</span></span></code></pre></div>
 <p>The scan above tests 288 cells. With so many tests, some cells will
 have a low p-value by chance. At a 5% level, about 14 of 288 cells would
 be ‘significant’ with an annual series of pure noise. For this reason
 the p-values are adjusted for multiple testing, across all the cells.
 The default method, Holm’s, keeps the probability of any false positive
 among all the cells below <code>alpha</code>. Other methods can be
-chosen with <code>p.adjust</code> (see <code><a href="https://rdrr.io/r/stats/p.adjust.html" class="external-link">?p.adjust</a></code>). With
-<code>p.adjust = "none"</code> many more cells are marked, but most of
-them are only neighbours of the best one:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">sc_none</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Scale-scan.html">scale_scan</a></span><span class="op">(</span><span class="va">bal</span>, <span class="va">yield</span>, scales <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">24</span>, detrend <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  p.adjust <span class="op">=</span> <span class="st">"none"</span></span>
-<span><span class="op">)</span></span>
+chosen with <code>p.adjust</code> (see <code><a href="https://rdrr.io/r/stats/p.adjust.html" class="external-link">?p.adjust</a></code>).</p>
+<p>To see the effect of the adjustment we scan a
+<strong>synthetic</strong> annual series of pure noise, which has no
+relation to the climate:</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
+<span><span class="va">noise</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/ts.html" class="external-link">ts</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">57</span><span class="op">)</span>, start <span class="op">=</span> <span class="fl">1961</span><span class="op">)</span></span>
+<span><span class="va">sc_none</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Scale-scan.html">scale_scan</a></span><span class="op">(</span><span class="va">bal</span>, <span class="va">noise</span>, scales <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">24</span>, p.adjust <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">sc_none</span><span class="op">$</span><span class="va">p.adj</span> <span class="op">&lt;=</span> <span class="fl">0.05</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 62</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">sc</span><span class="op">$</span><span class="va">p.adj</span> <span class="op">&lt;=</span> <span class="fl">0.05</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 1</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 7</span></span>
+<span><span class="va">sc_holm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Scale-scan.html">scale_scan</a></span><span class="op">(</span><span class="va">bal</span>, <span class="va">noise</span>, scales <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">24</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">sc_holm</span><span class="op">$</span><span class="va">p.adj</span> <span class="op">&lt;=</span> <span class="fl">0.05</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 0</span></span></code></pre></div>
+<p>Without the adjustment 7 cells are significant, and the best of them
+would be reported as the best window. With the adjustment 0 are. The
+Tarazona chronology has a strong signal, and many cells remain
+significant after the adjustment (165 of 288).</p>
 <p>The adjustment is conservative, because neighbouring cells share most
 of their data. With short series it may leave no significant cell even
 when there is a real signal. The unadjusted p-values are always in
@@ -258,28 +334,25 @@ of the previous year to March), but they always include the months of
 the current year too. The argument <code>lag</code> scans the months of
 previous years directly: <code>lag = 0:1</code> correlates the annual
 series of year Y with the index of year Y and of year Y-1.</p>
-<p>Our second synthetic series is a tree-ring index that responds to the
-water balance of July to September of the previous year:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">5</span><span class="op">)</span></span>
-<span><span class="va">rings</span> <span class="op">&lt;-</span> <span class="fl">1</span> <span class="op">+</span> <span class="fl">0.2</span> <span class="op">*</span> <span class="fu">season</span><span class="op">(</span><span class="va">bal</span>, <span class="fl">7</span><span class="op">:</span><span class="fl">9</span>, back <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">years</span><span class="op">)</span>, sd <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span></span>
-<span><span class="va">rings</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/ts.html" class="external-link">ts</a></span><span class="op">(</span><span class="va">rings</span>, start <span class="op">=</span> <span class="fl">1980</span>, frequency <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">sc_lag</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Scale-scan.html">scale_scan</a></span><span class="op">(</span><span class="va">bal</span>, <span class="va">rings</span>, scales <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">12</span>, lag <span class="op">=</span> <span class="fl">0</span><span class="op">:</span><span class="fl">1</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">sc_lag</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Scale-scan.html">scale_scan</a></span><span class="op">(</span><span class="va">bal</span>, <span class="va">rbai</span>, scales <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">24</span>, lag <span class="op">=</span> <span class="fl">0</span><span class="op">:</span><span class="fl">1</span><span class="op">)</span></span>
 <span><span class="va">sc_lag</span><span class="op">$</span><span class="va">best</span></span>
-<span><span class="co">#&gt;       sign lag cycle label scale         r           p        p.adj  n</span></span>
-<span><span class="co">#&gt; 1 positive   1     9 Sep-1     3 0.8813298 5.96501e-11 1.717923e-08 31</span></span>
-<span><span class="co">#&gt; 2 negative  NA    NA  &lt;NA&gt;    NA        NA          NA           NA NA</span></span>
+<span><span class="co">#&gt;       sign lag cycle label scale         r            p       p.adj  n</span></span>
+<span><span class="co">#&gt; 1 positive   0     8   Aug     8 0.7981936 8.194739e-13 4.72017e-10 53</span></span>
+<span><span class="co">#&gt; 2 negative  NA    NA  &lt;NA&gt;    NA        NA           NA          NA NA</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">sc_lag</span><span class="op">)</span></span></code></pre></div>
-<p><img src="scale_scan_files/figure-html/unnamed-chunk-12-1.png" class="r-plt" alt="Heatmap of the correlation between the synthetic tree-ring index and the SPEI, for the months of the previous and the current year. The highest correlation is in September of the previous year." width="768"></p>
+<p><img src="scale_scan_files/figure-html/unnamed-chunk-15-1.png" class="r-plt" alt="Heatmap of the correlation between the Tarazona BAI chronology and the SPEI, for the months of the previous and the current year. The correlations with the months of the previous year are weak; the highest ones are in the summer of the current year." width="768"></p>
 <p>The rows are now in chronological order. <code>Jan-1</code> to
 <code>Dec-1</code> are the months of the previous year, and
 <code>Jan</code> to <code>Dec</code> those of the current year. The best
-window is found in September of the previous year at a time scale of
-three months. The <code>lag</code> column of <code>best</code> gives the
-year. The adjustment of the p-values covers all the cells, so the scan
-with <code>lag = 0:1</code> is stricter than one with
+window is the same as before, in the current year. In the months of the
+previous year, the largest correlation (in absolute value) is 0.28, and
+no cell is significant (smallest adjusted p-value 1). So at this site
+the water balance of the previous year matters only through the long
+time scales of the current year, which reach into it. The
+<code>lag</code> column of <code>best</code> gives the year. The
+adjustment of the p-values covers all the cells, so the scan with
+<code>lag = 0:1</code> is stricter than one with
 <code>lag = 0</code>.</p>
 </div>
 <div class="section level2">
@@ -289,55 +362,47 @@ with <code>lag = 0:1</code> is stricter than one with
 for a window, by default the best positive one. It is aligned with the
 annual series: for a window with a lag of one year, the value of year Y
 is the index of year Y-1.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">spei_best</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Scale-scan.html">scale_extract</a></span><span class="op">(</span><span class="va">sc_lag</span><span class="op">)</span></span>
-<span><span class="va">spei_best</span></span>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">spei_best</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Scale-scan.html">scale_extract</a></span><span class="op">(</span><span class="va">sc</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/stats/window.html" class="external-link">window</a></span><span class="op">(</span><span class="va">spei_best</span>, end <span class="op">=</span> <span class="fl">1970</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Time Series:</span></span>
-<span><span class="co">#&gt; Start = 1981 </span></span>
-<span><span class="co">#&gt; End = 2012 </span></span>
+<span><span class="co">#&gt; Start = 1961 </span></span>
+<span><span class="co">#&gt; End = 1970 </span></span>
 <span><span class="co">#&gt; Frequency = 1 </span></span>
-<span><span class="co">#&gt;  [1] -1.48867451 -0.71930307 -1.34860096 -0.65348252 -1.52352143  0.69280585</span></span>
-<span><span class="co">#&gt;  [7]  0.89844855  0.54959022 -1.58145500  1.64767443 -1.02200074  0.30817469</span></span>
-<span><span class="co">#&gt; [13]  0.18316606  0.02730034  0.00772342  0.54060341  1.05757367  1.05659682</span></span>
-<span><span class="co">#&gt; [19] -0.04998234  1.16393587 -1.33884704 -0.96204096 -0.41948052  0.35957166</span></span>
-<span><span class="co">#&gt; [25]  0.16991899  1.39105593 -0.26118860 -0.18295225  1.98950323  0.86276091</span></span>
-<span><span class="co">#&gt; [31] -0.03524548 -1.24128393</span></span>
-<span><span class="co">#&gt; attr(,"cycle")</span></span>
-<span><span class="co">#&gt; [1] 9</span></span>
-<span><span class="co">#&gt; attr(,"scale")</span></span>
-<span><span class="co">#&gt; [1] 3</span></span>
-<span><span class="co">#&gt; attr(,"lag")</span></span>
-<span><span class="co">#&gt; [1] 1</span></span></code></pre></div>
-<p>The series covers all the years of the climate data, shifted by the
-lag (here 1981 to 2012), so it does not span the same years as the
-annual series. Use <code><a href="https://rdrr.io/r/stats/ts.union.html" class="external-link">ts.intersect()</a></code> to align them by year
-before using them together in other models. Note that <code><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm()</a></code>
-does not align time series by itself.</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/ts.union.html" class="external-link">ts.intersect</a></span><span class="op">(</span><span class="va">rings</span>, <span class="va">spei_best</span><span class="op">)</span></span>
-<span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">rings</span> <span class="op">~</span> <span class="va">spei_best</span>, data <span class="op">=</span> <span class="va">d</span><span class="op">)</span></span>
+<span><span class="co">#&gt;  [1] -0.9076176 -0.1689016  0.5111117 -0.4317334 -1.4632517  0.1971797</span></span>
+<span><span class="co">#&gt;  [7] -1.5046303  0.3475170  1.3698983 -0.7486864</span></span></code></pre></div>
+<p>The series covers all the years of the climate data (here 1961 to
+2020), so it does not span the same years as the annual series. Use
+<code><a href="https://rdrr.io/r/stats/ts.union.html" class="external-link">ts.intersect()</a></code> to align them by year before using them
+together in other models. Note that <code><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm()</a></code> does not align
+time series by itself.</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/ts.union.html" class="external-link">ts.intersect</a></span><span class="op">(</span><span class="va">chron</span>, <span class="va">spei_best</span><span class="op">)</span></span>
+<span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">chron</span> <span class="op">~</span> <span class="va">spei_best</span>, data <span class="op">=</span> <span class="va">d</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">$</span><span class="va">r.squared</span></span>
-<span><span class="co">#&gt; [1] 0.7767422</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 0.637113</span></span></code></pre></div>
 <p>Plotting the two series together shows how closely the index of the
 best window follows the annual series. They are in different units, so
-here the ring series is standardized (mean 0, standard deviation 1) to
+here the chronology is standardized (mean 0, standard deviation 1) to
 plot it on the scale of the index:</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">rings_std</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="va">rings</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">rings</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/stats/sd.html" class="external-link">sd</a></span><span class="op">(</span><span class="va">rings</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">spei_best</span>, type <span class="op">=</span> <span class="st">"l"</span>, col <span class="op">=</span> <span class="st">"red"</span>, lwd <span class="op">=</span> <span class="fl">2</span>,</span>
-<span>  ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/range.html" class="external-link">range</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">spei_best</span>, <span class="va">rings_std</span><span class="op">)</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">chron_std</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="va">chron</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">chron</span><span class="op">)</span><span class="op">)</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/stats/sd.html" class="external-link">sd</a></span><span class="op">(</span><span class="va">chron</span><span class="op">)</span></span>
+<span><span class="va">spei_plot</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/window.html" class="external-link">window</a></span><span class="op">(</span><span class="va">spei_best</span>, end <span class="op">=</span> <span class="fl">2017</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">spei_plot</span>,</span>
+<span>  type <span class="op">=</span> <span class="st">"l"</span>, col <span class="op">=</span> <span class="st">"red"</span>, lwd <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/range.html" class="external-link">range</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">spei_plot</span>, <span class="va">chron_std</span><span class="op">)</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
 <span>  xlab <span class="op">=</span> <span class="st">"Year"</span>, ylab <span class="op">=</span> <span class="st">"Standardized value"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">rings_std</span>, col <span class="op">=</span> <span class="st">"black"</span>, lwd <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">chron_std</span>, col <span class="op">=</span> <span class="st">"black"</span>, lwd <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>h <span class="op">=</span> <span class="fl">0</span>, lty <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/legend.html" class="external-link">legend</a></span><span class="op">(</span><span class="st">"bottomleft"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Ring width (standardized)"</span>, <span class="st">"SPEI, best window"</span><span class="op">)</span>,</span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/legend.html" class="external-link">legend</a></span><span class="op">(</span><span class="st">"bottomleft"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"BAI chronology (standardized)"</span>, <span class="st">"SPEI, best window"</span><span class="op">)</span>,</span>
 <span>  col <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"black"</span>, <span class="st">"red"</span><span class="op">)</span>, lwd <span class="op">=</span> <span class="fl">2</span>, bty <span class="op">=</span> <span class="st">"n"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><img src="scale_scan_files/figure-html/unnamed-chunk-15-1.png" class="r-plt" alt="Time plot of the standardized synthetic ring-width series and the SPEI of the best window (previous September, 3-month scale), which follow each other closely" width="672"></p>
+<p><img src="scale_scan_files/figure-html/unnamed-chunk-19-1.png" class="r-plt" alt="Time plot of the standardized Tarazona BAI chronology and the SPEI of the best window from 1965 to 2017. The two series follow each other, with the lowest values of both in the driest years." width="672"></p>
 <p>Any other window can be extracted by giving <code>cycle</code>,
 <code>scale</code> and <code>lag</code>:</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">spei_jul6</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Scale-scan.html">scale_extract</a></span><span class="op">(</span><span class="va">sc_lag</span>, cycle <span class="op">=</span> <span class="fl">7</span>, scale <span class="op">=</span> <span class="fl">6</span>, lag <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">spei_jun3</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Scale-scan.html">scale_extract</a></span><span class="op">(</span><span class="va">sc</span>, cycle <span class="op">=</span> <span class="fl">6</span>, scale <span class="op">=</span> <span class="fl">3</span>, lag <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
 <p>The correlation of the best window is chosen as the highest of many.
 It is biased upwards, so the strength of the relationship should be
 checked with independent data when possible.</p>
@@ -349,29 +414,36 @@ checked with independent data when possible.</p>
 <code><a href="../reference/Scale-scan.html">scale_scan()</a></code>, for example a reference period or a kernel.
 With <code>index = "spi"</code> the SPI is computed instead, from a
 precipitation series.</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">sc_spi</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Scale-scan.html">scale_scan</a></span><span class="op">(</span><span class="va">wichita</span><span class="op">[</span>, <span class="st">"PRCP"</span><span class="op">]</span>, <span class="va">yield</span>,</span>
-<span>  scales <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">12</span>, index <span class="op">=</span> <span class="st">"spi"</span>,</span>
-<span>  detrend <span class="op">=</span> <span class="cn">TRUE</span>, distribution <span class="op">=</span> <span class="st">"PearsonIII"</span></span>
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">prcp</span> <span class="op">&lt;-</span> <span class="fu">to_monthly</span><span class="op">(</span><span class="va">clim</span><span class="op">[</span>, <span class="st">"PRCP"</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="va">sc_spi</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Scale-scan.html">scale_scan</a></span><span class="op">(</span><span class="va">prcp</span>, <span class="va">rbai</span>,</span>
+<span>  scales <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">24</span>, index <span class="op">=</span> <span class="st">"spi"</span>,</span>
+<span>  distribution <span class="op">=</span> <span class="st">"PearsonIII"</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">sc_spi</span><span class="op">$</span><span class="va">best</span></span>
-<span><span class="co">#&gt;       sign lag cycle label scale         r            p      p.adj  n</span></span>
-<span><span class="co">#&gt; 1 positive   0     7   Jul     3 0.6293285 0.0001140446 0.01642242 32</span></span>
-<span><span class="co">#&gt; 2 negative  NA    NA  &lt;NA&gt;    NA        NA           NA         NA NA</span></span></code></pre></div>
+<span><span class="co">#&gt;       sign lag cycle label scale         r          p       p.adj  n</span></span>
+<span><span class="co">#&gt; 1 positive   0     8   Aug     8 0.7898762 2.0595e-12 5.93136e-10 53</span></span>
+<span><span class="co">#&gt; 2 negative  NA    NA  &lt;NA&gt;    NA        NA         NA          NA NA</span></span></code></pre></div>
+<p>The SPI gives the same window, with a correlation of 0.79. At this
+site the variation of the water balance between years comes mostly from
+the precipitation.</p>
 <p>The index can also be computed beforehand and passed with
 <code>index = "precomputed"</code>, as a time series with one column per
 time scale. The time scales are taken from the column names, or given in
 <code>scales</code>:</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">idx</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">3</span>, <span class="fl">6</span>, <span class="fl">12</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">s</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="fu"><a href="../reference/Drought-indices.html">spei</a></span><span class="op">(</span><span class="va">bal</span>, <span class="va">s</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span><span class="op">$</span><span class="va">fitted</span></span>
 <span><span class="op">}</span><span class="op">)</span></span>
-<span><span class="va">idx</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/ts.html" class="external-link">ts</a></span><span class="op">(</span><span class="va">idx</span>, start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1980</span>, <span class="fl">1</span><span class="op">)</span>, frequency <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span>
+<span><span class="va">idx</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/ts.html" class="external-link">ts</a></span><span class="op">(</span><span class="va">idx</span>, start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1961</span>, <span class="fl">1</span><span class="op">)</span>, frequency <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">idx</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"SPEI-1"</span>, <span class="st">"SPEI-3"</span>, <span class="st">"SPEI-6"</span>, <span class="st">"SPEI-12"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/Scale-scan.html">scale_scan</a></span><span class="op">(</span><span class="va">idx</span>, <span class="va">yield</span>, index <span class="op">=</span> <span class="st">"precomputed"</span>, detrend <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">$</span><span class="va">best</span></span>
-<span><span class="co">#&gt;       sign lag cycle label scale         r           p       p.adj  n</span></span>
-<span><span class="co">#&gt; 1 positive   0     7   Jul     3 0.6463505 6.43329e-05 0.003087979 32</span></span>
-<span><span class="co">#&gt; 2 negative  NA    NA  &lt;NA&gt;    NA        NA          NA          NA NA</span></span></code></pre></div>
+<span><span class="va">sc_pre</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Scale-scan.html">scale_scan</a></span><span class="op">(</span><span class="va">idx</span>, <span class="va">rbai</span>, index <span class="op">=</span> <span class="st">"precomputed"</span><span class="op">)</span></span>
+<span><span class="va">sc_pre</span><span class="op">$</span><span class="va">best</span></span>
+<span><span class="co">#&gt;       sign lag cycle label scale         r            p        p.adj  n</span></span>
+<span><span class="co">#&gt; 1 positive   0     8   Aug    12 0.7731425 1.167024e-11 5.601717e-10 53</span></span>
+<span><span class="co">#&gt; 2 negative  NA    NA  &lt;NA&gt;    NA        NA           NA           NA NA</span></span></code></pre></div>
+<p>With only these four time scales, the best window is August at 12
+months.</p>
 <p>This is useful to scan an index computed elsewhere, or a set of time
 scales computed once and used for several annual series.</p>
 </div>
@@ -381,11 +453,32 @@ scales computed once and used for several annual series.</p>
 <p>The scan is not limited to monthly data. The position of each value
 in the year comes from the frequency of the time series. Weekly data
 (frequency 52) give one row per week, labelled <code>W1</code> to
-<code>W52</code>, and <code>W1-1</code> to <code>W52-1</code> for the
-previous year. The time scales are then in weeks:</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># bal_week: a weekly water balance, as a ts with frequency 52</span></span>
-<span><span class="va">sc_week</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Scale-scan.html">scale_scan</a></span><span class="op">(</span><span class="va">bal_week</span>, <span class="va">rings</span>, scales <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">52</span>, by <span class="op">=</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<code>W52</code>. Other frequencies give one row per period, labelled
+<code>P1</code>, <code>P2</code>, etc. The time scales are then in
+periods.</p>
+<p>The original analysis of these data used the 48 periods per year of
+the Spanish drought monitor (Manrique-Alba et al., 2025). We scan time
+scales from 4 to 96 periods (1 to 24 months) in steps of 4:</p>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">bal48</span> <span class="op">&lt;-</span> <span class="va">clim</span><span class="op">[</span>, <span class="st">"PRCP"</span><span class="op">]</span> <span class="op">-</span> <span class="va">clim</span><span class="op">[</span>, <span class="st">"ETO"</span><span class="op">]</span></span>
+<span><span class="va">sc48</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Scale-scan.html">scale_scan</a></span><span class="op">(</span><span class="va">bal48</span>, <span class="va">rbai</span>, scales <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">96</span>, by <span class="op">=</span> <span class="fl">4</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">sc48</span><span class="op">$</span><span class="va">best</span></span>
+<span><span class="co">#&gt;       sign lag cycle label scale         r            p        p.adj  n</span></span>
+<span><span class="co">#&gt; 1 positive   0    33   P33    40 0.8252678 2.951287e-14 3.399883e-11 53</span></span>
+<span><span class="co">#&gt; 2 negative  NA    NA  &lt;NA&gt;    NA        NA           NA           NA NA</span></span></code></pre></div>
+<p>The best window ends in period 33, the first quarter of September,
+and has a time scale of 40 periods (10 months), with r = 0.83. The
+monthly scan found a window of 8 months ending in August. The heatmap
+shows that many neighbouring cells have almost the same correlation, so
+the exact position and length of the best window are not well
+determined. Manrique-Alba et al. (2025) used period 34 and a time scale
+of 12 months for this site, with a different model that included the
+thinned plots.</p>
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">sc48</span><span class="op">)</span></span></code></pre></div>
+<p><img src="scale_scan_files/figure-html/unnamed-chunk-25-1.png" class="r-plt" alt="Heatmap of the correlation between the Tarazona BAI chronology and the SPEI computed with 48 periods per year, by period and time scale. The highest correlations are in late summer at time scales of about 30 to 50 periods." width="768"></p>
+<p>See <code><a href="../articles/weekly.html">vignette("weekly")</a></code> for how to compute the indices
+with weekly and other non-monthly data.</p>
 </div>
 <div class="section level2">
 <h2 id="several-annual-series">Several annual series<a class="anchor" aria-label="anchor" href="#several-annual-series"></a>
@@ -394,55 +487,68 @@ previous year. The time scales are then in weeks:</p>
 trees, or several fields of the same crop. There are two ways to analyse
 them.</p>
 <p>The first one is to average them into a single series, and scan it
-once. <code>y</code> can be a time series with one column per series, a
-data frame with the years in the first column and one column per series,
-or a data frame with repeated years (one row per year and series). All
-the values of each year are averaged. <code>y.count</code> keeps the
-number of values in each year.</p>
-<p>Our synthetic ‘trees’ share a common signal, the water balance of
-April to June, and each one has its own noise. The noise is large, as it
-is in real trees:</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">11</span><span class="op">)</span></span>
-<span><span class="va">common</span> <span class="op">&lt;-</span> <span class="fu">season</span><span class="op">(</span><span class="va">bal</span>, <span class="fl">4</span><span class="op">:</span><span class="fl">6</span><span class="op">)</span></span>
-<span><span class="va">trees</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">8</span>, <span class="kw">function</span><span class="op">(</span><span class="va">i</span><span class="op">)</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">common</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">years</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">trees</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"tree"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">8</span><span class="op">)</span></span>
-<span><span class="va">trees</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/ts.html" class="external-link">ts</a></span><span class="op">(</span><span class="va">trees</span>, start <span class="op">=</span> <span class="fl">1980</span>, frequency <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">sc_mean</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Scale-scan.html">scale_scan</a></span><span class="op">(</span><span class="va">bal</span>, <span class="va">trees</span>, scales <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">12</span><span class="op">)</span></span>
-<span><span class="va">sc_mean</span><span class="op">$</span><span class="va">best</span></span>
+once. This is what we did above. <code>y</code> can be a time series
+with one column per series, a data frame with the years in the first
+column and one column per series, or a data frame with repeated years
+(one row per year and series). All the values of each year are averaged.
+<code>y.count</code> keeps the number of values in each year. The long
+format gives the same result as the matrix:</p>
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">long</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  year <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/time.html" class="external-link">time</a></span><span class="op">(</span><span class="va">rbai</span><span class="op">)</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">rbai</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  bai <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/vector.html" class="external-link">as.vector</a></span><span class="op">(</span><span class="va">rbai</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">long</span><span class="op">[</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">long</span><span class="op">$</span><span class="va">bai</span><span class="op">)</span>, <span class="op">]</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   year        bai</span></span>
+<span><span class="co">#&gt; 1 1965 -0.5839508</span></span>
+<span><span class="co">#&gt; 2 1966  0.4850719</span></span>
+<span><span class="co">#&gt; 3 1967 -0.1933830</span></span>
+<span><span class="co">#&gt; 4 1968  0.1507774</span></span>
+<span><span class="co">#&gt; 5 1969 -0.2699340</span></span>
+<span><span class="co">#&gt; 6 1970 -0.1973903</span></span>
+<span><span class="fu"><a href="../reference/Scale-scan.html">scale_scan</a></span><span class="op">(</span><span class="va">bal</span>, <span class="va">long</span>, scales <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">24</span><span class="op">)</span><span class="op">$</span><span class="va">best</span><span class="op">[</span><span class="fl">1</span>, <span class="op">]</span></span>
 <span><span class="co">#&gt;       sign lag cycle label scale         r            p        p.adj  n</span></span>
-<span><span class="co">#&gt; 1 positive   0     6   Jun     3 0.9012124 2.031634e-12 2.925552e-10 32</span></span>
-<span><span class="co">#&gt; 2 negative  NA    NA  &lt;NA&gt;    NA        NA           NA           NA NA</span></span></code></pre></div>
+<span><span class="co">#&gt; 1 positive   0     8   Aug     8 0.7981936 8.194739e-13 2.360085e-10 53</span></span></code></pre></div>
 <p>The second one is to scan each series on its own:</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">per_tree</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">trees</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">tr</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="fu"><a href="../reference/Scale-scan.html">scale_scan</a></span><span class="op">(</span><span class="va">bal</span>, <span class="va">trees</span><span class="op">[</span>, <span class="va">tr</span><span class="op">]</span>, scales <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">12</span><span class="op">)</span><span class="op">$</span><span class="va">best</span><span class="op">[</span><span class="fl">1</span>, <span class="op">]</span></span>
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">per_core</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">rbai</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">core</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="../reference/Scale-scan.html">scale_scan</a></span><span class="op">(</span><span class="va">bal</span>, <span class="va">rbai</span><span class="op">[</span>, <span class="va">core</span><span class="op">]</span>, scales <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">24</span><span class="op">)</span><span class="op">$</span><span class="va">best</span><span class="op">[</span><span class="fl">1</span>, <span class="op">]</span></span>
 <span><span class="op">}</span><span class="op">)</span></span>
-<span><span class="va">per_tree</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="va">per_tree</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span>tree <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">trees</span><span class="op">)</span>, <span class="va">per_tree</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"label"</span>, <span class="st">"scale"</span>, <span class="st">"r"</span>, <span class="st">"p.adj"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
-<span><span class="co">#&gt;    tree label scale         r        p.adj</span></span>
-<span><span class="co">#&gt; 1 tree1  &lt;NA&gt;    NA        NA           NA</span></span>
-<span><span class="co">#&gt; 2 tree2   Sep    10 0.6159819 3.240556e-02</span></span>
-<span><span class="co">#&gt; 3 tree3  &lt;NA&gt;    NA        NA           NA</span></span>
-<span><span class="co">#&gt; 4 tree4  &lt;NA&gt;    NA        NA           NA</span></span>
-<span><span class="co">#&gt; 5 tree5   Jun    12 0.7570813 1.188443e-04</span></span>
-<span><span class="co">#&gt; 6 tree6   Jul     4 0.7557850 8.197810e-05</span></span>
-<span><span class="co">#&gt; 7 tree7  &lt;NA&gt;    NA        NA           NA</span></span>
-<span><span class="co">#&gt; 8 tree8   Oct     8 0.7677985 4.200797e-05</span></span></code></pre></div>
-<p>The average has a much stronger and more stable signal than any
-single tree, because the individual noise cancels out. This is the
-standard way of building tree-ring chronologies. But averaging is only
-valid if all the series share the same climate data and respond to it in
-a similar way. It also hides any difference between sites or
-individuals. If the series are on different scales, standardize them
-before averaging.</p>
+<span><span class="va">per_core</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="va">per_core</span><span class="op">)</span></span>
+<span><span class="va">per_core</span><span class="op">$</span><span class="va">r</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">per_core</span><span class="op">$</span><span class="va">r</span>, <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="va">per_core</span><span class="op">$</span><span class="va">p.adj</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">signif</a></span><span class="op">(</span><span class="va">per_core</span><span class="op">$</span><span class="va">p.adj</span>, <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span>core <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">rbai</span><span class="op">)</span>, <span class="va">per_core</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"label"</span>, <span class="st">"scale"</span>, <span class="st">"r"</span>, <span class="st">"p.adj"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="co">#&gt;        core label scale    r   p.adj</span></span>
+<span><span class="co">#&gt; 1  TAPHD06A   Aug    11 0.76 1.6e-08</span></span>
+<span><span class="co">#&gt; 2  TAPHD06B   Aug    11 0.76 1.6e-08</span></span>
+<span><span class="co">#&gt; 3  TAPHD10A   Aug     9 0.72 9.8e-07</span></span>
+<span><span class="co">#&gt; 4  TAPHD10B   Aug     8 0.68 1.4e-05</span></span>
+<span><span class="co">#&gt; 5  TAPHD15A   Aug    11 0.68 1.3e-05</span></span>
+<span><span class="co">#&gt; 6  TAPHD15B   Aug    11 0.75 5.4e-08</span></span>
+<span><span class="co">#&gt; 7  TAPHD25A   Aug     8 0.81 2.3e-10</span></span>
+<span><span class="co">#&gt; 8  TAPHD31A   Oct    19 0.59 1.5e-03</span></span>
+<span><span class="co">#&gt; 9  TAPHD31B   Aug     7 0.64 1.1e-04</span></span>
+<span><span class="co">#&gt; 10 TAPHD35A   Jul     2 0.57 1.7e-02</span></span>
+<span><span class="co">#&gt; 11 TAPHD45A   Aug     9 0.65 3.5e-04</span></span>
+<span><span class="co">#&gt; 12 TAPHD53A   Aug    10 0.80 1.2e-10</span></span>
+<span><span class="co">#&gt; 13 TAPHD53B   Aug    10 0.80 2.0e-10</span></span>
+<span><span class="co">#&gt; 14 TAPHD55A   Aug     8 0.76 1.0e-08</span></span>
+<span><span class="co">#&gt; 15 TAPHD55B   Aug     8 0.73 1.3e-07</span></span>
+<span><span class="co">#&gt; 16 TAPHD59A   Dec    15 0.74 8.1e-08</span></span>
+<span><span class="co">#&gt; 17 TAPHD79A   Aug     8 0.65 4.3e-05</span></span>
+<span><span class="co">#&gt; 18 TAPHD79B   Aug     9 0.66 1.9e-05</span></span></code></pre></div>
+<p>Most cores (15 of 18) have their best window in August, but with time
+scales from 2 to 19 months, and correlations from 0.57 to 0.81. The
+average has a stronger signal than all but 1 of the single cores,
+because the individual noise cancels out. This is the standard way of
+building tree-ring chronologies. But averaging is only valid if all the
+series share the same climate data and respond to it in a similar way.
+It also hides any difference between sites or individuals. If the series
+are on different scales, standardize them before averaging. Here the
+detrending already puts all the cores on the same scale.</p>
 <p>Scanning each series gives a window for each one, so it can reveal
 different responses, and each series can have its own climate data. But
-each scan has more noise, and there are more tests in total. In the
-example above, the windows of the single trees are scattered, and some
-trees have no significant window, although all of them respond to the
-same months.</p>
+each scan has more noise, and there are more tests in total.</p>
 </div>
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
@@ -455,6 +561,11 @@ Ripoll, M.Á., Sánchez-Miranda, Á. (2025). Adaptive responses to
 thinning: growth and sensitivity to hydric and thermal stress in four
 widely planted pine species. <em>Agricultural and Forest
 Meteorology</em>, 373, 110777. <a href="https://doi.org/10.1016/j.agrformet.2025.110777" class="external-link uri">https://doi.org/10.1016/j.agrformet.2025.110777</a></p>
+<p>Manrique-Alba, À., Beguería, S., Molina, A.J., González-Sanchis, M.,
+Tomàs-Burguera, M., del Campo, A.D., Colangelo, M., Camarero, J.J.
+(2020). Long-term thinning effects on tree growth, drought response and
+water use efficiency at two Aleppo pine plantations in Spain.
+<em>Science of the Total Environment</em>, 728, 138536. <a href="https://doi.org/10.1016/j.scitotenv.2020.138536" class="external-link uri">https://doi.org/10.1016/j.scitotenv.2020.138536</a></p>
 <p>Pasho, E., Camarero, J.J., de Luis, M., Vicente-Serrano, S.M. (2011).
 Impacts of drought at different time scales on forest growth across a
 wide climatic gradient in north-eastern Spain. <em>Agricultural and
@@ -465,6 +576,11 @@ Lorenzo-Lacruz, J., Revuelto, J., Morán-Tejeda, E., Sanchez-Lorenzo, A.
 (2013). Response of vegetation to drought time-scales across global land
 biomes. <em>Proceedings of the National Academy of Sciences</em>,
 110(1), 52–57. <a href="https://doi.org/10.1073/pnas.1207068110" class="external-link uri">https://doi.org/10.1073/pnas.1207068110</a></p>
+<p>Vicente-Serrano, S.M., Tomas-Burguera, M., Beguería, S., Reig, F.,
+Latorre, B., Peña-Gallardo, M., Luna, M.Y., Morata, A.,
+González-Hidalgo, J.C. (2017). A high resolution dataset of drought
+indices for Spain. <em>Data</em>, 2(3), 22. <a href="https://doi.org/10.3390/data2030022" class="external-link uri">https://doi.org/10.3390/data2030022</a>. Data available from
+the Spanish drought monitor, <a href="https://monitordesequia.csic.es" class="external-link uri">https://monitordesequia.csic.es</a>.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

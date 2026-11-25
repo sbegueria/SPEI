@@ -31,7 +31,7 @@ print(x, ...)
 # S3 method for class 'scale_scan'
 summary(object, ...)
 # S3 method for class 'scale_scan'
-plot(x, sig = 'mark', main = NULL, ...)
+plot(x, sig = 'mark', main = NULL, colour = 'r2', ...)
 
 scale_extract(x, cycle = NULL, scale = NULL, lag = 0, which = "positive")
 
@@ -42,7 +42,7 @@ print(x, ...)
 summary(object, ...)
 
 # S3 method for class 'scale_scan'
-plot(x, sig = "mark", main = NULL, ...)
+plot(x, sig = "mark", main = NULL, colour = "r2", ...)
 ```
 
 ## Arguments
@@ -154,6 +154,15 @@ plot(x, sig = "mark", main = NULL, ...)
 - main:
 
   optional, a character string with the plot title.
+
+- colour:
+
+  how the correlations are mapped to colours in the plot: `"r2"`
+  (default) uses a scale proportional to the squared correlation with
+  its sign, which spreads the colours over the high correlations and
+  highlights the differences between them; `"r"` uses a scale
+  proportional to the correlation. The legend shows the correlation in
+  both cases.
 
 ## Value
 

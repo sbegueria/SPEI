@@ -33,6 +33,7 @@ annual series of the index for one window."><meta property="og:image" content="h
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/options.html">Choosing the options</a></li>
     <li><a class="dropdown-item" href="../articles/gridded.html">Many sites and gridded data</a></li>
+    <li><a class="dropdown-item" href="../articles/weekly.html">Weekly and other non-monthly time series</a></li>
     <li><a class="dropdown-item" href="../articles/scale_scan.html">Relating the index to annual series: finding the best time scale</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -83,7 +84,7 @@ annual series of the index for one window.</p>
 <span><span class="co"># S3 method for class 'scale_scan'</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
 <span><span class="co"># S3 method for class 'scale_scan'</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, sig <span class="op">=</span> <span class="st">'mark'</span>, main <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, sig <span class="op">=</span> <span class="st">'mark'</span>, main <span class="op">=</span> <span class="cn">NULL</span>, colour <span class="op">=</span> <span class="st">'r2'</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">scale_extract</span><span class="op">(</span><span class="va">x</span>, cycle <span class="op">=</span> <span class="cn">NULL</span>, scale <span class="op">=</span> <span class="cn">NULL</span>, lag <span class="op">=</span> <span class="fl">0</span>, which <span class="op">=</span> <span class="st">"positive"</span><span class="op">)</span></span>
 <span></span>
@@ -94,7 +95,7 @@ annual series of the index for one window.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'scale_scan'</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, sig <span class="op">=</span> <span class="st">"mark"</span>, main <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, sig <span class="op">=</span> <span class="st">"mark"</span>, main <span class="op">=</span> <span class="cn">NULL</span>, colour <span class="op">=</span> <span class="st">"r2"</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -208,6 +209,15 @@ best window to extract, either <code>'positive'</code> (default) or
 
 <dt id="arg-main">main<a class="anchor" aria-label="anchor" href="#arg-main"></a></dt>
 <dd><p>optional, a character string with the plot title.</p></dd>
+
+
+<dt id="arg-colour">colour<a class="anchor" aria-label="anchor" href="#arg-colour"></a></dt>
+<dd><p>how the correlations are mapped to colours in the plot:
+<code>"r2"</code> (default) uses a scale proportional to the squared
+correlation with its sign, which spreads the colours over the high
+correlations and highlights the differences between them; <code>"r"</code>
+uses a scale proportional to the correlation. The legend shows the
+correlation in both cases.</p></dd>
 
 </dl></div>
     <div class="section level2">

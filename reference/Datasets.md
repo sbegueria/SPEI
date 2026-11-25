@@ -8,7 +8,11 @@ evapotranspiration) at eleven locations around the World, since January
 1900 (1296 months); `cabinda`: one year of data for computing
 Penman-Monteith ET0 from Allen et al. (1998); `cruts4`: 120 years of
 monthly climatic water balance (precipitation minus reference
-evapotranspiration) data at six grid points from CRU TS 4.05.
+evapotranspiration) data at six grid points from CRU TS 4.05;
+`tarazona`: annual basal area increment of 18 cores of Aleppo pine
+(*Pinus halepensis*) at Tarazona (Spain) from 1959 to 2017, and climate
+at the same site with 48 periods per year (four per month) from 1961 to
+2020.
 
 ## Usage
 
@@ -17,6 +21,7 @@ data(wichita)
 data(balance)
 data(cabinda)
 data(cruts4)
+data(tarazona)
 ```
 
 ## Format
@@ -108,6 +113,42 @@ grid points from CRU TS 4.05 data set. The array has dimensions
 1900. Longitudes are (0.25, 0.75), and latitudes (42.25, 42.75, 43.25),
 corresponding to the Central Pyrenees between Spain and France.
 
+`tarazona` dataset: a list with three elements, with data from the
+unthinned (control) plot of an Aleppo pine (*Pinus halepensis*)
+plantation at Tarazona (Zaragoza, Spain; lat=41.8667, lon=-1.8333,
+elevation=785 m a.s.l.):
+
+- site:
+
+  a list with the site metadata: `name`, `lat`, `lon`, `elevation` (m
+  a.s.l.), `species`, `plot` (the plot code, TAPHD), `treatment`
+  (control, i.e. unthinned) and `thinning.year` (1998, the year in which
+  the neighbouring plots of the experiment were thinned; the control
+  plot was not thinned).
+
+- bai:
+
+  a data frame with the annual basal area increment (BAI, in cm2 per
+  year) of the control plot. The first column, `year`, has the years
+  (1959 to 2017), and the other 18 columns the BAI of each core, `NA`
+  outside the years covered by the core. The cores come from 11 trees.
+  The column names are the plot code, the tree number and the core
+  letter, e.g. `TAPHD06A` and `TAPHD06B` are two cores of tree TAPHD06.
+  BAI has an age and size trend, which must be removed before relating
+  it to climate (see
+  [`vignette("scale_scan")`](https://sbegueria.github.io/SPEI/articles/scale_scan.md)).
+
+- clim:
+
+  a multivariate time series (`ts`) with frequency 48 (four periods per
+  month), from the first period of January 1961 to the last period of
+  December 2020 (2880 periods). The periods of each month start on days
+  1, 9, 16 and 23, so they span days 1-8, 9-15, 16-22, and 23 to the end
+  of the month. The columns are `PRCP`, precipitation in mm per period;
+  `ETO`, FAO-56 Penman-Monteith reference evapotranspiration in mm per
+  period; `TMIN` and `TMAX`, mean daily minimum and maximum temperature
+  in the period, in ºC. Values are rounded to two decimals.
+
 ## Source
 
 The `wichita` data were obtained from the Global Historical Climatology
@@ -116,7 +157,19 @@ dataset were extracted from CRU TS V3.1 and from the 20th Century
 Reanalysis V2 data set. Data for the `cabinda` dataset were taken from
 Allen et al. (1998), page 69, figure 18. The `cruts4` data were obtained
 from the CRU (Climatic Research Unit, University of East Anglia
-<https://crudata.uea.ac.uk/>) TS V4.05 data set.
+<https://crudata.uea.ac.uk/>) TS V4.05 data set. The basal area
+increment in the `tarazona` dataset comes from Manrique-Alba et al.
+(2020), and is part of the dataset: Manrique-Alba, À., Molina, A.J.,
+Beguería, S., Camarero, J.J., et al. (2025). Basal Area Increment and
+Climate Data from Long-Term Silviculture Monitoring Sites in Spain
+(SilvAdapt.net) \[Dataset\]. DIGITAL.CSIC,
+[doi:10.20350/digitalcsic/17165](https://doi.org/10.20350/digitalcsic/17165)
+. The same data were used in Manrique-Alba et al. (2025). The climate
+data were extracted from the gridded dataset of the Spanish drought
+monitor (<https://monitordesequia.csic.es>, Vicente-Serrano et al.,
+2017). The `tarazona` data are distributed with the package, under its
+licence (GPL (\>= 2)), by the data authors. The script used to build the
+dataset is `data-raw/tarazona.R` in the package source repository.
 
 ## Details
 
@@ -132,6 +185,24 @@ Precipitation Evapotranspiration Index – SPEI. *Journal of Climate*
 R.G. Allen, L.S. Pereira, D. Raes, M. Smith. 1998. *Crop
 evapotranspiration - Guidelines for computing crop water requirements -
 FAO Irrigation and drainage paper 56*. FAO, Rome. ISBN 92-5-104219-5.
+
+À. Manrique-Alba, S. Beguería, A.J. Molina, M. González-Sanchis, M.
+Tomàs-Burguera, A.D. del Campo, M. Colangelo, J.J. Camarero. 2020.
+Long-term thinning effects on tree growth, drought response and water
+use efficiency at two Aleppo pine plantations in Spain. *Science of the
+Total Environment* **728**: 138536, DOI:
+10.1016/j.scitotenv.2020.138536.
+
+À. Manrique-Alba, S. Beguería, J.J. Camarero, A.J. Molina, et al. 2025.
+Adaptive responses to thinning: growth and sensitivity to hydric and
+thermal stress in four widely planted pine species. *Agricultural and
+Forest Meteorology* **373**: 110777, DOI:
+10.1016/j.agrformet.2025.110777.
+
+S.M. Vicente-Serrano, M. Tomas-Burguera, S. Beguería, F. Reig, B.
+Latorre, M. Peña-Gallardo, M.Y. Luna, A. Morata, J.C. González-Hidalgo.
+2017. A high resolution dataset of drought indices for Spain. *Data*
+**2**(3): 22, DOI: 10.3390/data2030022.
 
 ## Author
 
@@ -195,4 +266,40 @@ data(cruts4)
 summary(cruts4)
 #>     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
 #> -265.600  -33.200    4.900    7.755   49.225  188.300 
+data(tarazona)
+str(tarazona)
+#> List of 3
+#>  $ site:List of 8
+#>   ..$ name         : chr "Tarazona"
+#>   ..$ lat          : num 41.9
+#>   ..$ lon          : num -1.83
+#>   ..$ elevation    : num 785
+#>   ..$ species      : chr "Pinus halepensis"
+#>   ..$ plot         : chr "TAPHD"
+#>   ..$ treatment    : chr "control (unthinned)"
+#>   ..$ thinning.year: num 1998
+#>  $ bai :'data.frame':    59 obs. of  19 variables:
+#>   ..$ year    : int [1:59] 1959 1960 1961 1962 1963 1964 1965 1966 1967 1968 ...
+#>   ..$ TAPHD06A: num [1:59] NA NA NA NA NA ...
+#>   ..$ TAPHD06B: num [1:59] NA NA NA NA NA ...
+#>   ..$ TAPHD10A: num [1:59] NA NA NA NA NA ...
+#>   ..$ TAPHD10B: num [1:59] NA NA NA NA NA ...
+#>   ..$ TAPHD15A: num [1:59] NA NA NA NA NA ...
+#>   ..$ TAPHD15B: num [1:59] NA NA NA NA NA ...
+#>   ..$ TAPHD25A: num [1:59] NA NA NA NA NA ...
+#>   ..$ TAPHD31A: num [1:59] NA NA NA NA NA ...
+#>   ..$ TAPHD31B: num [1:59] NA NA NA NA NA ...
+#>   ..$ TAPHD35A: num [1:59] NA NA NA NA NA ...
+#>   ..$ TAPHD45A: num [1:59] NA NA NA NA NA ...
+#>   ..$ TAPHD53A: num [1:59] NA NA NA NA NA ...
+#>   ..$ TAPHD53B: num [1:59] NA NA NA NA NA ...
+#>   ..$ TAPHD55A: num [1:59] NA NA NA NA NA ...
+#>   ..$ TAPHD55B: num [1:59] NA NA NA NA NA ...
+#>   ..$ TAPHD59A: num [1:59] 0.207 0.505 1.239 2.329 3.906 ...
+#>   ..$ TAPHD79A: num [1:59] NA NA NA NA NA ...
+#>   ..$ TAPHD79B: num [1:59] NA NA NA NA NA ...
+#>  $ clim: Time-Series [1:2880, 1:4] from 1961 to 2021: 15.1 4.16 16.51 9.75 1.35 ...
+#>   ..- attr(*, "dimnames")=List of 2
+#>   .. ..$ : NULL
+#>   .. ..$ : chr [1:4] "PRCP" "ETO" "TMIN" "TMAX"
 ```

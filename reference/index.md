@@ -43,7 +43,8 @@
 - [`wichita`](https://sbegueria.github.io/SPEI/reference/Datasets.md)
   [`balance`](https://sbegueria.github.io/SPEI/reference/Datasets.md)
   [`cabinda`](https://sbegueria.github.io/SPEI/reference/Datasets.md)
-  [`cruts4`](https://sbegueria.github.io/SPEI/reference/Datasets.md) :
+  [`cruts4`](https://sbegueria.github.io/SPEI/reference/Datasets.md)
+  [`tarazona`](https://sbegueria.github.io/SPEI/reference/Datasets.md) :
   Data sets for illustrating the functions in the SPEI package
 
 ## Package
