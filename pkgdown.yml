@@ -1,8 +1,11 @@
 pandoc: 3.8.3
 pkgdown: 2.2.1
 pkgdown_sha: ~
-articles: {}
-last_built: 2026-11-25T08:51Z
+articles:
+  gridded: gridded.html
+  options: options.html
+  SPEI: SPEI.html
+last_built: 2026-11-25T09:31Z
 urls:
   reference: https://sbegueria.github.io/SPEI/reference
   article: https://sbegueria.github.io/SPEI/articles
