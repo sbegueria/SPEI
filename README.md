@@ -102,7 +102,7 @@ Feel free to [send an issue](https://github.com/sbegueria/SPEI/issues) if you ha
 
 ## Use of AI tools
 
-Since version 1.9.0, the maintainers have used AI coding assistants (Claude, Anthropic) for code review, bug fixing, tests and documentation. All changes were reviewed, tested and approved by the maintainers, who are responsible for the package.
+Since version 1.9.0, the maintainers have used AI coding assistants for code review, bug fixing, tests and documentation. All changes were reviewed, tested and approved by the maintainers, who are responsible for the package.
 
 
 ## Copyright and license
