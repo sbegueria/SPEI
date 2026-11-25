@@ -100,6 +100,11 @@ Version 1.9.0 fixes a number of bugs found in a full audit of the package. Some 
 Feel free to [send an issue](https://github.com/sbegueria/SPEI/issues) if you have any questions or problems.
 
 
+## Use of AI tools
+
+Since version 1.9.0, the maintainers have used AI coding assistants (Claude, Anthropic) for code review, bug fixing, tests and documentation. All changes were reviewed, tested and approved by the maintainers, who are responsible for the package.
+
+
 ## Copyright and license
 
 Copyright (C) 2013–2026 Santiago Beguería and Sergio M. Vicente-Serrano.
