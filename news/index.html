@@ -19,8 +19,9 @@
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/gridded.html">Many sites and gridded data</a></li>
-    <li><a class="dropdown-item" href="../articles/options.html">Choosing the options</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/options.html">Choosing the options</a></li>
+    <li><a class="dropdown-item" href="../articles/gridded.html">Many sites and gridded data</a></li>
+    <li><a class="dropdown-item" href="../articles/scale_scan.html">Relating the index to annual series: finding the best time scale</a></li>
   </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -39,6 +40,10 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="spei-development-version">SPEI (development version)<a class="anchor" aria-label="anchor" href="#spei-development-version"></a></h2>
+<div class="section level3">
+<h3 id="new-features-development-version">New features<a class="anchor" aria-label="anchor" href="#new-features-development-version"></a></h3>
+<ul><li>New function <code>&lt;scale_scan&gt;</code> finds the time scale and the position in the year (month, week, etc.) at which the SPEI or the SPI best correlates with an annual series, such as tree-ring widths, crop yields or reservoir levels (<a href="https://github.com/sbegueria/SPEI/issues/7" class="external-link">#7</a>). It computes the index at a set of time scales (or takes already computed index values), correlates it with the annual series at every position in the year and time scale, optionally also in previous years (<code>lag</code>), adjusts the p-values for multiple testing, and reports the strongest significant positive and negative windows. It works with any time series frequency. Several annual series (e.g. several trees) are averaged per year. A <code>plot</code> method draws a heatmap of the correlations, and <code>&lt;scale_extract&gt;</code> extracts the annual series of the index for a given window. A new vignette, <code><a href="../articles/scale_scan.html">vignette("scale_scan")</a></code>, shows how to use them.</li>
+</ul></div>
 </div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.9.0" id="spei-190">SPEI 1.9.0<a class="anchor" aria-label="anchor" href="#spei-190"></a></h2><p class="text-muted">CRAN release: 2026-11-23</p>

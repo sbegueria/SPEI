@@ -197,6 +197,14 @@ option) any later version.
   [`kern.plot()`](https://sbegueria.github.io/SPEI/reference/Kernel-functions.md)
   : Time kernel for computing the SPEI at different time scales.
 
+- [`scale_scan()`](https://sbegueria.github.io/SPEI/reference/Scale-scan.md)
+  [`scale_extract()`](https://sbegueria.github.io/SPEI/reference/Scale-scan.md)
+  [`print(`*`<scale_scan>`*`)`](https://sbegueria.github.io/SPEI/reference/Scale-scan.md)
+  [`summary(`*`<scale_scan>`*`)`](https://sbegueria.github.io/SPEI/reference/Scale-scan.md)
+  [`plot(`*`<scale_scan>`*`)`](https://sbegueria.github.io/SPEI/reference/Scale-scan.md)
+  : Find the time scale and the time of the year at which a drought
+  index best correlates with an annual series.
+
 ## Potential evapotranspiration
 
 - [`thornthwaite()`](https://sbegueria.github.io/SPEI/reference/Potential-evapotranspiration.md)
@@ -226,11 +234,11 @@ option) any later version.
 
 # Articles
 
-### All vignettes
+### Articles
 
-- [Many sites and gridded
-  data](https://sbegueria.github.io/SPEI/articles/gridded.md):
 - [Choosing the
   options](https://sbegueria.github.io/SPEI/articles/options.md):
-- [Getting started with
-  SPEI](https://sbegueria.github.io/SPEI/articles/SPEI.md):
+- [Many sites and gridded
+  data](https://sbegueria.github.io/SPEI/articles/gridded.md):
+- [Relating the index to annual series: finding the best time
+  scale](https://sbegueria.github.io/SPEI/articles/scale_scan.md):

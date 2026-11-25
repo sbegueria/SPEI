@@ -37,6 +37,8 @@ Useful links:
 
 - <https://spei.csic.es>
 
+- <https://sbegueria.github.io/SPEI/>
+
 - <https://github.com/sbegueria/SPEI>
 
 - Report bugs at <https://github.com/sbegueria/SPEI/issues>

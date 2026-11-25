@@ -18,6 +18,14 @@
   [`kern.plot()`](https://sbegueria.github.io/SPEI/reference/Kernel-functions.md)
   : Time kernel for computing the SPEI at different time scales.
 
+- [`scale_scan()`](https://sbegueria.github.io/SPEI/reference/Scale-scan.md)
+  [`scale_extract()`](https://sbegueria.github.io/SPEI/reference/Scale-scan.md)
+  [`print(`*`<scale_scan>`*`)`](https://sbegueria.github.io/SPEI/reference/Scale-scan.md)
+  [`summary(`*`<scale_scan>`*`)`](https://sbegueria.github.io/SPEI/reference/Scale-scan.md)
+  [`plot(`*`<scale_scan>`*`)`](https://sbegueria.github.io/SPEI/reference/Scale-scan.md)
+  : Find the time scale and the time of the year at which a drought
+  index best correlates with an annual series.
+
 ## Potential evapotranspiration
 
 - [`thornthwaite()`](https://sbegueria.github.io/SPEI/reference/Potential-evapotranspiration.md)
