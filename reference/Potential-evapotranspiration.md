@@ -18,12 +18,12 @@ See hargreaves
 thornthwaite(Tave, lat, na.rm = FALSE, verbose=TRUE)
 
 hargreaves(Tmin, Tmax, Ra = NULL, lat = NULL, Pre = NULL, na.rm = FALSE,
-verbose=TRUE)
+verbose=TRUE, dates = NULL)
 
 penman(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL, tsun = NULL,
        CC = NULL, ed = NULL, Tdew = NULL, RH = NULL, P = NULL, P0 = NULL,
        CO2 = NULL, z = NULL, crop='short', na.rm = FALSE, method='ICID',
-       verbose=TRUE)
+       verbose=TRUE, dates = NULL)
 
 penman(
   Tmin,
@@ -44,7 +44,8 @@ penman(
   crop = "short",
   na.rm = FALSE,
   method = "ICID",
-  verbose = TRUE
+  verbose = TRUE,
+  dates = NULL
 )
 
 thornthwaite(Tave, lat, na.rm = FALSE, verbose = TRUE)
@@ -88,6 +89,18 @@ thornthwaite(Tave, lat, na.rm = FALSE, verbose = TRUE)
   Either 'TRUE' (default) or 'FALSE'. The report is issued as a message,
   so it can also be silenced with
   [`suppressMessages()`](https://rdrr.io/r/base/message.html).
+
+- dates:
+
+  optional, a `Date` vector (or a character vector that can be converted
+  with [`as.Date()`](https://rdrr.io/r/base/as.Date.html)) with the date
+  of each time step, i.e. one element per row (first dimension) of the
+  input data. Only used by `hargreaves` and `penman`. If provided, the
+  computation is done at a daily time step: the inputs are daily values
+  (instead of monthly means and totals) and the output is ETo in mm per
+  day. The dates must not contain missing values and must be in strictly
+  increasing order; gaps between dates are allowed. If `NULL` (the
+  default), the data are monthly. See Details.
 
 - U2:
 
@@ -172,13 +185,25 @@ thornthwaite(Tave, lat, na.rm = FALSE, verbose = TRUE)
 ## Value
 
 A vector, matrix or 3-d array with the values of monthly potential or
-reference evapotranspiration, in mm.
+reference evapotranspiration, in mm. If the main input is a time series
+(and `dates` is not given) the output is a time series with the same
+time attributes.
+
+If `dates` is given, the output has one value of daily reference
+evapotranspiration per date, in mm per day. For vector or matrix input
+(including time series) it is a
+[`zoo`](https://rdrr.io/pkg/zoo/man/zoo.html) object with `index` equal
+to `dates`; a matrix input gives a multi-column `zoo` object that keeps
+the column names of `Tmin`. For 3-d array input it is an array of the
+same dimensions whose first `dimnames` are the dates in "YYYY-MM-DD"
+format, keeping the other `dimnames` of `Tmin`.
 
 A time series with the values of monthly potential or reference
-evapotranspiration, in mm. If the input is a matrix or a multivariate
-time series each column will be treated as independent data (e.g.,
-different observatories), and the output will be a multivariate time
-series.
+evapotranspiration, in mm (or, if `dates` is given, a `zoo` object or an
+array of daily reference evapotranspiration, in mm per day). If the
+input is a matrix or a multivariate time series each column will be
+treated as independent data (e.g., different observatories), and the
+output will be a multivariate time series.
 
 A time series with the values of monthly potential or reference
 evapotranspiration, in mm. If the input is a matrix or a multivariate
@@ -244,11 +269,12 @@ provided, following Yang et al. (2019): the term 0.00024 (CO2 - 300) is
 added to the wind coefficient of the denominator (0.34 for the short
 crop, 0.38 for the tall crop). This correction was derived for the short
 reference crop, but it is applied to whichever crop is selected,
-including 'tall'. The soil heat flux G is computed from the difference
-in mean temperature between the previous and the following months, using
-forward or backward differences at the first and last time steps.
-`penman` works with series of any length; with a single time step G is
-set to 0.
+including 'tall'. With monthly data, the soil heat flux G is computed
+from the difference in mean temperature between the previous and the
+following months (FAO-56 eq. 43), using forward or backward differences
+at the first and last time steps. `penman` works with series of any
+length; with a single time step G is set to 0. With daily data
+(`dates`), G is always 0.
 
 The function will produce an error message if a valid combination of
 input parameters is not provided. If `verbose` is \`TRUE\` (the default
@@ -271,6 +297,30 @@ to determine the position of each observation within the year (month),
 allowing the data to start in a month different than January. If no time
 information is provided, then the input data will be treated as a
 sequence of monthly values starting in January.
+
+**Daily data.** By default all three functions work with monthly data.
+`hargreaves` and `penman` can also compute daily ETo by passing the date
+of each time step in the argument `dates` (`thornthwaite` is a monthly
+method and has no daily version). In that case all the inputs are daily
+values (e.g., daily maximum and minimum temperature, daily mean wind
+speed, daily sunshine hours or daily solar radiation) and the output is
+ETo in mm per day, following Allen et al. (1998). The day of the year
+used for the extraterrestrial radiation is that of each date (FAO-56 eq.
+21-25), instead of the mid-month day used for monthly data, and the
+result is not multiplied by the number of days in the month. In `penman`
+the soil heat flux G is set to zero, as recommended for daily time steps
+(FAO-56 eq. 42), so the ETo of each day only depends on the inputs of
+that day. The precipitation-modified Hargreaves equation (Droogers and
+Allen, 2002) was calibrated with monthly precipitation, so `Pre` can not
+be used together with `dates`. With daily data the result carries the
+dates: vector and matrix input give a
+[`zoo`](https://rdrr.io/pkg/zoo/man/zoo.html) object indexed by `dates`,
+and 3-d array input gives an array with the dates as names of the time
+dimension. If the main input is a time series (`ts`) and `dates` is
+given, the time attributes of the series are ignored and the dates are
+taken from `dates`. A `zoo` result can be aggregated to other time steps
+with [`aggregate.zoo`](https://rdrr.io/pkg/zoo/man/aggregate.zoo.html),
+e.g. to monthly totals with `aggregate(x, zoo::as.yearmon, sum)`.
 
 See hargreaves
 
@@ -788,4 +838,52 @@ pen_co2 <- penman(TMIN, TMAX, AWND,
 #> Using user-provided wind speed at 2 m height (`U2`) data. Using latitude (`lat`) to estimate extraterrestrial radiation. Using bright sunshine duration data (`tsun`) to estimate incoming solar radiation. Using minimum temperature (`Tmin`) to estimate dewpoint temperature and actual vapour pressure. Assuming constant atmospheric surface pressure corresponding to elevation `z`. Using custom CO2 concentration. Computing for a short crop. Missing values (`NA`) will not be considered in the calculation. Input type is vector. Assuming the data are monthly time series starting in January, all regular (non-leap) years. Calculation method is ICID.
 plot(ts(cbind(pen_300, pen_co2), fr = 12))
 
+
+# Daily data
+
+# Synthetic daily series for one year (not real observations), for a site
+# at 40 N and 500 m a.s.l.
+dates <- seq(as.Date("2020-01-01"), as.Date("2020-12-31"), by = "day")
+doy <- as.numeric(format(dates, "%j"))
+tmin_d <- 5 - 8 * cos(2 * pi * (doy - 15) / 366)
+tmax_d <- tmin_d + 11 + 2 * sin(2 * pi * doy / 7)
+tsun_d <- 7 - 3 * cos(2 * pi * (doy - 15) / 366)
+# ETo in mm per day
+har_d <- hargreaves(tmin_d, tmax_d, lat = 40, dates = dates)
+#> Calculating reference evapotranspiration using the Hargreaves method. Using latitude (`lat`) to estimate extraterrestrial radiation. Checking for missing values (`NA`): all the data must be complete. Input type is vector. Daily data (`dates` provided) spanning 2020-01-01 to 2020-12-31; ET0 is given in mm per day.
+pen_d <- penman(tmin_d, tmax_d,
+  tsun = tsun_d, lat = 40, z = 500,
+  method = "FAO", dates = dates
+)
+#> No wind data (`U2`) provided, so using a constant value of 2 m s-1. Using latitude (`lat`) to estimate extraterrestrial radiation. Using bright sunshine duration data (`tsun`) to estimate incoming solar radiation. Using minimum temperature (`Tmin`) to estimate dewpoint temperature and actual vapour pressure. Assuming constant atmospheric surface pressure corresponding to elevation `z`. Computing for a short crop. Checking for missing values (`NA`): all the data must be complete. Input type is vector. Daily data (`dates` provided) spanning 2020-01-01 to 2020-12-31; ET0 is given in mm per day and the soil heat flux is set to zero. Calculation method is FAO.
+# The result is a zoo object indexed by the dates
+class(pen_d)
+#> [1] "zoo"
+head(pen_d)
+#> 2020-01-01 2020-01-02 2020-01-03 2020-01-04 2020-01-05 2020-01-06 
+#>  1.1375010  1.1754367  1.0769949  0.9262503  0.8382203  0.8728821 
+plot(cbind(penman = pen_d, hargreaves = har_d),
+  plot.type = "single",
+  col = c("black", "red"), ylab = "ETo (mm/day)"
+)
+
+# Monthly and weekly totals of the daily values
+aggregate(pen_d, zoo::as.yearmon, sum)
+#>  Jan 2020  Feb 2020  Mar 2020  Apr 2020  May 2020  Jun 2020  Jul 2020  Aug 2020 
+#>  33.41541  39.73538  60.76757  85.43127 115.21018 130.16743 138.55620 120.96247 
+#>  Sep 2020  Oct 2020  Nov 2020  Dec 2020 
+#>  89.02501  61.15005  38.50678  32.08920 
+head(aggregate(pen_d, function(d) as.Date(cut(d, "week")), sum))
+#> 2019-12-30 2020-01-06 2020-01-13 2020-01-20 2020-01-27 2020-02-03 
+#>   5.154403   7.145145   7.379191   7.710783   8.142670   8.678880 
+
+# FAO-56 Example 18 (Allen et al., 1998): Uccle (Brussels), 6 July,
+# 50 48'N, 100 m a.s.l.; ETo = 3.9 mm/day
+penman(12.3, 21.5, 2.078,
+  tsun = 9.25, ed = 1.409, lat = 50.8, z = 100,
+  method = "FAO", dates = as.Date("2023-07-06")
+)
+#> Using user-provided wind speed at 2 m height (`U2`) data. Using latitude (`lat`) to estimate extraterrestrial radiation. Using bright sunshine duration data (`tsun`) to estimate incoming solar radiation. Using user-provided actual vapour pressure (`ed`) data. Assuming constant atmospheric surface pressure corresponding to elevation `z`. Computing for a short crop. Checking for missing values (`NA`): all the data must be complete. Input type is vector. Daily data (`dates` provided) spanning 2023-07-06 to 2023-07-06; ET0 is given in mm per day and the soil heat flux is set to zero. Calculation method is FAO.
+#> 2023-07-06 
+#>   3.884041 
 ```

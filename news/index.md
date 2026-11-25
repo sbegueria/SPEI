@@ -38,6 +38,26 @@
   evapotranspiration at those resolutions, the reference period, and the
   comparison with the monthly index, using the `tarazona` dataset.
 
+- `<penman>` and `<hargreaves>` can compute daily reference
+  evapotranspiration
+  ([\#6](https://github.com/sbegueria/SPEI/issues/6)). The new argument
+  `dates` takes the date of each time step (a `Date` vector, or
+  character dates that
+  [`as.Date()`](https://rdrr.io/r/base/as.Date.html) can read, sorted
+  and without repeats; gaps are allowed). With `dates` the inputs are
+  daily values and the result is in mm per day: the day of the year of
+  each date is used for the extraterrestrial radiation, the result is
+  not multiplied by the length of the month, and in `<penman>` the soil
+  heat flux is zero (FAO-56 eq. 42). The daily result carries the dates:
+  vector and matrix input (including time series, whose time attributes
+  are ignored) give a `zoo` object indexed by `dates`, keeping the
+  column names of a matrix, which can be aggregated to months or weeks
+  with [`aggregate()`](https://rdrr.io/r/stats/aggregate.html); a 3-d
+  array input gives an array whose first `dimnames` are the dates. The
+  precipitation-modified Hargreaves equation (`Pre`) is monthly only and
+  gives an error with `dates`. Without `dates` (the default) the results
+  are the same as before.
+
 ## SPEI 1.9.0
 
 CRAN release: 2026-11-23
