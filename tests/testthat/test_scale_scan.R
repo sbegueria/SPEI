@@ -24,7 +24,7 @@ test_that("Output structure", {
     expect_equal(dim(sc[[m]]), c(12, 6))
     expect_equal(
       dimnames(sc[[m]]),
-      list(cycle = as.character(1:12), scale = as.character(1:6))
+      list(position = month.abb, scale = as.character(1:6))
     )
   }
   expect_equal(dim(sc$index), c(length(bal), 6))
@@ -46,7 +46,7 @@ test_that("The best window of the synthetic series is found", {
 test_that("Correlations, p-values and n are computed per cell", {
   for (cc in c(1, 8, 11)) {
     for (s in c(1, 3, 6)) {
-      w <- scan_window(sc, cycle = cc, scale = s)
+      w <- scale_extract(sc, cycle = cc, scale = s)
       ok <- !is.na(w) & !is.na(y)
       ct <- cor.test(as.numeric(w)[ok], as.numeric(y)[ok])
       expect_equal(sc$cor[cc, s], unname(ct$estimate))
@@ -80,7 +80,7 @@ test_that("No significant window gives NA", {
   noise <- ts(rnorm(32), start = 1980, frequency = 1)
   sc0 <- scale_scan(bal, noise, scales = 1:3, alpha = 1e-6)
   expect_true(all(is.na(sc0$best$cycle)))
-  expect_error(scan_window(sc0), "There is no significant positive window")
+  expect_error(scale_extract(sc0), "There is no significant positive window")
   expect_s3_class(plot(sc0), "ggplot")
 })
 
@@ -127,6 +127,8 @@ test_that("Options are passed to spei() / spi()", {
       verbose = FALSE)$fitted)
   )
   expect_silent(scale_scan(bal, y, scales = 1))
+  expect_silent(scale_scan(bal, y, scales = 1, verbose = FALSE))
+  expect_message(scale_scan(bal, y, scales = 1, verbose = TRUE), "SPEI")
 })
 
 test_that("Annual series as a data frame", {
@@ -138,10 +140,86 @@ test_that("Annual series as a data frame", {
   yy <- y
   yy[match(df[-match(df2$year, df$year), "year"], 1980:2011)] <- NA
   expect_equal(sc2$cor, scale_scan(bal, yy, scales = 1:2)$cor)
-  expect_error(
-    scale_scan(bal, rbind(df, df[1, ]), scales = 1),
-    "The years in `y` can not be repeated."
+  # a numeric matrix works the same way
+  expect_equal(scale_scan(bal, as.matrix(df), scales = 1:6)$cor, sc$cor)
+})
+
+test_that("Several values per year are averaged", {
+  set.seed(7)
+  # three synthetic 'trees': common signal plus individual noise
+  trees <- sapply(1:3, function(i) as.numeric(y) + rnorm(length(y)))
+  trees[1:5, 1] <- NA
+  m <- rowMeans(trees, na.rm = TRUE)
+  ym <- ts(m, start = 1980, frequency = 1)
+  ref <- scale_scan(bal, ym, scales = 1:3)
+  # multi-column ts
+  sc_t <- scale_scan(bal, ts(trees, start = 1980), scales = 1:3)
+  expect_equal(sc_t$cor, ref$cor)
+  expect_equal(as.numeric(sc_t$y), m)
+  expect_equal(as.numeric(sc_t$y.count), c(rep(2, 5), rep(3, 27)))
+  expect_output(print(sc_t), "Values averaged per year: 2 to 3")
+  # multi-column data frame
+  df <- data.frame(year = 1980:2011, trees)
+  expect_equal(scale_scan(bal, df, scales = 1:3)$cor, ref$cor)
+  # long format: repeated years
+  long <- data.frame(
+    year = rep(1980:2011, 3), value = as.numeric(trees)
   )
+  long <- long[sample(nrow(long)), ]
+  sc_l <- scale_scan(bal, long, scales = 1:3)
+  expect_equal(sc_l$cor, ref$cor)
+  expect_equal(as.numeric(sc_l$y.count), as.numeric(sc_t$y.count))
+  # a year with no values is NA
+  long2 <- long[long$year != 1990, ]
+  expect_true(is.na(scale_scan(bal, long2, scales = 1)$y[11]))
+  expect_equal(as.numeric(scale_scan(bal, long2, scales = 1)$y.count[11]), 0)
+})
+
+test_that("Lagged scan", {
+  # synthetic series driven by the previous year's SPEI-4 of October
+  s4 <- spei(bal, 4, verbose = FALSE)$fitted
+  oct <- as.numeric(s4[cycle(s4) == 10])
+  set.seed(3)
+  yl <- ts(oct[-length(oct)] + rnorm(length(oct) - 1, sd = 0.3),
+    start = 1981, frequency = 1
+  )
+  sc_l <- scale_scan(bal, yl, scales = 1:6, lag = 0:1)
+  expect_equal(nrow(sc_l$cor), 24)
+  expect_equal(
+    rownames(sc_l$cor),
+    c(paste0(month.abb, "-1"), month.abb)
+  )
+  expect_equal(sc_l$rows$lag, rep(1:0, each = 12))
+  expect_equal(sc_l$lag, 1:0)
+  b <- sc_l$best[1, ]
+  expect_equal(c(b$lag, b$cycle, b$scale), c(1, 10, 4))
+  expect_equal(b$label, "Oct-1")
+  # the same year rows equal those of a scan without lag
+  sc_0 <- scale_scan(bal, yl, scales = 1:6)
+  expect_equal(sc_l$cor[13:24, ], sc_0$cor)
+  expect_equal(sc_l$p[13:24, ], sc_0$p)
+  # the adjustment covers all the cells
+  expect_equal(
+    as.numeric(sc_l$p.adj),
+    p.adjust(as.numeric(sc_l$p), method = "holm")
+  )
+  # the lag-1 cells correlate y of year Y with the index of year Y - 1
+  w <- scale_extract(sc_l)
+  expect_equal(attr(w, "lag"), 1)
+  expect_equal(start(w), c(1981, 1))
+  expect_equal(as.numeric(w), oct)
+  ok <- window(w, 1981, 2011)
+  expect_equal(cor(as.numeric(ok), as.numeric(yl)), b$r)
+  expect_equal(
+    as.numeric(scale_extract(sc_l, cycle = 10, scale = 4, lag = 1)),
+    oct
+  )
+  # lag order does not matter
+  expect_equal(scale_scan(bal, yl, scales = 1:2, lag = c(0, 1))$cor,
+    scale_scan(bal, yl, scales = 1:2, lag = c(1, 0))$cor)
+  expect_s3_class(plot(sc_l), "ggplot")
+  expect_output(print(sc_l), "lags: 0, 1 years")
+  expect_error(scale_extract(sc_l, 10, 4, lag = -1), "Argument `lag`")
 })
 
 test_that("Detrending of the annual series", {
@@ -194,11 +272,15 @@ test_that("Weekly data", {
   expect_equal(dim(sc_w$cor), c(52, 2))
   b <- sc_w$best[1, ]
   expect_equal(c(b$cycle, b$scale), c(20, 8))
-  w <- scan_window(sc_w)
+  w <- scale_extract(sc_w)
   expect_equal(as.numeric(w), as.numeric(target))
   expect_equal(time(w), time(yy))
   expect_equal(c(attr(w, "cycle"), attr(w, "scale")), c(20, 8))
   expect_s3_class(plot(sc_w), "ggplot")
+  sc_w2 <- scale_scan(wk, yy, index = "precomputed", lag = 0:1)
+  expect_equal(rownames(sc_w2$cor)[c(1, 52, 53, 104)],
+    c("W1-1", "W52-1", "W1", "W52"))
+  expect_s3_class(plot(sc_w2), "ggplot")
 })
 
 # Methods
@@ -213,19 +295,19 @@ test_that("print and plot", {
   expect_error(plot(sc, sig = "x"), "Argument `sig` must be one of")
 })
 
-test_that("scan_window", {
-  w <- scan_window(sc)
+test_that("scale_extract", {
+  w <- scale_extract(sc)
   expect_equal(start(w), c(1980, 1))
   expect_equal(frequency(w), 1)
   expect_equal(
     as.numeric(w),
     as.numeric(spei(bal, 3, verbose = FALSE)$fitted)[cycle(bal) == 8]
   )
-  expect_error(scan_window(sc, cycle = 8), "must be given together")
-  expect_error(scan_window(sc, 13, 3), "Argument `cycle` must be")
-  expect_error(scan_window(sc, 8, 12), "Argument `scale` must be one of")
-  expect_error(scan_window(sc, which = "x"), "Argument `which` must be")
-  expect_error(scan_window(1), "must be a `scale_scan` object")
+  expect_error(scale_extract(sc, cycle = 8), "must be given together")
+  expect_error(scale_extract(sc, 13, 3), "Argument `cycle` must be")
+  expect_error(scale_extract(sc, 8, 12), "Argument `scale` must be one of")
+  expect_error(scale_extract(sc, which = "x"), "Argument `which` must be")
+  expect_error(scale_extract(1), "must be a `scale_scan` object")
 })
 
 # Argument checks
@@ -253,6 +335,8 @@ test_that("Argument checks", {
     "one value per column of `data`"
   )
   expect_error(scale_scan(bal, y, method = "x"), "Argument `method`")
+  expect_error(scale_scan(bal, y, lag = -1), "Argument `lag`")
+  expect_error(scale_scan(bal, y, lag = c(0, 0)), "Argument `lag`")
   expect_error(scale_scan(bal, y, p.adjust = "x"), "Argument `p.adjust`")
   expect_error(scale_scan(bal, y, alpha = 2), "Argument `alpha`")
   expect_error(scale_scan(bal, y, min.n = 2), "Argument `min.n`")
