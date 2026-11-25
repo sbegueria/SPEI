@@ -2,8 +2,8 @@
 #' @description See hargreaves
 #' @details See hargreaves
 #' @return  A time series with the values of monthly potential or reference
-#' evapotranspiration, in mm (or, if \code{dates} is given, of daily
-#' reference evapotranspiration, in mm per day).
+#' evapotranspiration, in mm (or, if \code{dates} is given, a \code{zoo}
+#' object or an array of daily reference evapotranspiration, in mm per day).
 #' If the input is a matrix or a multivariate time series each column will be
 #' treated as independent data (e.g., different observatories), and the output
 #' will be a multivariate time series.
@@ -13,6 +13,7 @@
 #'
 #'
 #' @importFrom lubridate days_in_month yday
+#' @importFrom zoo zoo
 #' @export
 #'
 penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
@@ -169,8 +170,8 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
   # Daily (`dates` given) or monthly (default) time step
   daily <- !is.null(dates)
 
-  # Determine output data shape. With daily data a time series input gives
-  # a plain vector or matrix.
+  # Determine output data shape. With daily data a time series input is
+  # treated as a plain vector or matrix (the output is a zoo object).
   if (is.ts(Tmin) && !daily) {
     if (is.matrix(Tmin)) {
       out_type <- "tsmatrix"
@@ -538,6 +539,9 @@ penman <- function(Tmin, Tmax, U2 = NULL, Ra = NULL, lat = NULL, Rs = NULL,
 
 
   ### Format output and return - - - - - - - - - - - - - - - - - - - - - - -
+  if (daily) {
+    return(daily_output(ET0, out_type, dates, names))
+  }
   if (out_type == "tsmatrix") {
     ET0 <- matrix(ET0, nrow = n_times)
     ET0 <- ts(ET0, frequency = ts_freq, start = ts_start)

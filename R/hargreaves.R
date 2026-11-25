@@ -191,19 +191,30 @@
 #' the ETo of each day only depends on the inputs of that day. The
 #' precipitation-modified Hargreaves equation (Droogers and Allen, 2002)
 #' was calibrated with monthly precipitation, so \code{Pre} can not be used
-#' together with \code{dates}. If the main input is a time series
+#' together with \code{dates}. With daily data the result carries the
+#' dates: vector and matrix input give a \code{\link[zoo]{zoo}} object
+#' indexed by \code{dates}, and 3-d array input gives an array with the
+#' dates as names of the time dimension. If the main input is a time series
 #' (\code{ts}) and \code{dates} is given, the time attributes of the series
-#' are ignored and the result is a plain vector or matrix.
+#' are ignored and the dates are taken from \code{dates}. A \code{zoo}
+#' result can be aggregated to other time steps with
+#' \code{\link[zoo]{aggregate.zoo}}, e.g. to monthly totals with
+#' \code{aggregate(x, zoo::as.yearmon, sum)}.
 #'
 #'
 #' @return A vector, matrix or 3-d array with the values of monthly potential
 #' or reference evapotranspiration, in mm. If the main input is a time series
 #' (and \code{dates} is not given) the output is a time series with the same
-#' time attributes. If \code{dates} is given, the output has one value of
-#' daily reference evapotranspiration per date, in mm per day, as a vector,
-#' matrix or 3-d array with the same dimensions as the input (time series
-#' input gives a plain vector or matrix); the dates are not stored in the
-#' output.
+#' time attributes.
+#'
+#' If \code{dates} is given, the output has one value of daily reference
+#' evapotranspiration per date, in mm per day. For vector or matrix input
+#' (including time series) it is a \code{\link[zoo]{zoo}} object with
+#' \code{index} equal to \code{dates}; a matrix input gives a multi-column
+#' \code{zoo} object that keeps the column names of \code{Tmin}. For 3-d
+#' array input it is an array of the same dimensions whose first
+#' \code{dimnames} are the dates in "YYYY-MM-DD" format, keeping the other
+#' \code{dimnames} of \code{Tmin}.
 #'
 #'
 #' @references
@@ -370,10 +381,16 @@
 #'   tsun = tsun_d, lat = 40, z = 500,
 #'   method = "FAO", dates = dates
 #' )
-#' plot(dates, pen_d, type = "l", ylab = "ETo (mm/day)")
-#' lines(dates, har_d, col = "red")
-#' # Monthly totals of the daily values
-#' tapply(pen_d, format(dates, "%m"), sum)
+#' # The result is a zoo object indexed by the dates
+#' class(pen_d)
+#' head(pen_d)
+#' plot(cbind(penman = pen_d, hargreaves = har_d),
+#'   plot.type = "single",
+#'   col = c("black", "red"), ylab = "ETo (mm/day)"
+#' )
+#' # Monthly and weekly totals of the daily values
+#' aggregate(pen_d, zoo::as.yearmon, sum)
+#' head(aggregate(pen_d, function(d) as.Date(cut(d, "week")), sum))
 #'
 #' # FAO-56 Example 18 (Allen et al., 1998): Uccle (Brussels), 6 July,
 #' # 50 48'N, 100 m a.s.l.; ETo = 3.9 mm/day
@@ -474,8 +491,8 @@ hargreaves <- function(Tmin, Tmax, Ra = NULL, lat = NULL, Pre = NULL,
   n_sites <- prod(int_dims[[2]], int_dims[[3]])
   n_times <- int_dims[[1]]
 
-  # Determine output data shape. With daily data a time series input gives
-  # a plain vector or matrix.
+  # Determine output data shape. With daily data a time series input is
+  # treated as a plain vector or matrix (the output is a zoo object).
   if (is.ts(Tmin) && !daily) {
     if (is.matrix(Tmin)) {
       out_type <- "tsmatrix"
@@ -622,6 +639,9 @@ hargreaves <- function(Tmin, Tmax, Ra = NULL, lat = NULL, Pre = NULL,
 
   ### Format output and return - - - - - - - - - - - - - - - - - - - - - - -
 
+  if (daily) {
+    return(daily_output(ET0, out_type, dates, names))
+  }
   if (out_type == "tsmatrix") {
     ET0 <- matrix(ET0, nrow = n_times)
     ET0 <- ts(ET0, frequency = ts_freq, start = ts_start)

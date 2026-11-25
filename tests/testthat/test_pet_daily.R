@@ -137,13 +137,16 @@ test_that("penman() reproduces FAO-56 Example 17 (monthly, Bangkok)", {
 ex18_lat <- 50 + 48 / 60
 ex18_date <- as.Date("2023-07-06")
 
+# Plain numeric values of a daily (zoo) result
+num <- function(x) as.numeric(zoo::coredata(x))
+
 test_that("penman() reproduces FAO-56 Example 18 (daily, Uccle)", {
   p <- penman(12.3, 21.5, 2.078,
     lat = ex18_lat, tsun = 9.25, ed = 1.409,
     z = 100, method = "FAO", dates = ex18_date, verbose = FALSE
   )
   # The published value is rounded to one decimal
-  expect_equal(p, 3.9, tolerance = 0.05, scale = 1)
+  expect_equal(num(p), 3.9, tolerance = 0.05, scale = 1)
   # Same with ea computed from RHmax and RHmin (FAO-56 eq. 17)
   e0 <- function(t) 0.6108 * exp(17.27 * t / (t + 237.3))
   ea <- (e0(12.3) * 0.84 + e0(21.5) * 0.63) / 2
@@ -151,14 +154,14 @@ test_that("penman() reproduces FAO-56 Example 18 (daily, Uccle)", {
     lat = ex18_lat, tsun = 9.25, ed = ea,
     z = 100, method = "FAO", dates = ex18_date, verbose = FALSE
   )
-  expect_equal(p2, 3.9, tolerance = 0.05, scale = 1)
+  expect_equal(num(p2), 3.9, tolerance = 0.05, scale = 1)
   # The other methods give similar values
   for (m in c("ICID", "ASCE")) {
     pm <- penman(12.3, 21.5, 2.078,
       lat = ex18_lat, tsun = 9.25, ed = 1.409,
       z = 100, method = m, dates = ex18_date, verbose = FALSE
     )
-    expect_equal(pm, 3.9, tolerance = 0.05, scale = 1)
+    expect_equal(num(pm), 3.9, tolerance = 0.05, scale = 1)
   }
 })
 
@@ -168,7 +171,7 @@ test_that("hargreaves() daily matches a hand computation (FAO-56 eq. 52)", {
     Ra = 41.09, dates = ex18_date,
     verbose = FALSE
   )
-  expect_equal(h, 0.0023 * 0.408 * 41.09 * (16.9 + 17.8) * sqrt(21.5 - 12.3))
+  expect_equal(num(h), 0.0023 * 0.408 * 41.09 * (16.9 + 17.8) * sqrt(21.5 - 12.3))
   # Ra estimated from latitude and the day of the year (Ra = 41.09 in
   # FAO-56 Example 18)
   h2 <- hargreaves(12.3, 21.5,
@@ -241,9 +244,9 @@ test_that("daily computation handles leap years", {
     expect_length(x, 3)
     expect_false(anyNA(x))
     # Day of the year 61 is 1 March in a leap year and 2 March otherwise
-    expect_equal(x[3], f(as.Date("2021-03-02")))
+    expect_equal(num(x[3]), num(f(as.Date("2021-03-02"))))
     # 29 February (day 60) equals 1 March of a regular year
-    expect_equal(x[2], f(as.Date("2021-03-01")))
+    expect_equal(num(x[2]), num(f(as.Date("2021-03-01"))))
     # ET0 increases from late February to March at 45 N
     expect_true(all(diff(x) > 0))
   }
@@ -273,22 +276,51 @@ test_that("daily vector, matrix and 3-d array inputs are consistent", {
   tmin_m <- sapply(1:4, function(i) tmin + i)
   tmax_m <- sapply(1:4, function(i) tmax + i)
 
-  # vector
+  # vector: a zoo series indexed by the dates
   v <- pen1(1)
-  expect_true(is.vector(v) && is.numeric(v))
-  expect_length(v, n)
+  vh <- har1(1)
+  for (x in list(v, vh)) {
+    expect_s3_class(x, "zoo")
+    expect_identical(zoo::index(x), d)
+    expect_null(dim(zoo::coredata(x)))
+    expect_length(x, n)
+  }
+  # values as computed before the output became a zoo object (commit
+  # f1815a9, which returned a plain numeric vector)
+  expect_equal(num(v), c(
+    0.75133485476, 1.18641040963, 1.12998940886,
+    1.37402091111, 0.951204673141
+  ), tolerance = 1e-10)
+  expect_equal(num(vh), c(
+    0.980904458021, 1.14023380661, 0.947571223181,
+    1.26692267855, 1.17022001705
+  ), tolerance = 1e-10)
 
-  # matrix, one latitude and elevation per site
+  # matrix, one latitude and elevation per site: a multi-column zoo
+  # series, keeping the column names
+  colnames(tmin_m) <- c("A", "B", "C", "D")
   pm <- penman(tmin_m, tmax_m, m(u2, 4),
     lat = lats, tsun = m(tsun, 4), z = zs,
     dates = d, verbose = FALSE
   )
   hm <- hargreaves(tmin_m, tmax_m, lat = lats, dates = d, verbose = FALSE)
-  expect_true(is.matrix(pm) && !is.ts(pm))
-  expect_equal(dim(pm), c(n, 4))
+  for (x in list(pm, hm)) {
+    expect_s3_class(x, "zoo")
+    expect_identical(zoo::index(x), d)
+    expect_equal(dim(x), c(n, 4))
+    expect_identical(colnames(x), c("A", "B", "C", "D"))
+  }
+  # without column names
+  pm0 <- penman(unname(tmin_m), tmax_m, m(u2, 4),
+    lat = lats, tsun = m(tsun, 4), z = zs,
+    dates = d, verbose = FALSE
+  )
+  expect_s3_class(pm0, "zoo")
+  expect_null(colnames(pm0))
+  expect_equal(unname(zoo::coredata(pm0)), unname(zoo::coredata(pm)))
   for (i in 1:4) {
-    expect_equal(as.numeric(pm[, i]), pen1(i))
-    expect_equal(as.numeric(hm[, i]), har1(i))
+    expect_equal(as.numeric(pm[, i]), num(pen1(i)))
+    expect_equal(as.numeric(hm[, i]), num(har1(i)))
   }
 
   # 3-d array (time first), latitude and elevation as 2-d arrays
@@ -301,24 +333,51 @@ test_that("daily vector, matrix and 3-d array inputs are consistent", {
     lat = array(lats, c(2, 2)),
     dates = d, verbose = FALSE
   )
-  expect_equal(dim(pa), c(n, 2, 2))
-  expect_equal(as.numeric(pa), as.numeric(pm))
-  expect_equal(as.numeric(ha), as.numeric(hm))
+  for (x in list(pa, ha)) {
+    expect_true(is.array(x) && !inherits(x, "zoo"))
+    expect_equal(dim(x), c(n, 2, 2))
+    expect_identical(dimnames(x), list(format(d, "%Y-%m-%d"), NULL, NULL))
+  }
+  expect_equal(as.numeric(pa), as.numeric(zoo::coredata(pm)))
+  expect_equal(as.numeric(ha), as.numeric(zoo::coredata(hm)))
+  # other dimnames of the input are kept
+  ta <- a(tmin_m)
+  dimnames(ta) <- list(NULL, c("x1", "x2"), c("y1", "y2"))
+  ha2 <- hargreaves(ta, a(tmax_m),
+    lat = array(lats, c(2, 2)),
+    dates = d, verbose = FALSE
+  )
+  expect_identical(
+    dimnames(ha2),
+    list(format(d, "%Y-%m-%d"), c("x1", "x2"), c("y1", "y2"))
+  )
+  expect_equal(unname(ha2), unname(ha))
 
-  # Time series input gives a plain vector or matrix; the ts attributes are
-  # ignored
+  # Time series input gives a zoo series; the ts attributes are ignored
   pts <- penman(ts(tmin + 1, start = c(2020, 12), frequency = 12), tmax + 1,
     u2,
     lat = lats[1], tsun = tsun, z = zs[1], dates = d, verbose = FALSE
   )
   expect_false(is.ts(pts))
-  expect_equal(pts, v)
+  expect_identical(pts, v)
   hts <- hargreaves(ts(tmin_m, frequency = 365), tmax_m,
     lat = lats,
     dates = d, verbose = FALSE
   )
-  expect_true(is.matrix(hts) && !is.ts(hts))
-  expect_equal(as.numeric(hts), as.numeric(hm))
+  expect_s3_class(hts, "zoo")
+  expect_false(is.ts(hts))
+  expect_identical(zoo::index(hts), d)
+  expect_identical(hts, hm)
+
+  # Daily results aggregate to other time steps
+  dd <- seq(as.Date("2021-01-01"), as.Date("2021-03-31"), by = "day")
+  hd <- hargreaves(rep(5, length(dd)), rep(15, length(dd)),
+    lat = 40,
+    dates = dd, verbose = FALSE
+  )
+  hmon <- aggregate(hd, zoo::as.yearmon, sum)
+  expect_length(hmon, 3)
+  expect_equal(num(hmon)[2], sum(num(hd)[32:59]))
 })
 
 test_that("invalid `dates` are rejected", {
