@@ -33,11 +33,11 @@ the series responds to most. The function `scale_scan()` does this, and
 `scale_extract()` gives the index series of the chosen window.
 
 This approach has been used to relate the SPEI and the SPI to tree-ring
-growth across a climatic gradient (Pasho et al., 2011), to compare drought
-indices for ecological, agricultural and hydrological applications, using
-tree-ring widths, crop yields and river flows (Vicente-Serrano et al.,
-2012), and to map the time scales at which vegetation responds to drought
-across the world's biomes (Vicente-Serrano et al., 2013).
+growth across a climatic gradient (Pasho et al., 2011), to map the time
+scales at which vegetation responds to drought across the world's biomes
+(Vicente-Serrano et al., 2013), and to study how thinning changes the
+sensitivity of tree growth to hydric and thermal stress in four widely
+planted pine species (Manrique-Alba et al., 2025).
 
 ```{r setup, message = FALSE}
 library(SPEI)
@@ -355,17 +355,20 @@ months.
 
 ## References
 
+Manrique-Alba, À., Beguería, S., Camarero, J.J., Molina, A.J., Barberá,
+G.G., Blanco, J.A., Cachinero-Vivar, A.M., Castillo, V.M., del Campo, A.D.,
+Hernández, Á., Imbert, J.B., Jiménez, M.N., Lo, Y.-H., Lucas-Borja, M.E.,
+Moreno, G., Navarro, F.B., Navarro-Cerrillo, R.M., Ripoll, M.Á.,
+Sánchez-Miranda, Á. (2025). Adaptive responses to thinning: growth and
+sensitivity to hydric and thermal stress in four widely planted pine
+species. *Agricultural and Forest Meteorology*, 373, 110777.
+<https://doi.org/10.1016/j.agrformet.2025.110777>
+
 Pasho, E., Camarero, J.J., de Luis, M., Vicente-Serrano, S.M. (2011).
 Impacts of drought at different time scales on forest growth across a wide
 climatic gradient in north-eastern Spain. *Agricultural and Forest
 Meteorology*, 151(12), 1800–1811.
 <https://doi.org/10.1016/j.agrformet.2011.07.018>
-
-Vicente-Serrano, S.M., Beguería, S., Lorenzo-Lacruz, J., Camarero, J.J.,
-López-Moreno, J.I., Azorin-Molina, C., Revuelto, J., Morán-Tejeda, E.,
-Sanchez-Lorenzo, A. (2012). Performance of drought indices for ecological,
-agricultural, and hydrological applications. *Earth Interactions*, 16(10),
-1–27. <https://doi.org/10.1175/2012EI000434.1>
 
 Vicente-Serrano, S.M., Gouveia, C., Camarero, J.J., Beguería, S., Trigo, R.,
 López-Moreno, J.I., Azorín-Molina, C., Pasho, E., Lorenzo-Lacruz, J.,
