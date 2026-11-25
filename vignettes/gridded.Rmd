@@ -197,3 +197,13 @@ Two common ways to handle them:
 - **Process the blocks in parallel**, for example with the `parallel` or
   `future.apply` packages. Each cell is fitted independently, so the result
   doesn't depend on how the grid is split.
+
+### A complete example: SPEIbase
+
+[SPEIbase](https://github.com/sbegueria/SPEIbase) is the code that produces
+the global SPEI dataset distributed at <https://spei.csic.es>. It does
+everything described in this section for the whole globe: it reads the CRU
+TS precipitation and PET NetCDF files in bands of latitude, converts PET to
+monthly values, computes the SPEI at time scales from 1 to 48 months in
+parallel, and writes the results to NetCDF files. Its code is a good
+starting point for processing other large gridded datasets.
