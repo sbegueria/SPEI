@@ -302,16 +302,25 @@ mean(spei12$fitted <= -1, na.rm = TRUE)
 #> [1] 0.1859838
 ```
 
+[`summary()`](https://rdrr.io/r/base/summary.html) shows the call, the
+values and the fitted parameters of the distribution for each calendar
+month, which are also in `spei12$coefficients`.
+
+## Drought events
+
+A drought event is a run of consecutive months with the index below a
+threshold (run theory).
 [`index_events()`](https://sbegueria.github.io/SPEI/reference/Index-events.md)
-lists the drought events: the runs of consecutive months with the index
-at or below -1. For each event it gives the first and the last month,
-the duration in months, the severity (the sum of the index values), the
-intensity (the severity divided by the duration) and the peak (the
-lowest value) with its month:
+lists the events of a series. By default it takes the runs at or below
+-1, i.e. moderate or worse drought. For each event it gives the first
+and the last month, the duration in months, the severity (the sum of the
+index values), the intensity (the severity divided by the duration) and
+the peak (the lowest value) with its month:
 
 ``` r
 
-index_events(spei12)
+ev <- index_events(spei12)
+ev
 #>      start     end duration   severity intensity      peak peak.time
 #> 1  1980-12 1981-09       10 -15.841594 -1.584159 -1.870803   1981-04
 #> 2  1984-11 1984-11        1  -1.021509 -1.021509 -1.021509   1984-11
@@ -326,15 +335,79 @@ index_events(spei12)
 #> 11 2011-05 2011-10        6  -9.322761 -1.553793 -1.777688   2011-09
 ```
 
-The 2011 drought started in May and was still going on at the end of the
-series. The argument `threshold` changes the threshold, `type = "wet"`
-gives the wet events, and `min.duration` drops the shortest events. See
+The longest and most severe event lasted 18 months, from 1990-08 to
+1992-01. The 2011 drought started in May and was still going on at the
+end of the series.
+
+With `type = "wet"` the function gives the wet events instead: the runs
+at or above +1, with the severity and the peak now positive:
+
+``` r
+
+ev_wet <- index_events(spei12, type = "wet")
+ev_wet
+#>      start     end duration  severity intensity     peak peak.time
+#> 1  1987-05 1987-06        2  2.138843  1.069421 1.126384   1987-05
+#> 2  1987-08 1987-08        1  1.020793  1.020793 1.020793   1987-08
+#> 3  1993-05 1993-10        6  8.319843  1.386640 1.757180   1993-05
+#> 4  1995-06 1995-06        1  1.002873  1.002873 1.002873   1995-06
+#> 5  1995-08 1995-09        2  2.294459  1.147230 1.155080   1995-09
+#> 6  1998-03 1998-04        2  2.243474  1.121737 1.176878   1998-03
+#> 7  1999-06 2000-07       14 21.809176  1.557798 2.114575   2000-03
+#> 8  2004-07 2004-08        2  2.526616  1.263308 1.449962   2004-07
+#> 9  2005-01 2005-02        2  2.015623  1.007812 1.008691   2005-01
+#> 10 2008-05 2009-08       16 32.320665  2.020042 2.999803   2009-04
+```
+
+The wettest period lasted 16 months, from 2008-05 to 2009-08, with a
+peak of 3.
+
+Both kinds of events can be shown on the plot of the index:
+
+``` r
+
+to_time <- function(x) {
+  as.numeric(substr(x, 1, 4)) + (as.numeric(substr(x, 6, 7)) - 1) / 12
+}
+shade <- function(ev, col) {
+  rect(to_time(ev$start), -4, to_time(ev$end) + 1 / 12, 4,
+    col = adjustcolor(col, 0.25), border = NA
+  )
+}
+plot(spei12$fitted, ylab = "SPEI-12", xlab = "Year")
+shade(ev, "red")
+shade(ev_wet, "blue")
+abline(h = c(-1, 0, 1), lty = c(3, 1, 3))
+legend("topleft", c("Drought events", "Wet events"),
+  fill = adjustcolor(c("red", "blue"), 0.25), border = NA, bty = "n"
+)
+```
+
+![SPEI-12 of Wichita from 1980 to 2011, with the drought events (runs at
+or below -1) shaded in red and the wet events (runs at or above +1)
+shaded in blue](SPEI_files/figure-html/unnamed-chunk-14-1.png)
+
+The argument `threshold` changes the threshold (by default -1 for
+droughts and +1 for wet events). `min.duration` drops events shorter
+than a number of months, and `pool` merges events separated by short
+gaps. For example, the droughts of at least six months, joining those
+separated by one or two months:
+
+``` r
+
+index_events(spei12, min.duration = 6, pool = 2)
+#>     start     end duration   severity intensity      peak peak.time
+#> 1 1980-12 1981-09       10 -15.841594 -1.584159 -1.870803   1981-04
+#> 2 1988-08 1989-06       11 -18.650139 -1.695467 -1.934305   1989-04
+#> 3 1990-08 1992-01       18 -27.198684 -1.511038 -1.889157   1991-03
+#> 4 1994-05 1994-12        8 -10.020066 -1.252508 -1.404095   1994-07
+#> 5 2001-11 2002-06        8 -10.602097 -1.325262 -1.573290   2002-03
+#> 6 2011-05 2011-10        6  -9.322761 -1.553793 -1.777688   2011-09
+```
+
+See
 [`?index_events`](https://sbegueria.github.io/SPEI/reference/Index-events.md)
 for the details.
-
-[`summary()`](https://rdrr.io/r/base/summary.html) shows the call, the
-values and the fitted parameters of the distribution for each calendar
-month, which are also in `spei12$coefficients`.
 
 ## The SPI
 
@@ -349,7 +422,7 @@ plot(spi12, main = "Wichita, SPI-12")
 ```
 
 ![Bar plot of SPI-12 at Wichita,
-1980-2011](SPEI_files/figure-html/unnamed-chunk-13-1.png)
+1980-2011](SPEI_files/figure-html/unnamed-chunk-16-1.png)
 
 The SPI and the SPEI often agree, but the SPEI also accounts for the
 effect of temperature on the atmospheric water demand. Where
@@ -365,7 +438,7 @@ abline(0, 1, lty = 2)
 ```
 
 ![Scatter plot of SPEI-12 against SPI-12 at Wichita, with the one-to-one
-line](SPEI_files/figure-html/unnamed-chunk-14-1.png)
+line](SPEI_files/figure-html/unnamed-chunk-17-1.png)
 
 ## Next steps
 

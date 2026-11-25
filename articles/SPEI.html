@@ -375,13 +375,23 @@ at the 12-month scale:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">spei12</span><span class="op">$</span><span class="va">fitted</span> <span class="op">&lt;=</span> <span class="op">-</span><span class="fl">1</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 0.1859838</span></span></code></pre></div>
-<p><code><a href="../reference/Index-events.html">index_events()</a></code> lists the drought events: the runs of
-consecutive months with the index at or below -1. For each event it
-gives the first and the last month, the duration in months, the severity
-(the sum of the index values), the intensity (the severity divided by
-the duration) and the peak (the lowest value) with its month:</p>
+<p><code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> shows the call, the values and the fitted
+parameters of the distribution for each calendar month, which are also
+in <code>spei12$coefficients</code>.</p>
+</div>
+<div class="section level2">
+<h2 id="drought-events">Drought events<a class="anchor" aria-label="anchor" href="#drought-events"></a>
+</h2>
+<p>A drought event is a run of consecutive months with the index below a
+threshold (run theory). <code><a href="../reference/Index-events.html">index_events()</a></code> lists the events of
+a series. By default it takes the runs at or below -1, i.e. moderate or
+worse drought. For each event it gives the first and the last month, the
+duration in months, the severity (the sum of the index values), the
+intensity (the severity divided by the duration) and the peak (the
+lowest value) with its month:</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/Index-events.html">index_events</a></span><span class="op">(</span><span class="va">spei12</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">ev</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Index-events.html">index_events</a></span><span class="op">(</span><span class="va">spei12</span><span class="op">)</span></span>
+<span><span class="va">ev</span></span>
 <span><span class="co">#&gt;      start     end duration   severity intensity      peak peak.time</span></span>
 <span><span class="co">#&gt; 1  1980-12 1981-09       10 -15.841594 -1.584159 -1.870803   1981-04</span></span>
 <span><span class="co">#&gt; 2  1984-11 1984-11        1  -1.021509 -1.021509 -1.021509   1984-11</span></span>
@@ -394,35 +404,82 @@ the duration) and the peak (the lowest value) with its month:</p>
 <span><span class="co">#&gt; 9  2001-11 2002-06        8 -10.602097 -1.325262 -1.573290   2002-03</span></span>
 <span><span class="co">#&gt; 10 2006-11 2006-11        1  -1.016132 -1.016132 -1.016132   2006-11</span></span>
 <span><span class="co">#&gt; 11 2011-05 2011-10        6  -9.322761 -1.553793 -1.777688   2011-09</span></span></code></pre></div>
-<p>The 2011 drought started in May and was still going on at the end of
-the series. The argument <code>threshold</code> changes the threshold,
-<code>type = "wet"</code> gives the wet events, and
-<code>min.duration</code> drops the shortest events. See
-<code><a href="../reference/Index-events.html">?index_events</a></code> for the details.</p>
-<p><code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> shows the call, the values and the fitted
-parameters of the distribution for each calendar month, which are also
-in <code>spei12$coefficients</code>.</p>
+<p>The longest and most severe event lasted 18 months, from 1990-08 to
+1992-01. The 2011 drought started in May and was still going on at the
+end of the series.</p>
+<p>With <code>type = "wet"</code> the function gives the wet events
+instead: the runs at or above +1, with the severity and the peak now
+positive:</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">ev_wet</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Index-events.html">index_events</a></span><span class="op">(</span><span class="va">spei12</span>, type <span class="op">=</span> <span class="st">"wet"</span><span class="op">)</span></span>
+<span><span class="va">ev_wet</span></span>
+<span><span class="co">#&gt;      start     end duration  severity intensity     peak peak.time</span></span>
+<span><span class="co">#&gt; 1  1987-05 1987-06        2  2.138843  1.069421 1.126384   1987-05</span></span>
+<span><span class="co">#&gt; 2  1987-08 1987-08        1  1.020793  1.020793 1.020793   1987-08</span></span>
+<span><span class="co">#&gt; 3  1993-05 1993-10        6  8.319843  1.386640 1.757180   1993-05</span></span>
+<span><span class="co">#&gt; 4  1995-06 1995-06        1  1.002873  1.002873 1.002873   1995-06</span></span>
+<span><span class="co">#&gt; 5  1995-08 1995-09        2  2.294459  1.147230 1.155080   1995-09</span></span>
+<span><span class="co">#&gt; 6  1998-03 1998-04        2  2.243474  1.121737 1.176878   1998-03</span></span>
+<span><span class="co">#&gt; 7  1999-06 2000-07       14 21.809176  1.557798 2.114575   2000-03</span></span>
+<span><span class="co">#&gt; 8  2004-07 2004-08        2  2.526616  1.263308 1.449962   2004-07</span></span>
+<span><span class="co">#&gt; 9  2005-01 2005-02        2  2.015623  1.007812 1.008691   2005-01</span></span>
+<span><span class="co">#&gt; 10 2008-05 2009-08       16 32.320665  2.020042 2.999803   2009-04</span></span></code></pre></div>
+<p>The wettest period lasted 16 months, from 2008-05 to 2009-08, with a
+peak of 3.</p>
+<p>Both kinds of events can be shown on the plot of the index:</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">to_time</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/substr.html" class="external-link">substr</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">1</span>, <span class="fl">4</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/substr.html" class="external-link">substr</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">6</span>, <span class="fl">7</span><span class="op">)</span><span class="op">)</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span> <span class="op">/</span> <span class="fl">12</span></span>
+<span><span class="op">}</span></span>
+<span><span class="va">shade</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">ev</span>, <span class="va">col</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/graphics/rect.html" class="external-link">rect</a></span><span class="op">(</span><span class="fu">to_time</span><span class="op">(</span><span class="va">ev</span><span class="op">$</span><span class="va">start</span><span class="op">)</span>, <span class="op">-</span><span class="fl">4</span>, <span class="fu">to_time</span><span class="op">(</span><span class="va">ev</span><span class="op">$</span><span class="va">end</span><span class="op">)</span> <span class="op">+</span> <span class="fl">1</span> <span class="op">/</span> <span class="fl">12</span>, <span class="fl">4</span>,</span>
+<span>    col <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/grDevices/adjustcolor.html" class="external-link">adjustcolor</a></span><span class="op">(</span><span class="va">col</span>, <span class="fl">0.25</span><span class="op">)</span>, border <span class="op">=</span> <span class="cn">NA</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">spei12</span><span class="op">$</span><span class="va">fitted</span>, ylab <span class="op">=</span> <span class="st">"SPEI-12"</span>, xlab <span class="op">=</span> <span class="st">"Year"</span><span class="op">)</span></span>
+<span><span class="fu">shade</span><span class="op">(</span><span class="va">ev</span>, <span class="st">"red"</span><span class="op">)</span></span>
+<span><span class="fu">shade</span><span class="op">(</span><span class="va">ev_wet</span>, <span class="st">"blue"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>h <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, lty <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">1</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/legend.html" class="external-link">legend</a></span><span class="op">(</span><span class="st">"topleft"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Drought events"</span>, <span class="st">"Wet events"</span><span class="op">)</span>,</span>
+<span>  fill <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/grDevices/adjustcolor.html" class="external-link">adjustcolor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"red"</span>, <span class="st">"blue"</span><span class="op">)</span>, <span class="fl">0.25</span><span class="op">)</span>, border <span class="op">=</span> <span class="cn">NA</span>, bty <span class="op">=</span> <span class="st">"n"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><img src="SPEI_files/figure-html/unnamed-chunk-14-1.png" class="r-plt" alt="SPEI-12 of Wichita from 1980 to 2011, with the drought events (runs at or below -1) shaded in red and the wet events (runs at or above +1) shaded in blue" width="672"></p>
+<p>The argument <code>threshold</code> changes the threshold (by default
+-1 for droughts and +1 for wet events). <code>min.duration</code> drops
+events shorter than a number of months, and <code>pool</code> merges
+events separated by short gaps. For example, the droughts of at least
+six months, joining those separated by one or two months:</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/Index-events.html">index_events</a></span><span class="op">(</span><span class="va">spei12</span>, min.duration <span class="op">=</span> <span class="fl">6</span>, pool <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="co">#&gt;     start     end duration   severity intensity      peak peak.time</span></span>
+<span><span class="co">#&gt; 1 1980-12 1981-09       10 -15.841594 -1.584159 -1.870803   1981-04</span></span>
+<span><span class="co">#&gt; 2 1988-08 1989-06       11 -18.650139 -1.695467 -1.934305   1989-04</span></span>
+<span><span class="co">#&gt; 3 1990-08 1992-01       18 -27.198684 -1.511038 -1.889157   1991-03</span></span>
+<span><span class="co">#&gt; 4 1994-05 1994-12        8 -10.020066 -1.252508 -1.404095   1994-07</span></span>
+<span><span class="co">#&gt; 5 2001-11 2002-06        8 -10.602097 -1.325262 -1.573290   2002-03</span></span>
+<span><span class="co">#&gt; 6 2011-05 2011-10        6  -9.322761 -1.553793 -1.777688   2011-09</span></span></code></pre></div>
+<p>See <code><a href="../reference/Index-events.html">?index_events</a></code> for the details.</p>
 </div>
 <div class="section level2">
 <h2 id="the-spi">The SPI<a class="anchor" aria-label="anchor" href="#the-spi"></a>
 </h2>
 <p>The SPI is computed in the same way from precipitation alone. By
 default it uses the Gamma distribution:</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">spi12</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Drought-indices.html">spi</a></span><span class="op">(</span><span class="va">wichita</span><span class="op">[</span>, <span class="st">"PRCP"</span><span class="op">]</span>, <span class="fl">12</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Calculating the Standardized Precipitation Index (SPI) at a time scale of 12. Using kernel type 'rectangular', with 0 shift. Fitting the data to a Gamma distribution. Using the ub-pwm parameter fitting method. Checking for missing values (`NA`): all the data must be complete. Using the whole time series as reference period. Input type is tsvector. Time series spanning Jan 1980 to Oct 2011, with frequency = 12.</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">spi12</span>, main <span class="op">=</span> <span class="st">"Wichita, SPI-12"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="SPEI_files/figure-html/unnamed-chunk-13-1.png" class="r-plt" alt="Bar plot of SPI-12 at Wichita, 1980-2011" width="672"></p>
+<p><img src="SPEI_files/figure-html/unnamed-chunk-16-1.png" class="r-plt" alt="Bar plot of SPI-12 at Wichita, 1980-2011" width="672"></p>
 <p>The SPI and the SPEI often agree, but the SPEI also accounts for the
 effect of temperature on the atmospheric water demand. Where
 temperatures are rising or a dry period is also hot, the SPEI shows more
 severe drought than the SPI:</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">spi12</span><span class="op">$</span><span class="va">fitted</span>, <span class="va">spei12</span><span class="op">$</span><span class="va">fitted</span>,</span>
 <span>  xlab <span class="op">=</span> <span class="st">"SPI-12"</span>, ylab <span class="op">=</span> <span class="st">"SPEI-12"</span>, asp <span class="op">=</span> <span class="fl">1</span></span>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, lty <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
-<p><img src="SPEI_files/figure-html/unnamed-chunk-14-1.png" class="r-plt" alt="Scatter plot of SPEI-12 against SPI-12 at Wichita, with the one-to-one line" width="672"></p>
+<p><img src="SPEI_files/figure-html/unnamed-chunk-17-1.png" class="r-plt" alt="Scatter plot of SPEI-12 against SPI-12 at Wichita, with the one-to-one line" width="672"></p>
 </div>
 <div class="section level2">
 <h2 id="next-steps">Next steps<a class="anchor" aria-label="anchor" href="#next-steps"></a>
