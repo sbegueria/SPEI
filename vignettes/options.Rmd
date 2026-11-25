@@ -63,7 +63,7 @@ By default, all the months in the time scale have the same weight (a
 rectangular kernel). The `kernel` argument gives more weight to the recent
 months, with the shapes `"triangular"`, `"circular"` and `"gaussian"`:
 
-```{r, fig.alt = "Weights of the rectangular, triangular, circular and gaussian kernels over 12 months"}
+```{r kernel-weights, fig.alt = "Weights of the rectangular, triangular, circular and gaussian kernels over 12 months"}
 k <- sapply(c("rectangular", "triangular", "circular", "gaussian"),
   function(type) kern(12, type)
 )
@@ -146,7 +146,7 @@ available:
   It starts from the `ub-pwm` estimates. For Gamma and PearsonIII it gives a
   warning and uses `ub-pwm`.
 
-```{r, fig.alt = "SPEI-3 computed with the pp-pwm and max-lik fits plotted against the default ub-pwm fit"}
+```{r fit-comparison, fig.alt = "SPEI-3 computed with the pp-pwm and max-lik fits plotted against the default ub-pwm fit"}
 fits <- sapply(c("ub-pwm", "pp-pwm", "max-lik"),
   function(f) spei(bal, 3, fit = f, verbose = FALSE)$fitted
 )
@@ -338,7 +338,7 @@ index, we fit the SPEI-12 to the present climate and apply the same
 parameters (see 'Reusing the fitted parameters') to the water balance with
 4 ºC of warming:
 
-```{r, fig.alt = "SPEI-12 of Wichita computed with the FAO and the energy-only PET, for the present climate and with 4 degrees of warming applied with the parameters of the present climate. With the FAO PET the warmed series is shifted much further towards drought."}
+```{r pet-warming, fig.alt = "SPEI-12 of Wichita computed with the FAO and the energy-only PET, for the present climate and with 4 degrees of warming applied with the parameters of the present climate. With the FAO PET the warmed series is shifted much further towards drought."}
 warm_spei <- function(method, pet0) {
   s0 <- spei(prcp - pet0, 12, na.rm = TRUE, verbose = FALSE)
   s4 <- spei(prcp - pet_warm(4, method), 12,

@@ -89,7 +89,7 @@ trend.
 The BAI of the cores shows these trends, and large differences in growth
 rate between cores:
 
-```{r, fig.alt = "Basal area increment of the 18 cores of the Tarazona control plot from 1959 to 2017. Growth rises during the first years of each core, and the cores differ in their level of growth."}
+```{r bai-cores, fig.alt = "Basal area increment of the 18 cores of the Tarazona control plot from 1959 to 2017. Growth rises during the first years of each core, and the cores differ in their level of growth."}
 matplot(bai$year, bai[, -1],
   type = "l", lty = 1, col = "grey40",
   xlab = "Year", ylab = "BAI (cm2/year)"
@@ -128,7 +128,7 @@ simpler cases such as a crop yield that grows steadily over the years.
 The average of the detrended cores in each year is the chronology of the
 site:
 
-```{r, fig.alt = "Mean of the detrended BAI of the 18 cores (the site chronology) from 1959 to 2017, fluctuating around zero with strong drops in some years"}
+```{r bai-chronology, fig.alt = "Mean of the detrended BAI of the 18 cores (the site chronology) from 1959 to 2017, fluctuating around zero with strong drops in some years"}
 chron <- ts(rowMeans(rbai, na.rm = TRUE), start = bai$year[1])
 plot(chron, xlab = "Year", ylab = "Detrended BAI (log ratio)")
 abline(h = 0, lty = 3)
@@ -215,7 +215,7 @@ the horizontal axis and the time scales on the vertical axis. The dots
 mark the cells that are significant after adjusting for multiple testing,
 and the black outline shows the best window:
 
-```{r, fig.height = 5, fig.alt = "Heatmap of the correlation between the Tarazona BAI chronology and the SPEI by month and time scale. The highest correlations are from June to September at time scales of about 6 to 12 months."}
+```{r scan-heatmap, fig.height = 5, fig.alt = "Heatmap of the correlation between the Tarazona BAI chronology and the SPEI by month and time scale. The highest correlations are from June to September at time scales of about 6 to 12 months."}
 plot(sc)
 ```
 
@@ -230,7 +230,7 @@ correlations, which are the ones of interest, while the legend still shows
 the correlation. With `colour = "r"` the colours are proportional to the
 correlation itself:
 
-```{r, fig.height = 5, fig.alt = "The same heatmap with colours proportional to the correlation instead of the squared correlation; the differences among the high correlations are less visible."}
+```{r scan-heatmap-r, fig.height = 5, fig.alt = "The same heatmap with colours proportional to the correlation instead of the squared correlation; the differences among the high correlations are less visible."}
 plot(sc, colour = "r")
 ```
 
@@ -295,7 +295,7 @@ too. The argument `lag` scans the months of previous years directly:
 `lag = 0:1` correlates the annual series of year Y with the index of year
 Y and of year Y-1.
 
-```{r, fig.width = 8, fig.height = 5, fig.alt = "Heatmap of the correlation between the Tarazona BAI chronology and the SPEI, for the months of the previous and the current year. The correlations with the months of the previous year are weak; the highest ones are in the summer of the current year."}
+```{r scan-heatmap-lag, fig.width = 8, fig.height = 5, fig.alt = "Heatmap of the correlation between the Tarazona BAI chronology and the SPEI, for the months of the previous and the current year. The correlations with the months of the previous year are weak; the highest ones are in the summer of the current year."}
 sc_lag <- scale_scan(bal, rbai, scales = 1:24, lag = 0:1)
 sc_lag$best
 plot(sc_lag)
@@ -347,7 +347,7 @@ window follows the annual series. They are in different units, so here the
 chronology is standardized (mean 0, standard deviation 1) to plot it on
 the scale of the index:
 
-```{r, fig.alt = "Time plot of the standardized Tarazona BAI chronology and the SPEI of the best window from 1965 to 2017. The two series follow each other, with the lowest values of both in the driest years."}
+```{r chronology-vs-spei, fig.alt = "Time plot of the standardized Tarazona BAI chronology and the SPEI of the best window from 1965 to 2017. The two series follow each other, with the lowest values of both in the driest years."}
 chron_std <- (chron - mean(chron)) / sd(chron)
 spei_plot <- window(spei_best, end = 2017)
 plot(spei_plot,
@@ -445,7 +445,7 @@ of the best window are not well determined. Manrique-Alba et al. (2025)
 used period 34 and a time scale of 12 months for this site, with a
 different model that included the thinned plots.
 
-```{r, fig.width = 8, fig.height = 5, fig.alt = "Heatmap of the correlation between the Tarazona BAI chronology and the SPEI computed with 48 periods per year, by period and time scale. The highest correlations are in late summer at time scales of about 30 to 50 periods."}
+```{r scan-heatmap-48, fig.width = 8, fig.height = 5, fig.alt = "Heatmap of the correlation between the Tarazona BAI chronology and the SPEI computed with 48 periods per year, by period and time scale. The highest correlations are in late summer at time scales of about 30 to 50 periods."}
 plot(sc48)
 ```
 

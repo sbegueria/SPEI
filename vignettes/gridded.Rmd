@@ -54,7 +54,7 @@ class(spei12$fitted)
 The result is a time series matrix with the same columns. The plot method
 shows one panel per station, for up to ten stations; here, the first four:
 
-```{r, fig.height = 6, fig.alt = "SPEI-12 at Indore, Kimberley, Albuquerque and Valencia, one panel per station"}
+```{r spei12-stations, fig.height = 6, fig.alt = "SPEI-12 at Indore, Kimberley, Albuquerque and Valencia, one panel per station"}
 plot(spei(bal[, 1:4], 12, verbose = FALSE))
 ```
 

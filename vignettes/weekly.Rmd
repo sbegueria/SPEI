@@ -171,7 +171,7 @@ rbind(
 The plot shows the daily ETo and the mean daily ETo of each quarter-month
 in the first year:
 
-```{r, fig.alt = "Daily reference evapotranspiration computed with the Hargreaves equation from synthetic temperatures at the latitude of Tarazona in 2001, with the mean of each quarter-month as a step line. ETo is below 1 mm per day in winter and about 6 mm per day in summer."}
+```{r eto-daily, fig.alt = "Daily reference evapotranspiration computed with the Hargreaves equation from synthetic temperatures at the latitude of Tarazona in 2001, with the mean of each quarter-month as a step line. ETo is below 1 mm per day in winter and about 6 mm per day in summer."}
 first <- format(day, "%Y") == "2001"
 eto_qm_mean <- to_periods(as.numeric(eto_day), day, quarter_month(day), 48,
   fun = mean
@@ -239,13 +239,13 @@ names(spei_qm) <- scales
 The `plot` method works as with monthly data. Here, the SPEI at 12
 quarter-months:
 
-```{r, fig.alt = "SPEI at a time scale of 12 quarter-months (3 months) at Tarazona from 1961 to 2020, with positive values in blue and negative values in red, and the reference period 1981-2010 shaded"}
+```{r spei-qm12, fig.alt = "SPEI at a time scale of 12 quarter-months (3 months) at Tarazona from 1961 to 2020, with positive values in blue and negative values in red, and the reference period 1981-2010 shaded"}
 plot(spei_qm[["12"]])
 ```
 
 The values of the index for the last ten years at the four scales:
 
-```{r, fig.height = 6, fig.alt = "SPEI at 4, 12, 24 and 48 quarter-months at Tarazona from 2011 to 2020. The series get smoother as the time scale increases."}
+```{r spei-qm-scales, fig.height = 6, fig.alt = "SPEI at 4, 12, 24 and 48 quarter-months at Tarazona from 2011 to 2020. The series get smoother as the time scale increases."}
 idx <- do.call(cbind, lapply(spei_qm, function(x) x$fitted))
 colnames(idx) <- paste0("SPEI-", scales)
 plot(window(idx, start = c(2011, 1)),
@@ -288,7 +288,7 @@ The quarter-month index adds three values between each pair of monthly
 values. The plot shows both series in 2011 and 2012, with each value placed
 at the end of its window:
 
-```{r, fig.alt = "SPEI at 12 quarter-months and at 3 months at Tarazona in 2011 and 2012. The monthly values coincide with every fourth quarter-month value, and the quarter-month series shows changes within each month."}
+```{r spei-qm-vs-monthly, fig.alt = "SPEI at 12 quarter-months and at 3 months at Tarazona in 2011 and 2012. The monthly values coincide with every fourth quarter-month value, and the quarter-month series shows changes within each month."}
 w <- window(spei_qm[["12"]]$fitted, start = c(2011, 1), end = c(2012, 48))
 m <- window(spei_m3$fitted, start = c(2011, 1), end = c(2012, 12))
 plot(as.numeric(time(w)) + 1 / 48, w,

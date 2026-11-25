@@ -78,7 +78,7 @@ pet_pen <- penman(wichita[, "TMIN"], wichita[, "TMAX"], wichita[, "AWND"],
 have some missing months. The result is in mm per month, and it is a time
 series with the same dates as the input:
 
-```{r, fig.alt = "Monthly PET at Wichita from 2000 to 2004 by the Thornthwaite, Hargreaves and Penman methods"}
+```{r pet-methods, fig.alt = "Monthly PET at Wichita from 2000 to 2004 by the Thornthwaite, Hargreaves and Penman methods"}
 pet <- cbind(Thornthwaite = pet_tho, Hargreaves = pet_har, Penman = pet_pen)
 plot(window(pet, start = c(2000, 1), end = c(2004, 12)),
   plot.type = "single", col = 1:3, ylab = "PET (mm)"
@@ -130,7 +130,7 @@ first accumulated value.
 The `plot()` method shows positive (wet) values in blue and negative (dry)
 values in red:
 
-```{r, fig.alt = "Bar plots of SPEI-1 and SPEI-12 at Wichita, 1980-2011, wet months in blue and dry months in red"}
+```{r spei-barplots, fig.alt = "Bar plots of SPEI-1 and SPEI-12 at Wichita, 1980-2011, wet months in blue and dry months in red"}
 plot(spei1, main = "Wichita, SPEI-1")
 plot(spei12, main = "Wichita, SPEI-12")
 ```
@@ -207,7 +207,7 @@ The wettest period lasted `r max(ev_wet$duration)` months, from
 
 Both kinds of events can be shown on the plot of the index:
 
-```{r, fig.alt = "SPEI-12 of Wichita from 1980 to 2011, with the drought events (runs at or below -1) shaded in red and the wet events (runs at or above +1) shaded in blue"}
+```{r drought-events, fig.alt = "SPEI-12 of Wichita from 1980 to 2011, with the drought events (runs at or below -1) shaded in red and the wet events (runs at or above +1) shaded in blue"}
 to_time <- function(x) {
   as.numeric(substr(x, 1, 4)) + (as.numeric(substr(x, 6, 7)) - 1) / 12
 }
@@ -241,7 +241,7 @@ See `?index_events` for the details.
 The SPI is computed in the same way from precipitation alone. By default it
 uses the Gamma distribution:
 
-```{r, fig.alt = "Bar plot of SPI-12 at Wichita, 1980-2011"}
+```{r spi12-barplot, fig.alt = "Bar plot of SPI-12 at Wichita, 1980-2011"}
 spi12 <- spi(wichita[, "PRCP"], 12)
 plot(spi12, main = "Wichita, SPI-12")
 ```
@@ -250,7 +250,7 @@ The SPI and the SPEI often agree, but the SPEI also accounts for the effect
 of temperature on the atmospheric water demand. Where temperatures are rising
 or a dry period is also hot, the SPEI shows more severe drought than the SPI:
 
-```{r, fig.alt = "Scatter plot of SPEI-12 against SPI-12 at Wichita, with the one-to-one line"}
+```{r spei-vs-spi, fig.alt = "Scatter plot of SPEI-12 against SPI-12 at Wichita, with the one-to-one line"}
 plot(spi12$fitted, spei12$fitted,
   xlab = "SPI-12", ylab = "SPEI-12", asp = 1
 )
