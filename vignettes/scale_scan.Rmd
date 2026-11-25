@@ -231,7 +231,7 @@ ring series is standardized (mean 0, standard deviation 1) to plot it on
 the scale of the index:
 
 ```{r, fig.alt = "Time plot of the standardized synthetic ring-width series and the SPEI of the best window (previous September, 3-month scale), which follow each other closely"}
-rings_std <- (rings - mean(rings)) / sd(rings)
+rings_std <- (rings - mean(rings, na.rm = TRUE)) / sd(rings, na.rm = TRUE)
 plot(spei_best, type = "l", col = "red", lwd = 2,
   ylim = range(c(spei_best, rings_std), na.rm = TRUE),
   xlab = "Year", ylab = "Standardized value"
