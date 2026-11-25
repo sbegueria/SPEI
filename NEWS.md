@@ -2,6 +2,29 @@
 
 ## New features
 
+* Experimental: `<spei>` and `<spi>` accept `distribution = "auto"`, a
+  flexible choice of the distribution adapted from FlexDroughtIndex and
+  Vicente-Serrano et al. (2025, doi:10.1002/joc.8906) (#92). For each
+  series and position in the year, six three-parameter distributions
+  (generalized extreme value, generalized logistic, generalized Pareto,
+  three-parameter log-normal, Pearson III and Weibull) are fitted by
+  L-moments, and the one whose standardized values in the reference period
+  are closest to normal (Shapiro-Wilk W, after the fewest infinite values)
+  is kept. `spi()` fits them to the positive values and handles zeros with
+  the probability of zero. The chosen distributions are returned in the new
+  element `selected`, and in a `dist` row of `coefficients`, which can be
+  passed back through `params`. `summary()` shows them.
+  `options(SPEI.auto.criterion = "aic")` selects with the AIC on the CDF of
+  the paper instead, reproducing the values of FlexDroughtIndex.
+
+* New function `<sedi>` computes the Standardized Evapotranspiration
+  Deficit Index (Kim and Rhee, 2016, doi:10.1002/2016GL070302) from the
+  difference between actual evapotranspiration and atmospheric evaporative
+  demand, a variable bounded above by zero, using by default the flexible
+  choice of the distribution of `distribution = "auto"`. Actual
+  evapotranspiration must be supplied by the user. It returns a `spei`
+  object.
+
 * New function `<scale_scan>` finds the time scale and the position in the
   year (month, week, etc.) at which the SPEI or the SPI best correlates
   with an annual series, such as tree-ring widths, crop yields or reservoir

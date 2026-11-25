@@ -66,8 +66,10 @@ to unshifted rectangular kernel.}
 
 \item{distribution}{optional, name of the distribution function
 to be used for computing the SPEI / SPI (one of 'log-Logistic',
-'Gamma' and 'PearsonIII'). Defaults to 'log-Logistic' for \code{spei},
-and to 'Gamma' for \code{spi}.}
+'Gamma' and 'PearsonIII'), or 'auto' (experimental) to choose, for each
+series and period of the year, the best of several distributions (see
+section 'Flexible choice of the distribution'). Defaults to
+'log-Logistic' for \code{spei}, and to 'Gamma' for \code{spi}.}
 
 \item{fit}{optional, name of the method used for computing the
 distribution function parameters (one of 'ub-pwm', 'pp-pwm' and
@@ -127,6 +129,9 @@ following components:
   \item kernel: the parameters and values of the kernel used to generate
   the object.
   \item distribution: the distribution function used to generate the object.
+  \item selected: only with \code{distribution = 'auto'}, a character
+  matrix (series by periods of the year) with the name of the
+  distribution chosen for each series and period.
   \item fit: the fitting method used to generate the object.
   \item na.action: the value of the na.action parameter used.
   \item data: if requested, the input data used.
@@ -193,6 +198,49 @@ values (e.g. in a climatic water balance) produce a warning and get the
 lowest possible index value.
 }
 
+\section{Flexible choice of the distribution}{
+
+With \code{distribution = 'auto'} (experimental) the distribution is not
+fixed in advance. For each series and position in the year (month, or
+period for other frequencies), six three-parameter distributions are
+fitted by L-moments (functions of package \code{lmom}): generalized
+extreme value (gev), generalized logistic (glo, i.e. the log-Logistic of
+the SPEI), generalized Pareto (gpa), three-parameter log-normal (ln3),
+Pearson III (pe3) and Weibull (wei). The one whose standardized values in
+the reference period are closest to a normal distribution is kept: first
+the candidates giving the fewest infinite values in the reference period
+(values outside the support of the distribution), and among them the one
+with the largest Shapiro-Wilk W of the finite values (ties go to the
+first in the list above). This follows the flexible approach of
+Vicente-Serrano et al. (2025) and its software FlexDroughtIndex
+(\url{https://github.com/lcsc/FlexDroughtIndex}), from which the
+candidate set and the fitting are adapted. That paper selects the
+distribution with an Akaike Information Criterion computed on the
+cumulative distribution function (AIC), and uses the Shapiro-Wilk test to
+evaluate the results; the AIC selection can be used instead with
+\code{options(SPEI.auto.criterion = 'aic')}, which then reproduces the
+values of FlexDroughtIndex (except that infinite values are kept, while
+FlexDroughtIndex sets them to -2.88 or 2.88).
+
+In \code{spei} the candidates are fitted to all the values, which can be
+negative. In \code{spi} they are fitted to the positive values only, and
+zeros are accounted for with the probability of zero (pze) as for the Gamma
+distribution. The same machinery, with the data bounded above by zero, is
+used by \code{\link{sedi}}. Since the choice is made on the reference
+period, it is optimistic about the normality there: outside it, the
+bounded support of some candidates (e.g. Weibull, generalized Pareto) can
+give more infinite values than the default distribution. With
+\code{fit = 'max-lik'}, 'ub-pwm' is used instead, with a warning.
+
+The \code{coefficients} array then has a first row \code{dist} with the
+code of the chosen distribution (1 to 6, in the order above), followed by
+the location, scale and shape parameters (as in package \code{lmom}) and,
+for \code{spi}, pze. The names of the chosen distributions are also given
+in the element \code{selected}. This array can be passed through
+\code{params} (with \code{distribution = 'auto'}) to reproduce the
+index.
+}
+
 \section{Fitting methods}{
 
 The default method for parameter fitting is based on unbiased Probability
@@ -222,7 +270,8 @@ versions before 1.9) are still accepted, but then pze is estimated from
 idea to look at the coefficients slot of a previously fit \code{spei} spei
 object in order to understand the structure of the parameter array. The
 parameter \code{distribution} is still used under this option in order to
-know what distribution function should be used.
+know what distribution function should be used. For 'auto', see section
+'Flexible choice of the distribution'.
 }
 
 \section{Reference period}{
@@ -317,6 +366,11 @@ spi_pe3 <- spi(wichita[, "PRCP"], 12, distribution = "PearsonIII")
 plot(spi_gam$fitted, spi_pe3$fitted)
 grid()
 
+# Flexible choice of the distribution (experimental)
+spei_auto <- spei(wichita[, "BAL"], 3, distribution = "auto")
+spei_auto$selected
+summary(spei_auto)
+
 # Using custom (user provided) parameters
 coe <- spei1$coefficients
 dim(coe)
@@ -363,10 +417,19 @@ precipitation evapotranspiration index (SPEI) revisited: parameter fitting,
 evapotranspiration models, tools, datasets and drought monitoring.
 \emph{International Journal of Climatology} \bold{34}(10): 3001-3023.
 
+S.M. Vicente-Serrano, F. Reig, S. Beguería, A. El-Kenawy, F.
+Domínguez-Castro, M. Franquesa, L. Gimeno-Sotelo, M. Adell-Michavilla, A.
+Halifa-Marín, I. Noguera, M. Andres-Martin, C. Azorin-Molina, A.
+Crespillo, D. Pérez-Pajuelo. 2025. An optimal and flexible approach for
+drought quantification based on standardised indices.
+\emph{International Journal of Climatology} \bold{45}(10): e8906,
+DOI: 10.1002/joc.8906.
+
 \url{https://spei.csic.es}
 }
 \seealso{
 \code{\link{kern}} for different kernel functions available.
+\code{\link{sedi}} for the Standardized Evapotranspiration Deficit Index.
 \code{\link{thornthwaite}},
 \code{\link{hargreaves}} and \code{\link{penman}} for ways of calculating
 potential evapotranspiration.

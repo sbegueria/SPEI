@@ -20,7 +20,8 @@ spi <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
   sol <- withCallingHandlers(
     spei(
       data, scale, kernel, distribution, fit, na.rm,
-      ref.start, ref.end, keep.x, params, verbose
+      ref.start, ref.end, keep.x, params, verbose,
+      .index = "SPI"
     ),
     message = function(m) {
       message(to_spi(conditionMessage(m)), appendLF = FALSE)

@@ -46,8 +46,10 @@
 #' to unshifted rectangular kernel.
 #' @param distribution optional, name of the distribution function
 #' to be used for computing the SPEI / SPI (one of 'log-Logistic',
-#' 'Gamma' and 'PearsonIII'). Defaults to 'log-Logistic' for \code{spei},
-#' and to 'Gamma' for \code{spi}.
+#' 'Gamma' and 'PearsonIII'), or 'auto' (experimental) to choose, for each
+#' series and period of the year, the best of several distributions (see
+#' section 'Flexible choice of the distribution'). Defaults to
+#' 'log-Logistic' for \code{spei}, and to 'Gamma' for \code{spi}.
 #' @param fit optional, name of the method used for computing the
 #' distribution function parameters (one of 'ub-pwm', 'pp-pwm' and
 #' 'max-lik'). Defaults to 'ub-pwm'.
@@ -124,6 +126,48 @@
 #' lowest possible index value.
 #'
 #'
+#' @section Flexible choice of the distribution:
+#' With \code{distribution = 'auto'} (experimental) the distribution is not
+#' fixed in advance. For each series and position in the year (month, or
+#' period for other frequencies), six three-parameter distributions are
+#' fitted by L-moments (functions of package \code{lmom}): generalized
+#' extreme value (gev), generalized logistic (glo, i.e. the log-Logistic of
+#' the SPEI), generalized Pareto (gpa), three-parameter log-normal (ln3),
+#' Pearson III (pe3) and Weibull (wei). The one whose standardized values in
+#' the reference period are closest to a normal distribution is kept: first
+#' the candidates giving the fewest infinite values in the reference period
+#' (values outside the support of the distribution), and among them the one
+#' with the largest Shapiro-Wilk W of the finite values (ties go to the
+#' first in the list above). This follows the flexible approach of
+#' Vicente-Serrano et al. (2025) and its software FlexDroughtIndex
+#' (\url{https://github.com/lcsc/FlexDroughtIndex}), from which the
+#' candidate set and the fitting are adapted. That paper selects the
+#' distribution with an Akaike Information Criterion computed on the
+#' cumulative distribution function (AIC), and uses the Shapiro-Wilk test to
+#' evaluate the results; the AIC selection can be used instead with
+#' \code{options(SPEI.auto.criterion = 'aic')}, which then reproduces the
+#' values of FlexDroughtIndex (except that infinite values are kept, while
+#' FlexDroughtIndex sets them to -2.88 or 2.88).
+#'
+#' In \code{spei} the candidates are fitted to all the values, which can be
+#' negative. In \code{spi} they are fitted to the positive values only, and
+#' zeros are accounted for with the probability of zero (pze) as for the Gamma
+#' distribution. The same machinery, with the data bounded above by zero, is
+#' used by \code{\link{sedi}}. Since the choice is made on the reference
+#' period, it is optimistic about the normality there: outside it, the
+#' bounded support of some candidates (e.g. Weibull, generalized Pareto) can
+#' give more infinite values than the default distribution. With
+#' \code{fit = 'max-lik'}, 'ub-pwm' is used instead, with a warning.
+#'
+#' The \code{coefficients} array then has a first row \code{dist} with the
+#' code of the chosen distribution (1 to 6, in the order above), followed by
+#' the location, scale and shape parameters (as in package \code{lmom}) and,
+#' for \code{spi}, pze. The names of the chosen distributions are also given
+#' in the element \code{selected}. This array can be passed through
+#' \code{params} (with \code{distribution = 'auto'}) to reproduce the
+#' index.
+#'
+#'
 #' @section Fitting methods:
 #' The default method for parameter fitting is based on unbiased Probability
 #' Weighted Moments ('ub-pwm'), but other methods can be used through parameter
@@ -151,7 +195,8 @@
 #' idea to look at the coefficients slot of a previously fit \code{spei} spei
 #' object in order to understand the structure of the parameter array. The
 #' parameter \code{distribution} is still used under this option in order to
-#' know what distribution function should be used.
+#' know what distribution function should be used. For 'auto', see section
+#' 'Flexible choice of the distribution'.
 #'
 #'
 #' @section Reference period:
@@ -205,6 +250,9 @@
 #'   \item kernel: the parameters and values of the kernel used to generate
 #'   the object.
 #'   \item distribution: the distribution function used to generate the object.
+#'   \item selected: only with \code{distribution = 'auto'}, a character
+#'   matrix (series by periods of the year) with the name of the
+#'   distribution chosen for each series and period.
 #'   \item fit: the fitting method used to generate the object.
 #'   \item na.action: the value of the na.action parameter used.
 #'   \item data: if requested, the input data used.
@@ -223,6 +271,14 @@
 #' evapotranspiration models, tools, datasets and drought monitoring.
 #' \emph{International Journal of Climatology} \bold{34}(10): 3001-3023.
 #'
+#' S.M. Vicente-Serrano, F. Reig, S. Beguería, A. El-Kenawy, F.
+#' Domínguez-Castro, M. Franquesa, L. Gimeno-Sotelo, M. Adell-Michavilla, A.
+#' Halifa-Marín, I. Noguera, M. Andres-Martin, C. Azorin-Molina, A.
+#' Crespillo, D. Pérez-Pajuelo. 2025. An optimal and flexible approach for
+#' drought quantification based on standardised indices.
+#' \emph{International Journal of Climatology} \bold{45}(10): e8906,
+#' DOI: 10.1002/joc.8906.
+#'
 #' \url{https://spei.csic.es}
 #'
 #'
@@ -232,6 +288,7 @@
 #'
 #' @seealso
 #' \code{\link{kern}} for different kernel functions available.
+#' \code{\link{sedi}} for the Standardized Evapotranspiration Deficit Index.
 #' \code{\link{thornthwaite}},
 #' \code{\link{hargreaves}} and \code{\link{penman}} for ways of calculating
 #' potential evapotranspiration.
@@ -308,6 +365,11 @@
 #' spi_pe3 <- spi(wichita[, "PRCP"], 12, distribution = "PearsonIII")
 #' plot(spi_gam$fitted, spi_pe3$fitted)
 #' grid()
+#'
+#' # Flexible choice of the distribution (experimental)
+#' spei_auto <- spei(wichita[, "BAL"], 3, distribution = "auto")
+#' spei_auto$selected
+#' summary(spei_auto)
 #'
 #' # Using custom (user provided) parameters
 #' coe <- spei1$coefficients
@@ -400,10 +462,14 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
   if (is.null(params)) {
     # fit distribution
     if (!is.character(distribution) | length(distribution) != 1 |
-      !distribution %in% c("log-Logistic", "Gamma", "PearsonIII")) {
+      !distribution %in% c("log-Logistic", "Gamma", "PearsonIII", "auto")) {
       check$push(paste0(
         "Argument `distribution` must be one of `log-Logistic`,",
-        " `Gamma` or `PearsonIII`."
+        " `Gamma` or `PearsonIII`, or `auto` (flexible choice)."
+      ))
+    } else if (distribution == "auto") {
+      warn$push(paste0(
+        "Fitting the data to the best of several distributions (auto)."
       ))
     } else {
       warn$push(paste0("Fitting the data to a ", distribution, " distribution."))
@@ -430,10 +496,10 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
     # guarantee that the user-provided object conforms to what is expected
     using$params <- TRUE
     if (!is.character(distribution) | length(distribution) != 1 |
-      !distribution %in% c("log-Logistic", "Gamma", "PearsonIII")) {
+      !distribution %in% c("log-Logistic", "Gamma", "PearsonIII", "auto")) {
       check$push(paste0(
         "Argument `distribution` must be one of `log-Logistic`,",
-        " `Gamma` or `PearsonIII`."
+        " `Gamma` or `PearsonIII`, or `auto` (flexible choice)."
       ))
     } else {
       warn$push(paste0(
@@ -490,8 +556,34 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
     check$push("`data` must not contain NA values if argument `na.rm` is set to FALSE.")
   }
 
+  # Index computed: spi() and sedi() pass `.index` through `...`; with
+  # distribution = "auto", the SPI and the SEDI use a probability of zero
+  # (the SPI data are bounded below by zero, the SEDI data above)
+  index <- list(...)$.index
+  if (!isTRUE(index %in% c("SPI", "SEDI"))) index <- "SPEI"
+  upper <- index == "SEDI"
+  auto <- identical(distribution, "auto")
+  auto_criterion <- getOption("SPEI.auto.criterion", "shapiro")
+  if (auto && !auto_criterion %in% c("shapiro", "aic")) {
+    stop("Option `SPEI.auto.criterion` must be 'shapiro' or 'aic'.")
+  }
+
   # Gamma and PearsonIII are fitted to positive values only
-  if (distribution %in% c("Gamma", "PearsonIII") && is.numeric(data) &&
+  if (auto && upper && is.numeric(data) && any(data > 0, na.rm = TRUE)) {
+    warning(
+      "`data` contains positive values, but sedi() fits the distributions ",
+      "to negative values only (zeros are handled through the probability ",
+      "of zero). Positive values get the same index value as zeros."
+    )
+  } else if (auto && index == "SPI" && is.numeric(data) &&
+    any(data < 0, na.rm = TRUE)) {
+    warning(
+      "`data` contains negative values, but with distribution = 'auto' ",
+      "spi() fits the distributions to positive values only (zeros are ",
+      "handled through the probability of zero). Use spei() for data that ",
+      "can be negative."
+    )
+  } else if (distribution %in% c("Gamma", "PearsonIII") && is.numeric(data) &&
     any(data < 0, na.rm = TRUE)) {
     warning(
       "`data` contains negative values, but the ", distribution,
@@ -570,8 +662,10 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
   # Verify the dimensions of the parameters array
   # (Gamma and PearsonIII carry an extra row with the probability of zero,
   # pze; arrays without it, from SPEI < 1.9, are still accepted)
-  dim_params <- ifelse(distribution == "Gamma", 2, 3)
-  has_pze <- distribution %in% c("Gamma", "PearsonIII")
+  # ("auto" stores a distribution code plus three parameters)
+  dim_params <- if (auto) 4 else ifelse(distribution == "Gamma", 2, 3)
+  has_pze <- distribution %in% c("Gamma", "PearsonIII") ||
+    (auto && index != "SPEI")
   dim_coef <- dim_params + has_pze
   params_pze <- FALSE
   if (using$params) {
@@ -586,6 +680,13 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
       check$push(paste0(
         "Parameters array should have dimensions (",
         dim_coef, ", ", n_sites, ", ", ts_freq, ")"
+      ))
+    } else if (auto && (dim(params)[1] != dim_coef ||
+      !all(params[1, , ] %in% c(seq_along(auto_dists), NA)))) {
+      check$push(paste0(
+        "With distribution = 'auto', `params` must have ", dim_coef,
+        " rows, the first one a distribution code (1 to ",
+        length(auto_dists), "), as in the `coefficients` of a previous call."
       ))
     } else if (has_pze) {
       params_pze <- dim(params)[1] == dim_coef
@@ -651,6 +752,13 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
         par = c("xi", "alpha", "kappa"),
         site_names, NULL
       )
+    ),
+    "auto" = array(
+      NA, c(dim_coef, n_sites, ts_freq),
+      list(
+        par = c("dist", "location", "scale", "shape", "pze")[1:dim_coef],
+        site_names, NULL
+      )
     )
   )
 
@@ -693,6 +801,7 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
   # that could not be fitted
   maxlik_failed <- 0
   n_skipped <- 0
+  auto_failed <- 0
 
   # Loop through series (columns in data)
   for (s in 1:n_sites) {
@@ -716,9 +825,10 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
       }
 
       # Probability of zero (pze)
-      if (distribution != "log-Logistic") {
+      x.all <- x.mon
+      if (has_pze) {
         pze <- sum(x.mon == 0) / length(x.mon)
-        x.mon <- x.mon[x.mon > 0]
+        x.mon <- if (upper) x.mon[x.mon < 0] else x.mon[x.mon > 0]
       }
 
       ## Compute coefficients - - - - - - - - - - - - - -
@@ -755,8 +865,18 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
         # This is handled internally by `lmomco` with `lmorph`
         fortran_vec <- c(lmom$lambdas[1:2], lmom$ratios[3])
 
+        # With "auto", choose among the candidate distributions
+        if (auto) {
+          f_params <- auto_select(x.mon, x.all, fortran_vec,
+            if (has_pze) pze, upper, auto_criterion)
+          if (is.null(f_params)) {
+            auto_failed <- auto_failed + 1
+            next()
+          }
+        }
+
         # Calculate parameters based on distribution with `lmom`, then `lmomco`
-        f_params <- switch(distribution,
+        if (!auto) f_params <- switch(distribution,
           "log-Logistic" = tryCatch(pelglo(fortran_vec),
             error = function(e) {
               parglo(lmom)$para
@@ -801,6 +921,15 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
 
       ## Standardize - - - - - - - - - - - - - -
 
+      # With "auto", standardize with the chosen distribution
+      if (auto) {
+        if (!is.na(f_params[1])) {
+          spei[ff, s] <- auto_z(x[ff], f_params[1], f_params[-1],
+            if (has_pze) pze, upper)
+        }
+        next()
+      }
+
       # Calculate CDF on `x` using `f_params`
       cdf_res <- switch(distribution,
         "log-Logistic" = lmom::cdfglo(x[ff], f_params),
@@ -823,6 +952,14 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
       "than 4 ", ifelse(has_pze, "non-zero ", ""), "values or only constant ",
       "values were available in the reference period, so the distribution ",
       "could not be fitted and the index was set to NA.",
+      call. = FALSE
+    )
+  }
+  if (auto_failed > 0) {
+    warning(
+      "In ", auto_failed, " case(s) (series and period of the year), none ",
+      "of the candidate distributions could be fitted, so the index was ",
+      "set to NA.",
       call. = FALSE
     )
   }
@@ -863,6 +1000,12 @@ spei <- function(data, scale, kernel = list(type = "rectangular", shift = 0),
     na.action = na.rm,
     index = "SPEI"
   )
+  if (auto) {
+    # Name of the distribution chosen for each series and period
+    z$selected <- matrix(auto_dists[coef[1, , ]], n_sites, ts_freq,
+      dimnames = list(site_names, NULL)
+    )
+  }
   if (using$ref.start | using$ref.end) {
     z$ref.period <-
       rbind(ref.start, ref.end)
@@ -943,6 +1086,10 @@ summary.spei <- function(object, ...) {
     cat("\t", dimnames(x$coeff)[[2]][i], ":\n", sep = "")
     tab <- cbind(t(x$coeff[, i, ]))
     rownames(tab) <- 1:dim(x$coeff)[3]
+    if (!is.null(x$selected)) {
+      # distribution = "auto": name of the chosen distribution
+      tab <- data.frame(dist = x$selected[i, ], tab[, -1, drop = FALSE])
+    }
     print(tab)
   }
   cat("\nFitted:\n")
